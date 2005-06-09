@@ -1,0 +1,31 @@
+
+ Stamina.LIB
+ 
+ Jakiekolwiek wykorzystywanie, modyfikowanie, lub publikowanie kodu 
+ bez wiedzy i PISEMNEJ ZGODY posiadacza praw autorskich jest ZABRONIONE!
+ Prawa autorskie do wszystkich wprowadzonych modyfikacji przechodz¹ 
+ automatycznie na w³aœciciela biblioteki w osobie Rafa³ Lindemann.
+
+ Brak informacji licencyjnej w poszczególnych plikach oznacza, 
+ ¿e w mocy jest powy¿sze postanowienie!
+ 
+ Pobranie i/lub przetwarzanie kodu Ÿród³owego oznacza zgodê na powy¿sze
+ postanowienia.
+
+ --
+
+ All rights reserved. Copying, reusing, modifications or publication of the
+ code is strictly prohibited, without written consent of the copyrights holder.
+ All code modification's and contribution's copyright rights are transfered
+ to the owner of the library - Rafa³ Lindemann.
+ 
+ Lack of license information in included files means that 
+ the above statement is in use!
+
+ Downloading and/or processing of the source code means agreement to the above
+ rules.
+ 
+ 
+ Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+
+ http://www.stamina.eu.org/ , http://www.konnekt.info/ 
