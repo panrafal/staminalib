@@ -110,6 +110,10 @@ namespace Stamina {
 		std::string operator [] (const std::string& named);
 		inline std::string operator () (int i) {return (*this)[i];}
 		inline std::string getSub(int i) {return (*this)[i];}
+		inline bool hasSub(int i) {
+			if (_result <= i || _vector[i*2]<0 || _vector[i*2] == _vector[i*2+1]) return false;
+			return true;
+		}
 		inline int getNamedIndex(const std::string& named) {
 			if (!_compiled) return -1;
             return _compiled->getNamedIndex(named);
@@ -296,8 +300,12 @@ namespace Stamina {
 	public:
 
 		inline static int doMatch(const char * pat , const char * sub) {
+			return doMatch(oCompiled(new Compiled(pat)), sub);
+		}
+		inline static int doMatch(const oCompiled& pat , const char * sub) {
 			RegEx r;
-			return r.match(pat, sub);
+			r.setSubject(sub);
+			return r.match(pat);
 		}
 		inline static std::string doReplace(const char * pat , const char * chg , const char * sub , int limit=0) {
 			RegEx r;
@@ -314,10 +322,14 @@ namespace Stamina {
 			return r.replace(pat, func, sub, limit);
 		}
 
-
 		inline static std::string doGet(const char* pat, const char* sub, int subPattern = 0, const char* def = 0) {
+			return doGet(oCompiled(new Compiled(pat)), sub, subPattern, def);
+		}
+
+		inline static std::string doGet(const oCompiled& pat, const char* sub, int subPattern = 0, const char* def = 0) {
 			RegEx r;
-			r.match(pat, sub);
+			r.setSubject(sub);
+			r.match(pat);
 			if (r.isMatched()) {
 				return r[subPattern];
 			} else {

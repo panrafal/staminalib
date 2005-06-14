@@ -106,6 +106,66 @@ namespace Stamina {
 		return sign? -(signed)l : (signed)l;
 	}
 
+	char * str_tr(char * str , const char * chIn , const char * chOut) {
+		if (!str || !chIn || !chOut || !*chIn || !*chOut || strlen(chIn)!=strlen(chOut)) return str;
+		char * c = str;
+		while (*c) {
+			char * pos = strchr(chIn , *c);
+			if (pos) {
+				*c = chOut[pos - chIn];
+			}
+			c++;
+		}
+		return str;
+	}
+
+
+	#ifdef __BORLANDC__
+	#define VSNPRINTF vsnprintf
+	#else
+	#define VSNPRINTF _vsnprintf
+	#endif
+
+	char * _vsaprintf(const char *format, va_list ap)
+	{
+			va_list temp_ap = ap;
+			char *buf = NULL, *tmp;
+			int size = 0, res;
+
+			if ((size = VSNPRINTF(buf, 0, format, ap)) < 1) {
+					size = 128;
+					do {
+							size *= 2;
+							if ((tmp = (char*)realloc(buf, size))==0) {
+									free(buf);
+									return NULL;
+							}
+							buf = tmp;
+							res = VSNPRINTF(buf, size, format, ap);
+					} while (res == size - 1 || res==-1);
+			} else {
+					if ((buf = (char*)malloc(size + 1))==0)
+							return NULL;
+			}                                    
+
+			ap = temp_ap;
+
+			VSNPRINTF(buf, size + 1, format, ap);
+
+			return buf;
+	}
+
+	char * _saprintf(const char *format, ...) {
+		va_list ap;
+
+		va_start(ap, format);
+		char * ret = _vsaprintf(format, ap);
+		va_end(ap);
+			return ret;
+	}
+
+
+
 
 void split(const std::string & txt, const std::string & splitter, tStringVector & list, bool all) {
 	std::string::size_type start = 0, end;
@@ -188,6 +248,28 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 			}
 		}
 		return result;
+	}
+
+	void * memrev(void * buff , int count) {
+		char t;
+		char * buf = (char*)buff;
+		for (int i = 0 ; i < count / 2 ; i++) {
+			t = buf[i];
+			buf[i] = buf[count - i - 1];
+			buf[count - i - 1] = t;
+		}
+		return buff;
+	}
+
+	std::string longToIp(long adr) {
+		memrev(&adr , sizeof(adr));
+		return stringf("%u.%u.%u.%u" , (adr&0xFF000000)>>24 , (adr&0xFF0000)>>16 , (adr&0xFF00)>>8 , adr&0xFF);
+	}
+
+	int ipToLong(const char * ip) {
+		int a , b , c , d;
+		sscanf(ip , "%u.%u.%u.%u" , &a , &b , &c , &d);
+		return ((BYTE)d << 24) | ((BYTE)c<<16) | ((BYTE)b<<8) | (BYTE)a;
 	}
 
 

@@ -29,10 +29,27 @@ namespace Stamina {
 	int random(int min = 0, int max = RAND_MAX);
 
 	const char * inttoch(int v , char * s , int radix=10 , int max=-1 , bool upper=true);
+
+	char * _vsaprintf(const char *format, va_list ap);
+	char * _saprintf(const char *format, ...);
+
 #ifdef _STRING_
 	std::string inttostr(int v , int radix=10 , int max=-1 , bool upper=true);
+
+	inline std::string stringf(const char *format, ...) {
+		va_list ap;
+
+		va_start(ap, format);
+		char * msg = _vsaprintf(format, ap);
+			std::string _msg = msg;
+			free(msg);
+			va_end(ap);
+			return _msg;
+	}
 #endif
 	int chtoint(const char * str , unsigned char base=0xFF);
+
+
 
 	inline unsigned char chval(unsigned char ch) { // zamienia znak na liczbe i odwrotnie
 		/* Zamieniamy liczbe na znak */
@@ -44,6 +61,7 @@ namespace Stamina {
 		return ch-'a'+10; // a-...
 	}
 
+	char * str_tr(char * str , const char * chIn , const char * chOut);
 
 #ifdef _STRING_
 
@@ -82,6 +100,13 @@ namespace Stamina {
 
 	char * stripSlashes(char * str);
 
+	/**Reverses buffer contents*/
+	void * memrev(void * buff , int count);
+
+	int ipToLong(const char * ip);
+#ifdef _STRING_
+	std::string longToIp(long adr);
+#endif
 
 
 };
