@@ -567,6 +567,9 @@
 				RelativePath=".\Timer.h">
 			</File>
 			<File
+				RelativePath=".\TLS.h">
+			</File>
+			<File
 				RelativePath=".\ToolTipX.h">
 			</File>
 			<File
