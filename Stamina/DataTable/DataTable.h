@@ -1,265 +1,333 @@
-#ifndef DTABLEH
-#define DTABLEH
+#ifndef __DATATABLE__
+#define __DATATABLE__
 
 #define _DTABLE_
 
 
 #include <vector>
 #include <Stdstring.h>
-#include "critical_section.h"
+#include <Stamina\CriticalSection.h>
 
-#define DT_READ 1
-#define DT_WRITE 2
-#define DT_APPEND 4
-
-#define DT_C_ID 0x7FFFFF
-
-#define DT_ROWID_MASK   0x40000000  // ta maska nalozona na numer wiersza oznacza ze numer jest identyfikatorem
-#define DT_ROWID_MAX    0x3FFFFFFF  // maxymalna wartosc identyfikatora
-#define DT_ROWID_MIN    0x1
-
-#define DT_COLID_UNIQUE 0x00800000 // Identyfikator kolumny jest unikatowy
-
-#define DT_CT_INT 0
-#define DT_CT_PCHAR 1
-#define DT_CT_STR DT_CT_PCHAR
-#define DT_CT_STRING 2
-#define DT_CT_64     3 // __int64 lub double , lub cokolwiek 64-bitowego
-#define DT_CT_BIN    4 // binarka. 4 bajty rozmiaru + bufor
-#define DT_CT_UNKNOWN -1  ///< dla sDTValue, typ nieznany (zostanie ustawiony).
-
-#define DT_CT_TYPEMASK 0xF
-
-
-#define DT_CF_NOSAVE   0x100       // ta wartosc nie zostanie zapisana
-#define DT_CF_KEY      0x200       // ta kolumna jest "kluczem"
-#define DT_CF_SECRET   0x400       // ta kolumna mo¿e byæ has³em i powinna byæ odpowiednio strze¿ona...
-
-#define DT_CT_DONTSAVE DT_CF_NOSAVE
-#define DT_CT_KEY      DT_CF_KEY
-
-
-#define DT_CF_CRYPTMASK 0xFF000
-#define DT_CT_CRYPTMASK DT_CF_CRYPTMASK
-#define DT_CF_CXOR      0x01000
-#define DT_CT_CXOR      DT_CF_CXOR
-
-#define DT_CF_NOSAVEFLAGS 0x000000 // Flagi które nie zostan¹ zapisane do pliku
-#define DT_CF_LOADED      0x100000 // Kolumna wczytana z pliku...
-
-#define DT_CC_RESIZE 1
-#define DT_CC_FILL 2
-
-// RowFlags
-#define DT_RF_DONTSAVE  0x1
-
-#define DT_FT_TEXT 0
-#define DT_FT_BINARY 1
-//#define DT_FT_AUTO -1
-
-#define DT_ERR_NOCOL 100
-#define DT_ERR_NOROW 200
-#define DT_ERR_BADTYPE 300
-#define DT_NOROW 0xFFFFFFFF
+#include <DT.h>
 
 #define DT_SETBLANKSBYTYPE
-
 #define DT_CHECKTYPE
 
-#define DT_LOCKALL -1
- // Klasy
 
- typedef void * TdEntry;
- typedef __int64 Td64;
+namespace Stamina { namespace DT {
 
-#pragma pack(push, 1)
-struct sDTValue {
-    short type; ///< Typ przekazywanej wartoœci
-    union {
-        struct {
-            union {
-                char * vChar;
-                const char * vCChar;
-            };
-            unsigned int buffSize;
-        };
-        int vInt;
-        __int64 vInt64;
-    };
-    sDTValue(short type=DT_CT_UNKNOWN):type(type) {vInt64 = 0;buffSize=0;}
-};
-#pragma pack(pop)
 
- // strukturka do przekazywania DT_CT_BIN
- struct CdtctBin {
-     int size;
-     void * buff;
+
+	typedef void* DataEntry;
+
+	class DataRow {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
+	public:
+		int allocData();
+		int freeData();
+		const DataEntry get (tColId id); // Pobiera wartosc kolumny
+		int set (tColId id , DataEntry val); // ustawia wartosc kolumny
+
+		const DataEntry getByIndex (int index); // Pobiera wartosc kolumny
+
+		DataRow (const DataRow & v);
+
+		DataRow (DataTable* t, char allocate=1);
+		~DataRow ();
+
+		inline void lock() {
+			_cs.lock();
+		}
+		inline void unlock() {
+			_cs.unlock();
+		}
+		inline bool canAccess() {
+			_cs.canAccess();
+		}
+
+		inline CriticalSection& getCS() {
+			return _cs;
+		}
+
+	private:
+		class DataTable * _table; ///< Parent table
+		int _size;  ///< Data slots count
+		DataEntry * _data; ///< Data slots
+		//unsigned int _pos;
+		//int _index;
+		tRowId _id;    // identyfikator wiersza
+		unsigned int _flag;
+		CriticalSection_blank _cs; // blokada
+	};
+
+	struct Column {
+		enColumnFlag type;
+		tColId id;
+		DataEntry def; // default
+		std::string name;  // tekstowy identyfikator
+
+		Column();
+
+		enColumnType getType() {
+			return (enColumnType) (type & ctypeMask);
+		}
+		enColumnFlag getFlags() {
+			return type;
+		}
+	};
+
+	extern const Column emptyColumn;
+
+	class ColumnsDesc {  // Opis typow kolumn
+	public:
+		typedef std::vector<Column> tColumns;
+	public:
+		ColumnsDesc ();
+		operator = (ColumnsDesc & x);
+
+		int setColCount (int count, bool expand = false); // ustawia ilosc kolumn
+		tColId setCol (tColId id , enColumnFlag type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
+		tColId setUniqueCol (const char * name , enColumnFlag type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
+
+		inline int getColCount () const {
+			return _cols.size();
+		}
+		inline int size() const {
+			return _cols.size();
+		}
+
+		const Column& getColumnByIndex(int index) const;
+		const Column& getColumn(tColId id) const {
+			return getColumnByIndex(colIndex(id));
+		}
+
+		int colIndex (tColId id) const; // zwraca index kolumny
+
+		void clear() {
+			_cols.clear();
+		}
+
+		void optimize();
+		int join(const ColumnsDesc& other , bool overwrite); // ³¹czy dwa deskryptory, zwraca liczbê do³¹czonych
+
+		int getNewUniqueId(void);
+		int getNameId(const char * name) const;
+
+		bool isLoader() {
+			return _loader;
+		}
+		void setLoader(bool loader) {
+			_loader = loader;
+		}
+
+	protected:
+		tColumns _cols;
+		bool _loader;
+		//void * table;
+		//int _deftype;
+	};
+
+
+
+
+	class DataTable {
+	public:
+		typedef std::vector <DataRow *> tRows;
+
+	public:
+		DataTable ();
+		~DataTable ();
+
+		// rows
+		tRowId DataTable::getRowId(unsigned int row) const {
+			if (isRowId(row)) return row;
+			if (row >= this->getRowCount()) return -1;
+			return flagId(_rows[row]->id);
+		}
+		tRowId DataTable::getRowPos(tRowId row) const {
+			if (!isRowId(row)) return row;
+			row = unflagId(row);
+			for (unsigned int i=0; i < _rows.size(); i++)
+				if (_rows[i]->id == row) return i;
+			return -1;
+		}
+
+		inline static bool isRowId(unsigned int val) {
+			return ((row)!=0xFFFFFFFF)&&((row) & DT::rowIdMask) != 0;
+		}
+
+		/** Adds flag to the row Id */
+		inline static tRowId flagId(tRowId row) {
+			return (tRowId)((row) | DT::rowIdMask);
+		}
+		/** Removes flag from the row Id */
+		inline static tRowId unflagId(tRowId row) {
+			return (tRowId)( row&(~DT::rowIdMask) );
+		}
+
+		tRowId addRow(tRowId id = rowNotFound); // Dodaje wiersz , mozna podac ID
+
+		tRowId insertRow(unsigned int row , tRowId id = -1); // wstawia wiersz , mozna podac ID
+
+		bool deleteRow(tRowId row);
+
+		inline unsigned int getRowCount() const {
+			return _rows.size();
+		}
+
+		void clearRows();
+
+
+		/** Znajduje wiersz spe³niaj¹cy podane kryteria.
+		@param startPos - numer wiersza od którego zaczynamy szukanie
+		@param argCount - liczba przekazywanych struktur Find*, lub -1 je¿eli ostatnie kryterium jest równe 0
+		@param ... - kolejne kryteria jako struktury Find*, najbezpieczniej dodaæ na koñcu kryterium 0
+
+		np. Znajduje pierwszy kontakt sieci NET_GG aktywny w ci¹gu ostatniej minuty.
+		dt->findRow(0, -1, &Find::EqInt(CNT_NET, NET_GG), &Find(Find::gt, CNT_ACTIVITY, ValueInt64(_time64(0) - 60000)), 0);
+		*/
+        tRowId findRow(unsigned int startPos, int argCount, ...) const;
+
+		inline tRowId findRow(unsigned int startPos, Find& f1) const {
+			return this->findRow(startPos, 1, &f1);
+		}
+		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2) const {
+			return this->findRow(startPos, 2, &f1, &f2);
+		}
+		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2, Find& f3) const {
+			return this->findRow(startPos, 3, &f1, &f2, &f3);
+		}
+
+
+		DataEntry get(tRowId row , tColId id) const; // zwraca wartosc w wierszu/kolumnie
+		bool set(tRowId row , int tColId , DataEntry val);
+
+
+		// inne
+		inline int getInt(tRowId row , tColId id) const {
+			Value v = Value(ctypeInt);
+			this->getValue(row, id, &v);
+			return v.vInt;
+		}
+		inline int setInt(tRowId row , tColId id , int val) {
+			return this->setValue(row, id, ValueInt(val));
+		}
+		inline const char * getCh(tRowId row , tColId id) const {
+			Value v = Value(ctypeString);
+			this->getValue(row, id, &v);
+			return v.vChar;
+		}
+		inline int setCh(tRowId row , tColId id , const char * val) {
+			return this->setValue(row, id, ValueStr(val));
+		}
+
+		inline TypeBin getbin(tRowId row , tColId id) const {
+			Value v = Value(ctypeBin);
+			this->getValue(row, id, &v);
+			return v.vBin;
+		}
+		inline int setBin(tRowId row , tColId id , void * val , size_t size) {
+			return this->setValue(row, id, ValueBin(val, size));
+		}
+		inline int setBin(tRowId row , tColId id , const TypeBin& val) {
+			return this->setValue(row, id, ValueBin(val));
+		}
+
+		inline __int64 get64(tRowId row , tColId id) const {
+			Value v = Value(ctypeInt64);
+			this->getValue(row, id, &v);
+			return v.vInt64;
+		}
+		inline int set64(tRowId row , tColId id , __int64 val) {
+			return this->setValue(row, id, ValueInt64(val));
+		}
+
+		inline std::string getStr(tRowId row , tColId id) const {
+			Value v = ValueStr(0, -1); // this way we will get string duplicate
+			this->getValue(row, id, &v);
+			std::string s = v.vChar;
+			free(v.vChar);
+			return s;
+		}
+		inline int setStr(tRowId row , tColId id , const std::string& val) {
+			return setCh(row, id, val.c_str());
+		}
+
+		const ColumnsDesc& getColumns() {
+			return this->_cols;
+		}
+
+		int checkColType(tColId id , int type) {
+			return this->_cols.getColumn(id).type == type;
+		}
+
+		bool idExists(int id) {
+			if (isRowId(id)) 
+				return getRowPos(id) != -1;
+			else 
+				return getRowId(id) != -1;
+		}
+
+		void lock(tRowId row);
+		void unlock(tRowId row);
+		bool canaccess(tRowId row);
+
+/*
+  Gdy pobierana jest wartoœæ char to...
+    vChar = 0 buffSize = -1  - zwracany jest duplikat
+	vChar = 0 buffSize = 0   - b³¹d
+	vChar = * buffSize = 0   - zwracana jest aktualna wartoœæ, a w przypadku liczb u¿ywany jest podany wskaŸnik
+	vChar = * buffSize = #   - wartoœæ jest kopiowana do *
+*/
+		bool getValue(tRowId row , tColId col , Value& value);
+		
+		/** Sets the value using conversion.
+		*/
+		bool setValue(tRowId row , tColId col , const Value& value);
+
+		inline void setError(enError error) {
+			_error = error;
+		}
+		inline void resetError() {
+			_error = 0;
+		}
+		inline int getError() {
+		}
+
+		inline setOldXorKey(const char* key) {
+			_cxor_key = key;
+		}
+
+
+	private:
+		tRows _rows;
+		int _size;
+		unsigned int _lastId; // ostatni identyfikator wiersza
+		ColumnsDesc _cols;
+		enError _error;
+		//int mode;
+		//int notypecheck;
+		char * _cxor_key;
+		//unsigned int dbID; // Identyfikator bazy
+		cCriticalSection _cs; // mechanizm blokuj¹cy
+		bool _changed;
+
+
  };
 
- // class CdTable;
- class CdtRow {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
-  int size;  // ilosc zaalokowanych kolumn
-  class CdTable * table; // Tablica do ktorej nalezy wiersz
-  TdEntry * data;
-  public:
-  unsigned int pos;
-  int index;
-  unsigned int id;    // identyfikator wiersza
-  unsigned int flag;
-  cCriticalSection_blank CS; // blokada
-//  CGarbage_Collector garbage;
 
-  int allocData();
-  int freeData();
-  const TdEntry get (int id); // Pobiera wartosc kolumny
-  int set (int id , TdEntry val); // ustawia wartosc kolumny
-
-  const TdEntry getbyindex (int index); // Pobiera wartosc kolumny
-
-  CdtRow (const CdtRow & v);
-
-  CdtRow (CdTable * t, int index , char allocate=1);
-  ~CdtRow ();
-
-  unsigned short lock(int row);
-  unsigned short unlock(int row);
-//  unsigned short access(int row);
-
- };
-
- struct CdtColDescItem {
-   int type;
-   int id;
-   TdEntry def; // default
-   std::string name;  // tekstowy identyfikator
-   CdtColDescItem();
- };
-
- class CdtColDesc {  // Opis typow kolumn
-  public:
-    typedef std::vector <CdtColDescItem>::iterator cols_it_t;
-    std::vector <CdtColDescItem> cols;
-    void * table;
-    int deftype;
-	bool loader;
-    CdtColDesc ();
-    CdtColDesc (int count , ...); // (...,id,type,def,...)
-    operator = (CdtColDesc & x);
-
-    int setcolcount (int count, int=0); // ustawia ilosc kolumn
-    int setcol (int id , int type , TdEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
-    int setuniquecol (const char * name , int type , TdEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
-    int getcolcount ();
-    int getcol (int index , int & type , int & id);
-    int getcoltype (int index);
-    int getcolflag (int index);
-    int getcolid (int index);
-	const char * getcolname (int index);
-	int colindex (int id , bool quick = 1); // zwraca index kolumny
-    void clear();
-    void optimize();
-	int join(CdtColDesc * other , bool overwrite); // ³¹czy dwa deskryptory, zwraca liczbê do³¹czonych
-
-    int getnewuniqueid(void);
-    int getnameid(const char * name);
- };
-
-
-
-
- typedef std::vector <CdtRow *>::iterator t_rows_it;
-
- class CdTable {
-  public:
-    std::vector <CdtRow *> rows;
-    int size;
-    unsigned int lastid; // ostatni identyfikator wiersza
-    CdtColDesc cols;
-    int error;
-    int index_eq_id; // ustala czy indexKolumny == idKolumny
-    int mode;
-    int notypecheck;
-    char * cxor_key;
-    unsigned int dbID; // Identyfikator bazy
-    cCriticalSection CS; // mechanizm blokuj¹cy
-    bool changed;
-    CdTable ();
-    ~CdTable ();
-
-
-
-    // rows
-    unsigned int getrowid(unsigned int row);  // Uzyskuje identyfikator
-    unsigned int getrowpos(unsigned int row); // Uzyskuje pozycje
-
-    #define DT_ISROWID(row) (((row)!=0xFFFFFFFF)&&((row)&DT_ROWID_MASK)) // Sprawdza czy row jest identyfikatorem
-    #define DT_MASKID(row) ((row)|DT_ROWID_MASK) // Dodaje maske do identyfiaktora
-    #define DT_MAKEID(row) DT_MAKEID(row)
-    #define DT_UNMASKID(row) (row&(~DT_ROWID_MASK)) // Zdejumuje maske z identyfikatora
-    // f-cje wewnetrzne
-    #define DTI_GETID(row) (DT_ISROWID(row)?row:getrowid(row))
-    #define DTI_GETPOS(row) (DT_ISROWID(row)?getrowpos(row):row)
-    // f-cje zewnetrzne
-    #define DT_GETID(dt , row) (DT_ISROWID(row)?row:dt->getrowid(row))
-    #define DT_GETPOS(dt , row) (DT_ISROWID(row)?dt->getrowpos(row):row)
-
-    int addrow(int id = -1); // Dodaje wiersz , mozna podac ID
-    unsigned int insertrow(unsigned int row , int id = -1); // wstawia wiersz , mozna podac ID
-    int deleterow(unsigned
- int row);
-    unsigned int getrowcount(); // podaje liczbe wierszy
-    void clearrows();
-    int findby(TdEntry val , int id=-1 , bool csens=0);
-
-    TdEntry get(unsigned int row , int id); // zwraca wartosc w wierszu/kolumnie
-    int set(unsigned int row , int id , TdEntry val);
-    // inne
-    int getint(unsigned int row , int id);
-    int setint(unsigned int row , int id , int val);
-    char * getch(unsigned int row , int id);
-    int setch(unsigned int row , int id , const char * val);
-
-//    void * getbin(unsigned int row , int id);
-    int setbin(unsigned int row , int id , void * val , size_t size);
-    CdtctBin getbin(unsigned int row , int id);
-    int setbin(unsigned int row , int id , CdtctBin * val);
-
-    Td64 get64(unsigned int row , int id);
-    int set64(unsigned int row , int id , Td64 val);
-
-    const std::string getstr(unsigned int row , int id);
-    int setstr(unsigned int row , int id , std::string val);
-
-    int checkcoltype(unsigned int id , int type);
-
-    void setindexes();
-
-    bool idexists(int id);
-
-    unsigned short lock(int row);
-    unsigned short unlock(int row);
-    bool canaccess(int row);
-
-	bool getValue(unsigned int row , unsigned int col , sDTValue * value);
-	bool setValue(unsigned int row , unsigned int col , sDTValue * value);
-
-
- };
-
-
- class CdtFile {
+ class FileBase {
    public:
-   CdTable * table;
+   DataTable * table;
    int opened;
-   CdtColDesc fcols;
+   ColumnsDesc fcols;
    std::string fileName;
    bool write_failed;
 //   virtual
 
-    CdtFile();
-    CdtFile(CdTable * t);
-    void assign(CdTable * t);
-    ~CdtFile();
+    FileBase();
+    FileBase(DataTable * t);
+    void assign(DataTable * t);
+    ~FileBase();
     // Defined
     virtual int load (const char * fn); // wgrywa caly plik
     virtual int loadAll (const char * fn); // wgrywa caly plik , razem z deskryptorem
@@ -286,6 +354,8 @@ struct sDTValue {
 
     virtual int fset(int pos , int whence) {return 0;} // ustawia sie na odpowiednia pozycje ...
  };
+
+};}; // namespace'y
 
 #endif
 

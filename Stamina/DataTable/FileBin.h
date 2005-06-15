@@ -1,8 +1,8 @@
-#ifndef DTABLEBIN
-#define DTABLEBIN
+#ifndef __DTFILEBIN__
+#define __DTFILEBIN__
 
 //#include <mem.h>
-#include "dbtable.h"
+#include "DataTable.h"
 #define DT_BIN_ROW_SEP = '\n'
 #define DT_BIN_COL_SEP = '\t'
 #define DT_BIN_VER '3'
@@ -16,7 +16,7 @@
 
 
 
-class CdtFileBin : public CdtFile {
+class FileBin : public FileBase {
 
    public:
    FILE * file;
@@ -38,9 +38,9 @@ class CdtFileBin : public CdtFile {
     bool authorize(std::string p);
 
     void init();
-    CdtFileBin();
-    CdtFileBin(CdTable * t);
-    ~CdtFileBin();
+    FileBin();
+    FileBin(DataTable * t);
+    ~FileBin();
     int open (const char * fn , int mode); // otwiera plik (fn - nazwa , ft - typ)
     int close (); // zamyka plik
 //    virtual examine(); // Zapisuje lokalizacje wierszy
