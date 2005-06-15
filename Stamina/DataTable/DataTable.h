@@ -7,7 +7,7 @@
  *
  *  $Id$
  */
-
+#pragma once
 #ifndef __DATATABLE__
 #define __DATATABLE__
 
@@ -18,7 +18,7 @@
 #include <Stdstring.h>
 #include <Stamina\CriticalSection.h>
 
-#include <DT.h>
+#include "DT.h"
 
 #define DT_SETBLANKSBYTYPE
 #define DT_CHECKTYPE
@@ -57,6 +57,20 @@ namespace Stamina { namespace DT {
 		inline CriticalSection& getCS() {
 			return _cs;
 		}
+	
+		enRowFlag getFlags() {
+			return _flag;
+		}
+		void setFlag(enRowFlag flag, bool setting) {
+			if (setting)
+				_flag = (enRowFlag) (_flag | flag);
+			else
+				_flag = (enRowFlag) (_flag & (~flag));
+		}
+		bool hasFlag(enRowFlag flag) {
+			return (_flag & flag) != 0;
+		}
+
 
 	private:
 		class DataTable * _table; ///< Parent table
@@ -65,7 +79,7 @@ namespace Stamina { namespace DT {
 		//unsigned int _pos;
 		//int _index;
 		tRowId _id;    // identyfikator wiersza
-		unsigned int _flag;
+		enRowFlag _flag;
 		CriticalSection_blank _cs; // blokada
 	};
 
@@ -83,6 +97,17 @@ namespace Stamina { namespace DT {
 		enColumnFlag getFlags() {
 			return type;
 		}
+
+		void setFlag(enColumnFlag flag, bool setting) {
+			if (setting)
+				type = (enRowFlag) (type | flag);
+			else
+				type = (enRowFlag) (type & (~flag));
+		}
+		bool hasFlag(enColumnFlag flag) {
+			return (type & flag) != 0;
+		}
+
 	};
 
 	extern const Column emptyColumn;
@@ -186,6 +211,12 @@ namespace Stamina { namespace DT {
 
 		void clearRows();
 
+		tRowId getNewRowId() {
+	        _lastId++;
+			if (_lastId > rowIdMax) _lastId = rowIdMin;
+			return _lastId;
+		}
+
 
 		/** Znajduje wiersz spe³niaj¹cy podane kryteria.
 		@param startPos - numer wiersza od którego zaczynamy szukanie
@@ -207,6 +238,12 @@ namespace Stamina { namespace DT {
 			return this->findRow(startPos, 3, &f1, &f2, &f3);
 		}
 
+
+		DataRow& getRow(tRowId row) throw {
+			row = this->getRowPos(row);
+			if (row == rowNotFound) throw DTException(errNoRow);
+			return *this->_rows[row];
+		}
 
 		DataEntry get(tRowId row , tColId id) const; // zwraca wartosc w wierszu/kolumnie
 		bool set(tRowId row , int tColId , DataEntry val);
@@ -266,6 +303,11 @@ namespace Stamina { namespace DT {
 			return this->_cols;
 		}
 
+		void mergeColumns(const ColumnsDesc& columns) {
+			return this->_cols.join(columns);
+		}
+
+
 		int checkColType(tColId id , int type) {
 			return this->_cols.getColumn(id).type == type;
 		}
@@ -279,7 +321,7 @@ namespace Stamina { namespace DT {
 
 		void lock(tRowId row);
 		void unlock(tRowId row);
-		bool canaccess(tRowId row);
+		bool canAccess(tRowId row);
 
 /*
   Gdy pobierana jest wartoœæ char to...
@@ -311,7 +353,7 @@ namespace Stamina { namespace DT {
 	private:
 		tRows _rows;
 		int _size;
-		unsigned int _lastId; // ostatni identyfikator wiersza
+		tRowId _lastId; // ostatni identyfikator wiersza
 		ColumnsDesc _cols;
 		enError _error;
 		//int mode;
@@ -322,48 +364,26 @@ namespace Stamina { namespace DT {
 		bool _changed;
 
 
- };
+	};
 
 
- class FileBase {
-   public:
-   DataTable * table;
-   int opened;
-   ColumnsDesc fcols;
-   std::string fileName;
-   bool write_failed;
-//   virtual
+	class LockerDT { 
+	public:
+		inline LockerDT(DataTable* dt, tRowId row):_dt(dt), _row(row) {
+			_dt->lock(_row);
+		}
+		inline LockerDT(DataTable& dt, tRowId row):_dt(&dt), _row(row) {
+			_dt->lock(_row);
+		}
+		inline ~LockerDT() {
+			_dt->unlock(_row);
+		}
+	private:
+		DataTable* _dt;
+		tRowId _row;
+	}
 
-    FileBase();
-    FileBase(DataTable * t);
-    void assign(DataTable * t);
-    ~FileBase();
-    // Defined
-    virtual int load (const char * fn); // wgrywa caly plik
-    virtual int loadAll (const char * fn); // wgrywa caly plik , razem z deskryptorem
-    virtual int save (const char * fn); // zapisuje caly plik
-    virtual int append (const char * fn); // dopisuje elementy
 
-    // placeHolders
-    virtual int open (const char * fn , int mode) {return 0;}; // otwiera plik (fn - nazwa , ft - typ)
-    virtual close () {return 0;}; // zamyka plik
-    virtual examine() {return 0;}; // Zapisuje lokalizacje wierszy
-    virtual examinepos(int row) {return 0;}; // zapisuje lokalizacje wiersza
-    virtual int readrow(int row) {return 0;}; // wczytuje wiersz
-    virtual freerow(int row) {return 0;}; // zwalnia wiersz
-    virtual int readrows() {return 0;}; // wczytuje wiersze
-    virtual int next() {return 0;} // przesuwa sie na nastepny
-    virtual int prev() {return 0;} // przesuwa sie na poprzedni
-    // Obsluga pliku
-    virtual int fwriterow(int row) {return 0;};
-    virtual int fwritedesc() {return 0;};
-    virtual int freaddesc() {return 0;};
-    virtual int freadrow(int row) {return 0;}; // wczytuje wiersz na aktualnej pozycji do row
-    virtual int freadpartialrow(int row , int * columns) {return 0;}; // wczytuje tylko podane kolumny na aktualnej pozycji do row. Lista kolumn musi byæ zakoñczone ID 0, a d³ugoœæ listy minimum 2, lub pusty wskaŸnik
-    virtual int ffindnextrow() {return 0;}; // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
-
-    virtual int fset(int pos , int whence) {return 0;} // ustawia sie na odpowiednia pozycje ...
- };
 
 };}; // namespace'y
 

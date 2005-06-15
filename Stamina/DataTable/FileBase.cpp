@@ -14,93 +14,109 @@
 namespace Stamina { namespace DT {
 
 	FileBase::FileBase() {
-		fcols.loader = true; 
-		opened=0;
-		write_failed = false;
+		_fcols.setLoader(true);
+		_opened = false;
+		_writeFailed = false;
 	}
-	FileBase::FileBase(DataTable * t) {fcols.loader = true; opened=0;assign(t);}
-	void FileBase::assign(DataTable * t) {table=t;fcols.table=t;}
-	FileBase::~FileBase() {}
+
+	FileBase::FileBase(DataTable * table) {
+		_fcols.setLoader(true); 
+		_opened = false;
+		assign(table);
+	}
+
+	FileBase::~FileBase() {
+	}
+
+	void FileBase::assign(DataTable * table) {
+		this->_table = table;
+		//_fcols.table=t;
+	}
+
+    enResult FileBase::load (const std::string& fn, bool loadColumns) {
+		if (!fn.empty())
+			fileName = fn;
+		if (!_table) return errNotInitialized;
+		if (fileName.empty() || _access(fileName, 0))
+			return errFileNotFound;
+		_table->clearRows();
+		_fcols.clear();
+
+		try {
+			this->open(fileName , fileRead);
+			this->readDescriptor();
+			if (loadColumns) {
+				this->_table->mergeColumns(&fcols);
+			}
+			this->readRows();
+		} catch (DTException e) {
+			close();
+			return e.errorCode;
+		}
+		close();
+		return success;
+    }
 
 
-    int FileBase::load (const char * fn)
+    int FileBase::save (const std::string& fn)
     {
-      if (!fn) fn=fileName.c_str();
-       else fileName = fn;
-      table->clearrows();
-      fcols.clear();
-//      open(fn , DT_READ);
-      int r;
-      r=open(fn , DT_READ);
-      if (r) return r;
-      r=freaddesc(); if(r) return r;
-      r=readrows(); if(r) return r;
-      close();
-      return 0;
-    }
+		if (!fn.empty())
+			fileName = fn;
+		if (!_table) return errNotInitialized;
+		if (fileName.empty())
+			return errFileNotFound;
 
-    int FileBase::loadAll (const char * fn)
-    {
-      if (!fn) fn=fileName.c_str();
-       else fileName = fn;
-      table->clearrows();
-      fcols.clear();
-//      open(fn , DT_READ);
-      int r;
-      r=open(fn , DT_READ);
-      if (r) return r;
-      r=freaddesc(); if(r) return r;
-	  table->cols.join(&fcols , false);
-      r=readrows(); if(r) return r;
-      close();
-      return 0;
+		_fcols = _table->getColumns();
+		try {
+			this->open(fileName , fileWrite);
+			LockerDT lock(this, allRows);
+		    this->writeDescriptor();
+			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
+				if (_table->getRow(i).hasFlag(rflagDontSave) == false) {
+					this->writeRow(i);
+				}
+			}
+		} catch (DTException e) {
+			this->close();
+			return e.errorCode;
+		}
+		this->close();
+		return success;
     }
 
 
-    int FileBase::save (const char * fn)
-    {
-      if (!fn) fn=fileName.c_str();
-       else fileName = fn;
-      fcols = table->cols;
-      int r;
-      r=open(fn , DT_WRITE);
-      if (r) return r;
-      fwritedesc();
-      for (unsigned int i=0; i < table->getrowcount() ; i ++)
-        {if (!(table->rows[i]->flag & DT_RF_DONTSAVE)) fwriterow(i);}
-      close();
-      return 0;
-    }
-
-    int FileBase::append (const char * fn) {
-      if (!fn) fn=fileName.c_str();
-       else fileName = fn;
-      fcols.clear();
-      int r;
-      bool first = _access(fn , 0)!=0;
-      r=open(fn , DT_APPEND);
-      if (r) return r;
-      fset(0 , SEEK_SET);
-      if (first) {
-        fcols = table->cols;
-        table->lastid = DT_ROWID_MIN;
-        fwritedesc();
-      } else {
-        r=freaddesc(); if(r) return r;
-      }
-/*      close();
-      r=open(fn , DT_APPEND);*/
-      if (r) return r;
-      fset(0 , SEEK_END);
-      for (unsigned int i=0; i < table->getrowcount() ; i ++)
-        {table->lastid++;
-         if (table->lastid > DT_ROWID_MAX) table->lastid = DT_ROWID_MIN;
-         table->rows[i]->id=table->lastid;
-         fwriterow(i);}
-
-      close();
-      return 0;
-    }
+    int FileBase::append (const std::string& fn) {
+		if (!fn.empty())
+			fileName = fn;
+		if (!_table) return errNotInitialized;
+		if (fileName.empty() || _access(fileName, 0))
+			return errFileNotFound;
+		
+		_fcols.clear();
+	    
+		bool first = (_access(fn , 0) !=0); // tworzymy plik
+		try {
+			this->open(fn , fileAppend);
+			this->seekToBeginning();
+		    if (first) {
+				_fcols = _table->getColumns();
+				//_table->lastId = DT_ROWID_MIN;
+				this->writeDescriptor();
+			} else {
+				this->readDescriptor();
+			}
+			this->seekToEnd();
+			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
+				_table->getRow(i).id = _table->getNewRowId();
+				this->writeRow(i);
+			}
+		} catch (DTException e) {
+			this->close();
+			return e.errorCode;
+		}
+	    this->close();
+		return success;
+	}
 
 
 } }
