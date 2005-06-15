@@ -459,6 +459,12 @@
 				RelativePath=".\CriticalSection.h">
 			</File>
 			<File
+				RelativePath=".\DataTable.h">
+			</File>
+			<File
+				RelativePath=".\DataTableImpl.h">
+			</File>
+			<File
 				RelativePath=".\Debug.h">
 			</File>
 			<File

@@ -8,6 +8,7 @@
  *  $Id$
  */
 
-#include "stdafx.h"
-#include "Task.h"
-#include <boost\bind.hpp>
+#pragma once
+
+#include "DataTable\DataTable.h"
+#include "DataTable\FileBin.h"

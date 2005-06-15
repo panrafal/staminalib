@@ -4,6 +4,8 @@
  *  Please READ /License.txt FIRST! 
  * 
  *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ *
+ *  $Id$
  */
 
 #pragma once
@@ -105,7 +107,7 @@ namespace Stamina {
 		}
 	private:
 		/** Dopóki obiekt nie jest niszczony ma _useCount >= 1 */
-		unsigned int _useCount;
+		volatile unsigned int _useCount;
 	};
 
 
