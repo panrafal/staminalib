@@ -51,9 +51,7 @@ namespace Stamina { namespace DT {
 			rowPos = getRowPos(rowPos);
 			_rows.insert(_rows.begin() + rowPos , row);
 		}
-        if (id < 0) lastId++;
-		if (lastId > rowIdMax) lastId = rowIdMin;
-        row->id = id > 0 ? unflagId(id) : lastId;
+        row->id = id > 0 ? unflagId(id) : getNewRowId();
         return row->id;
     }
 
