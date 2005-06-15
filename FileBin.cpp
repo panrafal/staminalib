@@ -1,3 +1,11 @@
+/*
+ *  Stamina.LIB
+ *  
+ *  Please READ /License.txt FIRST! 
+ * 
+ *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ */
+
 //#include <mem.h>
 #include "dtablebin.h"
 #include <md5.h>
@@ -8,7 +16,7 @@
 
 using namespace std;
 
-void CdtFileBin::init() {
+void FileBin::init() {
             md5digest[0]=0;
 			fcols.loader = true;
             pos_dat = pos_row = flag = 0;opened=0;
@@ -21,22 +29,22 @@ void CdtFileBin::init() {
 			write_failed = false;
 
             }
-CdtFileBin::CdtFileBin() { init(); }
-CdtFileBin::CdtFileBin(CdTable * t) {init();assign(t);}
-CdtFileBin::~CdtFileBin() {close();}
-int CdtFileBin::fset(int pos , int whence) {return fseek(file , pos , whence);} // ustawia sie na odpowiednia pozycje ...
+FileBin::FileBin() { init(); }
+FileBin::FileBin(DataTable * t) {init();assign(t);}
+FileBin::~FileBin() {close();}
+int FileBin::fset(int pos , int whence) {return fseek(file , pos , whence);} // ustawia sie na odpowiednia pozycje ...
 
-    void CdtFileBin::setPass(std::string p) {
+    void FileBin::setPass(std::string p) {
 		MD5(p.c_str() , md5digest);
     }
-    bool CdtFileBin::authorize(std::string p) {
+    bool FileBin::authorize(std::string p) {
        unsigned char d [16];
 	   MD5((char*)p.c_str() , d);
        return ((dflag & DT_BIN_DFMD5) && !memcmp(md5digest , d , 16)) || 1; 
     }
 
 
-    int CdtFileBin::open (const char * fn , int mode) {
+    int FileBin::open (const char * fn , int mode) {
       close();
 	  this->write_failed = false;
       size=0;
@@ -79,7 +87,7 @@ int CdtFileBin::fset(int pos , int whence) {return fseek(file , pos , whence);} 
       this->fileName = fn;
       return 0;
     }
-    int CdtFileBin::close () {
+    int FileBin::close () {
       if (opened) {
           fwritesize();
           fclose(file);
@@ -128,7 +136,7 @@ int CdtFileBin::fset(int pos , int whence) {return fseek(file , pos , whence);} 
 
 // WRITE
 
-    int CdtFileBin::fwriterow(int row) {
+    int FileBin::fwriterow(int row) {
       row = DT_GETPOS(table , row);
       if (!opened) return 1;
       size++;
@@ -191,7 +199,7 @@ int CdtFileBin::fset(int pos , int whence) {return fseek(file , pos , whence);} 
             bsize += 4+b;
             break;
           case DT_CT_BIN: {
-              CdtctBin bin = table->getbin(row , id);
+              TypeBin bin = table->getbin(row , id);
               fwrite(&bin.size, 4, 1 , file);
               if (bin.size) fwrite(bin.buff , bin.size , 1 , file);
               bsize+=4+bin.size;
@@ -217,7 +225,7 @@ writefailed:
 	  return 2;
     }
 
-    int CdtFileBin::fwritesize() {
+    int FileBin::fwritesize() {
       if (!opened) return 1;
       if (mode & (DT_WRITE | DT_APPEND) && size != -1) {
         fseek(file , (v>'1')?11:6 , SEEK_SET);
@@ -235,7 +243,7 @@ writefailed:
 	  return 2;
     }
 
-    int CdtFileBin::fwritedesc() {
+    int FileBin::fwritedesc() {
       if (!opened) return 1;
       v = DT_BIN_VER;
       subv = DT_BIN_SUBVER;
@@ -266,7 +274,7 @@ writefailed:
 	      goto writefailed;
 
       for (i=0; i < fcols.getcolcount() ; i++) {  // Columns definitions
-        CdtColDescItem * cdi = &fcols.cols[i];
+        Column * cdi = &fcols.cols[i];
         fwrite(&cdi->id, 4, 1 , file);   //id
 		int type = cdi->type & (~DT_CF_NOSAVEFLAGS); 
         fwrite(&type, 4, 1 , file);   //type
@@ -285,7 +293,7 @@ writefailed:
 	  return 2;
     }
 
-    int CdtFileBin::fseterasedrow(bool overwrite , int testIndex) {
+    int FileBin::fseterasedrow(bool overwrite , int testIndex) {
         if (feof(file)) return 1;
         if (!opened) return 1;
         if (fgetc(file) != '\n') return 1; // wczytuje '\n'
@@ -358,7 +366,7 @@ writefailed:
 
 // READ
 
-    int CdtFileBin::freaddesc() {
+    int FileBin::freaddesc() {
       if (!opened) return 1;
       fseek(file , 0 , SEEK_SET);
       char sig [7];
@@ -419,7 +427,7 @@ writefailed:
       pos_row = ftell(file);
       return 0;
     }
-    int CdtFileBin::freadsize() {
+    int FileBin::freadsize() {
       if (!opened) return 1;
       fseek(file , (v>'1')?11:6 , SEEK_SET);
       fread(&size, 4, 1 , file);
@@ -428,14 +436,14 @@ writefailed:
     }
 
 
-    int CdtFileBin::freadpartialrow(int row , int * columns) {
+    int FileBin::freadpartialrow(int row , int * columns) {
         start:
       if (feof(file)) return 1;
       row = DT_GETPOS(table , row);
       if (!opened) return 1;
 	  size_t filesize = _filelength(file->_file);
       table->notypecheck=1;  // wylacza sprawdzanie typow ...
-      CdtRow * rowObj = table->rows[row];
+      DataRow * rowObj = table->rows[row];
       rowObj->pos = ftell(file);
       if (fgetc(file) != '\n') return 1;
       if (feof(file)) return 1;
@@ -543,7 +551,7 @@ writefailed:
 			}
             break;
           case DT_CT_BIN:{
-            CdtctBin bin;
+            TypeBin bin;
             bin.buff = 0;
             fread(&bin.size, 4, 1 , file); // wczytujemy rozmiar
 			if ((p + siz1) < ftell(file) + bin.size)
@@ -573,7 +581,7 @@ writefailed:
       return 0;
     }
 
-	int CdtFileBin::ffindnextrow() { // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
+	int FileBin::ffindnextrow() { // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
 		if (v <= '1' || feof(file))
 			return 1;
 		//size_t filesize = _filelength(file->_file);
@@ -588,7 +596,7 @@ writefailed:
 	}
 
 
-    int CdtFileBin::readrows() {
+    int FileBin::readrows() {
 //      int pos = ftell(file);
 //      freadsize();
 //      fseek(file , pos , SEEK_SET);
