@@ -1,3 +1,7 @@
+#pragma once
+#ifndef __DT_DT__
+#define __DT_DT__
+
 /*
  *  Stamina.LIB
  *  
@@ -14,9 +18,6 @@
 
 namespace Stamina { namespace DT {
 
-#define DT_READ 1
-#define DT_WRITE 2
-#define DT_APPEND 4
 
 	const unsigned int rowIdFlag = 0x40000000;
 	const unsigned int rowIdMax = 0x3FFFFFFF;
@@ -27,18 +28,23 @@ namespace Stamina { namespace DT {
 #define DT_CC_RESIZE 1
 #define DT_CC_FILL 2
 
-// RowFlags
-#define DT_RF_DONTSAVE  0x1
 
 #define DT_FT_TEXT 0
 #define DT_FT_BINARY 1
 //#define DT_FT_AUTO -1
 
 	enum enError {
+		errSuccess = 0,
+		success = 0,
 		errNoColumn = 100,
 		errNoRow = 200,
 		errBadType = 300,
+
+		errFileNotFound = 0x1000,
+		errNotInitialized = 0x1001,
+		errFileError = 0x10000000,
 	};
+	typedef enError enResult;
 
 #define DT_NOROW 0xFFFFFFFF
 
@@ -85,6 +91,19 @@ namespace Stamina { namespace DT {
 	inline enColumnType operator | (const enColumnType & a, const enColumnFlag & b) {
 		return (enColumnType) ((int)a | (int)b); 
 	}
+	inline enColumnFlag operator | (const enColumnFlag & a, const enColumnFlag & b) {
+		return (enColumnFlag) ((int)a | (int)b); 
+	}
+
+	enum enRowFlag {
+		rflagNone = 0,
+		rflagDontSave = 1,
+	};
+
+// RowFlags
+#define DT_RF_DONTSAVE  Stamina::DT::rflagDontSave
+
+
 
 	typedef unsigned int tColId;
 	typedef enColumnType tColType;
@@ -172,6 +191,12 @@ namespace Stamina { namespace DT {
 	};
 
 
+	class DTException: public Stamina::Exception {
+	public:
+		DTException(enError errorCode):errorCode(errorCode) {
+		}
+		enError errorCode;
+	};
 
 
 

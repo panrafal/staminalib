@@ -1,5 +1,6 @@
-#ifndef __DTFILEBIN__
-#define __DTFILEBIN__
+#pragma once
+#ifndef __DT_FILEBIN__
+#define __DT_FILEBIN__
 
 /*
  *  Stamina.LIB
@@ -10,6 +11,8 @@
  *
  *  $Id$
  */
+
+namespace Stamina { namespace DT {
 
 
 //#include <mem.h>
@@ -74,6 +77,15 @@ class FileBin : public FileBase {
 	int freadrow(int row) {return freadpartialrow(row , 0);} // wczytuje wiersz na aktualnej pozycji do row
 	int freadpartialrow(int row , int * columns);
 	int ffindnextrow(); // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
+
+		enum enPositionOrigin {
+			fromCurrent = SEEK_CUR,
+			fromEnd = SEEK_END,
+			fromBeginning = SEEK_SET
+		}
+		virtual int setFilePosition(int pos , enPositionOrigin origin)=0;
+
+
     int fset(int pos , int whence); // ustawia sie na odpowiednia pozycje ...
 private:
     bool _using_temp;
@@ -81,5 +93,6 @@ private:
     CStdString _temp_filename; // Podczas uzywania tempa plik z ... tempem :)
  };
 
+} }
 
 #endif
