@@ -5,5 +5,5 @@
  * 
  *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id $
+ *  $Id$
  */
