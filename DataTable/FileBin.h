@@ -1,6 +1,17 @@
 #ifndef __DTFILEBIN__
 #define __DTFILEBIN__
 
+/*
+ *  Stamina.LIB
+ *  
+ *  Please READ /License.txt FIRST! 
+ * 
+ *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ *
+ *  $Id $
+ */
+
+
 //#include <mem.h>
 #include "DataTable.h"
 #define DT_BIN_ROW_SEP = '\n'

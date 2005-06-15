@@ -109,6 +109,9 @@
 				RelativePath=".\DataTable.cpp">
 			</File>
 			<File
+				RelativePath=".\FileBase.cpp">
+			</File>
+			<File
 				RelativePath=".\FileBin.cpp">
 			</File>
 			<File
