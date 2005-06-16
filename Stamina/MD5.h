@@ -33,6 +33,10 @@ namespace Stamina {
 			calculate(string);
 		}
 
+		inline MD5Digest(const std::string& string) {
+			calculate(string);
+		}
+
 		inline MD5Digest(const MD5Digest& b) {
 			memcpy(_digest, b._digest, 16);
 		}

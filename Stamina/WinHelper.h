@@ -109,6 +109,13 @@ namespace Stamina {
 
 #ifdef _STRING_
 	std::string expandEnvironmentStrings(const char * src, unsigned int size=300);
+	inline std::string getFullPathName(LPCTSTR filename) {
+		TCHAR buffer [MAX_PATH + 1];
+		if (GetFullPathName(filename, MAX_PATH, buffer, 0))
+			return buffer;
+		else
+			return "";
+	}
 #endif
 
 	inline void runAPCqueue() {

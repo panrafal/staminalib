@@ -1,0 +1,349 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>Untitled Document</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<style type="text/css"> <!-- body {font-family:Tahoma; font-size:11px;}
+	.byte { background-color: #CCCCCC; border-bottom:1px solid #000000; border-left-width: 1px; border-left-style: solid; border-left-color: #000000; font-family: Tahoma; font-size: 9px; padding-left:2px; }
+	.cell { background-color: #E4E4E4; border-right-width: 1px; border-right-style: solid; border-right-color: #CCCCCC; font-family: Tahoma; font-size: 10px; font-style: normal; font-weight: bold; text-align:center; }
+	.startcell { background-color: #E4E4E4; border-right-width: 1px; border-right-style: solid; border-right-color: #CCCCCC; border-left-width: 1px; border-left-style: solid; border-left-color: #666666; font-family: Tahoma; font-size: 10px; font-style: normal; font-weight: bold; text-align:center; }
+	.nfo { font-family: Tahoma; font-size: 10px; background-color: #EFEFEF; border-top-width: 1px; border-top-style: solid; border-top-color: #999999; padding-left: 5px; }
+	--></style>
+	</head>
+	<body>
+		<h1>DTABLE 3.5</h1>
+		<p>©2002,2003,2004,2005 hao | <a href="http://www.stamina.eu.org">http://www.stamina.eu.org</a></p>
+		<hr>
+		<h2>Info</h2>
+		<p>DTable stands for Data Table and it's library which reads and writes data into 
+			defined table. Simple?<br>
+			The Lib stores data in memory as table, from where we can access data by 
+			providing the column identifier and row position (or identifier). Application 
+			have to&nbsp;provide a "Column Descriptor", which is then stored in a file. If 
+			file's Descriptor is older than application's one, then DTable uses default 
+			values for missing columns. Every version is backward compatible, so it's 
+			really safe to upgrade DTable lib, and Columns Descriptors, and that was the 
+			main goal of that project.</p>
+		<p>DTable can use several Table-&gt;File-&gt;Table interfaces, but now there's only 
+			.dtb generator (Binaries).</p>
+		<h2>Data specification for DATATABLE.BIN (*.dtb)</h2>
+		<H3>DTBIN 3.5</H3>
+		<P><b>Changes:</b></P>
+		<UL>
+			<LI>
+				New database fields - Parameters (key-value pairs), Creation time (64bit), 
+				Modification time, Last backup time</LI>
+			<LI>
+				New authentication scheme - Password digest is created with "salt". Password is 
+				strictly connected with XOR mask used&nbsp;in crypting. This way without proper 
+				password one can't read XOR protected data.</LI>
+			<LI>
+				XOR masking&nbsp;functions&nbsp;altered</LI></UL>
+		<H3>DTBIN 3.2</H3>
+		<p><strong>Changes:</strong> Optional column names and DATA section for each 
+			column.</p>
+		<p><strong>Header and Data</strong></p>
+		<table border="0" cellpadding="1" cellspacing="0">
+			<tr>
+				<td height="10" colspan="6" class="byte">0</td>
+				<td height="10" class="byte">6</td>
+				<td height="10" colspan="4" class="byte">7</td>
+				<td height="10" colspan="4" class="byte">11</td>
+				<td height="10" colspan="4" class="byte">15</td>
+				<td width="25" height="10" class="byte">19</td>
+				<td height="10" colspan="4" class="byte">&nbsp;</td>
+				<td width="44" height="10" class="byte">&nbsp;</td>
+				<td width="78" height="10" class="byte">&nbsp;</td>
+			</tr>
+			<tr>
+				<td width="20" class="startcell">D</td>
+				<td width="20" class="cell">T</td>
+				<td width="20" class="cell">B</td>
+				<td width="20" class="cell">I</td>
+				<td width="20" class="cell">N</td>
+				<td width="20" class="cell">3</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="40" class="startcell">.........</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="44" class="startcell">.......</td>
+				<td width="78" class="startcell">.......</td>
+			</tr>
+			<tr>
+				<td colspan="6" class="nfo">Signature</td>
+				<td class="nfo">SubV</td>
+				<td colspan="4" class="nfo">Flags</td>
+				<td colspan="4" class="nfo">Row Count</td>
+				<td colspan="4" class="nfo">DATA Size</td>
+				<td class="nfo"><strong><a href="#data">DATA</a></strong></td>
+				<td colspan="4" class="nfo">Columns Count</td>
+				<td class="nfo"><strong><a href="#cols">COLS</a></strong></td>
+				<td class="nfo"><strong><a href="#rows">ROWS</a></strong></td>
+			</tr>
+		</table>
+		<p><strong>COLS<a name="cols"></a></strong></p>
+		<p>Every column is stored in this descriptor.</p>
+		<table border="0" cellpadding="1" cellspacing="0">
+			<tr>
+				<td height="10" colspan="4" class="byte">0</td>
+				<td height="10" colspan="4" class="byte">4</td>
+				<td height="10" class="byte">8</td>
+				<td height="10" class="byte">9</td>
+				<td height="10" colspan="4" class="byte">&nbsp;</td>
+				<td height="10" class="byte">&nbsp;</td>
+			</tr>
+			<tr>
+				<td width="22" class="startcell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="22" class="startcell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="21" class="startcell">#</td>
+				<td width="51" class="startcell">........</td>
+				<td width="22" class="startcell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="21" class="cell">#</td>
+				<td width="62" class="startcell">........</td>
+			</tr>
+			<tr>
+				<td colspan="4" class="nfo">Column ID</td>
+				<td colspan="4" class="nfo">Type</td>
+				<td class="nfo">L</td>
+				<td class="nfo">TextualID</td>
+				<td colspan="4" class="nfo">DATA Size</td>
+				<td class="nfo"><strong><a href="#data">DATA</a></strong></td>
+			</tr>
+		</table>
+		<p><strong>L<a name="cell_l"></a></strong>- length of Textual ID</p>
+		<p>
+			<strong>ROWS</strong><a name="rows"></a>:<br>
+		</p>
+		<table border="0" cellpadding="1" cellspacing="0">
+			<tr>
+				<td height="10" class="byte">0</td>
+				<td height="10" colspan="4" class="byte">1</td>
+				<td height="10" colspan="4" class="byte">5</td>
+				<td height="10" colspan="4" class="byte">9</td>
+				<td height="10" class="byte">&nbsp;</td>
+				<td height="10" class="byte">&nbsp;</td>
+				<td height="10" colspan="4" class="byte">&nbsp;</td>
+			</tr>
+			<tr>
+				<td width="20" class="startcell">'\n'</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="startcell">3</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="50" class="startcell">........</td>
+				<td width="150" class="startcell">.... x ColCount</td>
+				<td width="20" class="startcell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+				<td width="20" class="cell">#</td>
+			</tr>
+			<tr>
+				<td class="nfo">&nbsp;</td>
+				<td colspan="4" class="nfo">Row Size</td>
+				<td colspan="4" class="nfo">Flag</td>
+				<td colspan="4" class="nfo">DATA size</td>
+				<td class="nfo"><strong><a href="#data">DATA</a></strong></td>
+				<td class="nfo"><a href="#cell_data">Cells data</a></td>
+				<td colspan="4" class="nfo">Row Size</td>
+			</tr>
+		</table>
+		<p><strong>RowSize</strong> = sizeof(CELLDATA)+sizeof(DATA)+ 8 /*flag+DATAsize*/
+		</p>
+		<p>To ensure that everything is written properly DTableBin checks whether Sizes (on 
+			start and end) and special characters (\n at start and \t between cells) 
+			match,...<br>
+			If Flag is equal -1 (0xFFFFFFFF) it means that the whole row was erased and we 
+			have to jump Size bytes from current position (starting from DATA size's 
+			position)
+			<br>
+			<br>
+			<strong>CELL DATA<a name="cell_data"></a></strong></p>
+		<p>Cell's data storage depends on cell's column type. In example Integer is stored 
+			as 4 bytes, while String is 4 byte length followed by length*bytes.<br>
+			Every cell is followed by one byte - the tab character.</p>
+		<p>
+			<strong>DATA</strong><a name="data"></a>:</p>
+		<p>There are 3 DATA sections, and each (if DataSize&gt;0) contains 4 byte flag, 
+			which describes what kind of data is stored.<br>
+			Hex value of bit that must be set in flag to allow this data to exist is 
+			written in headers of following tables.</p>
+		<blockquote>
+			<p><strong>HEADER_DATA</strong></p>
+			<table border="0" cellpadding="1" cellspacing="0">
+				<tr>
+					<td height="10" colspan="4" class="byte">&nbsp;</td>
+					<td colspan="4" class="byte">0x01</td>
+					<td colspan="8" class="byte">0x02</td>
+					<td height="10" colspan="4" class="byte">0x04</td>
+					<td height="10" colspan="1" class="byte">0x08</td>
+					<td height="10" colspan="4" class="byte">0x10</td>
+					<td height="10" colspan="4" class="byte">0x20</td>
+					<td height="10" colspan="4" class="byte">0x40</td>
+					<td height="10" colspan="4" class="byte">0x80</td>
+					<td height="10" colspan="4" class="byte">0x100</td>
+				</tr>
+				<tr>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="startcell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="startcell">####....</td>
+					<td width="20" class="startcell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="startcell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="startcell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="cell">##</td>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+				</tr>
+				<tr>
+					<td colspan="4" class="nfo">Flag</td>
+					<td colspan="4" class="nfo">Last row ID</td>
+					<td colspan="8" class="nfo">MD5 pass Digest (16 Bytes)</td>
+					<td colspan="4" class="nfo">DataBase ID</td>
+					<td colspan="1" class="nfo"><a href="#params">Params data</a></td>
+					<td colspan="4" class="nfo">Create time</td>
+					<td colspan="4" class="nfo">Modify time</td>
+					<td colspan="4" class="nfo">Last backup time</td>
+					<td colspan="4" class="nfo">Pass salt</td>
+					<td colspan="4" class="nfo">XOR mask salt</td>
+				</tr>
+			</table>
+		</blockquote><blockquote>
+			<p><strong>ROW_DATA</strong></p>
+			<table border="0" cellpadding="1" cellspacing="0">
+				<tr>
+					<td height="10" colspan="4" class="byte">&nbsp;</td>
+					<td height="10" colspan="4" class="byte">0x01</td>
+				</tr>
+				<tr>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+				</tr>
+				<tr>
+					<td colspan="4" class="nfo">Flag</td>
+					<td colspan="4" class="nfo">row ID</td>
+				</tr>
+			</table>
+			<p><strong>COL_DATA</strong></p>
+			<table border="0" cellpadding="1" cellspacing="0">
+				<tr>
+					<td height="10" colspan="4" class="byte">&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+				</tr>
+				<tr>
+					<td colspan="4" class="nfo">Flag</td>
+				</tr>
+			</table>
+			<P></P>
+		</blockquote><blockquote>
+			<p><strong>Params data</strong></p>
+			<table border="0" cellpadding="1" cellspacing="0" ID="Table1">
+				<tr>
+					<td height="10" colspan="4" class="byte">0</td>
+					<td colspan="4" class="byte">offset</td>
+					<td colspan="1" class="byte">+4</td>
+					<td height="4" colspan="4" class="byte">+offset</td>
+					<td height="1" colspan="1" class="byte">+4</td>
+				</tr>
+				<tr>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="100" class="startcell">.....</td>
+					<td width="20" class="startcell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="20" class="cell">#</td>
+					<td width="100" class="startcell">.....</td>
+				</tr>
+				<tr>
+					<td colspan="4" class="nfo">Param count</td>
+					<td colspan="4" class="nfo">Key length</td>
+					<td colspan="1" class="nfo">Key string</td>
+					<td colspan="4" class="nfo">Value length</td>
+					<td colspan="1" class="nfo">Value string</td>
+				</tr>
+				<tr>
+					<td colspan="4" class="nfo">&nbsp;</td>
+					<td colspan="10" class="nfo">x Param count</td>
+				</tr>
+			</table>
+		</blockquote>
+	</body>
+</html>

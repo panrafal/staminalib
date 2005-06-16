@@ -27,7 +27,7 @@ namespace Stamina { namespace DT {
 		_loader=false;
 	}
 
-    ColumnsDesc::operator = (ColumnsDesc & x) {
+    ColumnsDesc::operator = (const ColumnsDesc & x) {
 		_cols.resize(x._cols.size());
 		for (unsigned int i=0; i<x._cols.size();i++)
 			_cols[i]=x._cols[i];

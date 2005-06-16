@@ -289,7 +289,7 @@ namespace Stamina { namespace DT {
 
 
 
-	bool DataTable::getValue(tRowId row , tColId col , Value& value) {
+	bool DataTable::getValue(tRowId row , tColId col , Value& value) const {
 		LockerCS lock(_cs);
 		row = getRowPos(row);
 		if (value->type == ctypeString && value->vChar)

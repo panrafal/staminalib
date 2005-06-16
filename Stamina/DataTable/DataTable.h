@@ -15,10 +15,15 @@
 
 
 #include <vector>
+#include <map>
 #include <Stdstring.h>
 #include <Stamina\CriticalSection.h>
+#include <Stamina\MD5.h>
+#include <Stamina\Time64.h>
 
 #include "DT.h"
+#include "DataRow.h"
+#include "Column.h"
 
 #define DT_SETBLANKSBYTYPE
 #define DT_CHECKTYPE
@@ -26,147 +31,21 @@
 
 namespace Stamina { namespace DT {
 
-
-
-	typedef void* DataEntry;
-
-	class DataRow {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
-	public:
-		int allocData();
-		int freeData();
-		const DataEntry get (tColId id); // Pobiera wartosc kolumny
-		int set (tColId id , DataEntry val); // ustawia wartosc kolumny
-
-		const DataEntry getByIndex (int index); // Pobiera wartosc kolumny
-
-		DataRow (const DataRow & v);
-
-		DataRow (DataTable* t, char allocate=1);
-		~DataRow ();
-
-		inline void lock() {
-			_cs.lock();
-		}
-		inline void unlock() {
-			_cs.unlock();
-		}
-		inline bool canAccess() {
-			_cs.canAccess();
-		}
-
-		inline CriticalSection& getCS() {
-			return _cs;
-		}
-	
-		enRowFlag getFlags() {
-			return _flag;
-		}
-		void setFlag(enRowFlag flag, bool setting) {
-			if (setting)
-				_flag = (enRowFlag) (_flag | flag);
-			else
-				_flag = (enRowFlag) (_flag & (~flag));
-		}
-		bool hasFlag(enRowFlag flag) {
-			return (_flag & flag) != 0;
-		}
-
-
-	private:
-		class DataTable * _table; ///< Parent table
-		int _size;  ///< Data slots count
-		DataEntry * _data; ///< Data slots
-		//unsigned int _pos;
-		//int _index;
-		tRowId _id;    // identyfikator wiersza
-		enRowFlag _flag;
-		CriticalSection_blank _cs; // blokada
-	};
-
-	struct Column {
-		enColumnFlag type;
-		tColId id;
-		DataEntry def; // default
-		std::string name;  // tekstowy identyfikator
-
-		Column();
-
-		enColumnType getType() {
-			return (enColumnType) (type & ctypeMask);
-		}
-		enColumnFlag getFlags() {
-			return type;
-		}
-
-		void setFlag(enColumnFlag flag, bool setting) {
-			if (setting)
-				type = (enRowFlag) (type | flag);
-			else
-				type = (enRowFlag) (type & (~flag));
-		}
-		bool hasFlag(enColumnFlag flag) {
-			return (type & flag) != 0;
-		}
-
-	};
-
-	extern const Column emptyColumn;
-
-	class ColumnsDesc {  // Opis typow kolumn
-	public:
-		typedef std::vector<Column> tColumns;
-	public:
-		ColumnsDesc ();
-		operator = (ColumnsDesc & x);
-
-		int setColCount (int count, bool expand = false); // ustawia ilosc kolumn
-		tColId setCol (tColId id , enColumnFlag type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
-		tColId setUniqueCol (const char * name , enColumnFlag type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
-
-		inline int getColCount () const {
-			return _cols.size();
-		}
-		inline int size() const {
-			return _cols.size();
-		}
-
-		const Column& getColumnByIndex(int index) const;
-		const Column& getColumn(tColId id) const {
-			return getColumnByIndex(colIndex(id));
-		}
-
-		int colIndex (tColId id) const; // zwraca index kolumny
-
-		void clear() {
-			_cols.clear();
-		}
-
-		void optimize();
-		int join(const ColumnsDesc& other , bool overwrite); // ³¹czy dwa deskryptory, zwraca liczbê do³¹czonych
-
-		int getNewUniqueId(void);
-		int getNameId(const char * name) const;
-
-		bool isLoader() {
-			return _loader;
-		}
-		void setLoader(bool loader) {
-			_loader = loader;
-		}
-
-	protected:
-		tColumns _cols;
-		bool _loader;
-		//void * table;
-		//int _deftype;
-	};
-
-
+	const char* const paramComment = "Comment";
+	const char* const paramName = "Name";
+	const char* const paramOriginalFile = "OriginalFile";
+	const char* const paramOwner = "Owner";
+	const char* const paramAgent = "Agent";
 
 
 	class DataTable {
 	public:
 		typedef std::vector <DataRow *> tRows;
+		typedef std::map <std::string, std::string> tParams;
+
+
+		friend class FileBase;
+		friend class FileBin;
 
 	public:
 		DataTable ();
@@ -176,27 +55,27 @@ namespace Stamina { namespace DT {
 		tRowId DataTable::getRowId(unsigned int row) const {
 			if (isRowId(row)) return row;
 			if (row >= this->getRowCount()) return -1;
-			return flagId(_rows[row]->id);
+			return flagId(_rows[row]->getId());
 		}
 		tRowId DataTable::getRowPos(tRowId row) const {
 			if (!isRowId(row)) return row;
 			row = unflagId(row);
 			for (unsigned int i=0; i < _rows.size(); i++)
-				if (_rows[i]->id == row) return i;
+				if (_rows[i]->getId() == row) return i;
 			return -1;
 		}
 
 		inline static bool isRowId(unsigned int val) {
-			return ((row)!=0xFFFFFFFF)&&((row) & DT::rowIdMask) != 0;
+			return ((val)!=0xFFFFFFFF)&&((val) & DT::rowIdFlag) != 0;
 		}
 
 		/** Adds flag to the row Id */
 		inline static tRowId flagId(tRowId row) {
-			return (tRowId)((row) | DT::rowIdMask);
+			return (tRowId)((row) | DT::rowIdFlag);
 		}
 		/** Removes flag from the row Id */
 		inline static tRowId unflagId(tRowId row) {
-			return (tRowId)( row&(~DT::rowIdMask) );
+			return (tRowId)( row&(~DT::rowIdFlag) );
 		}
 
 		tRowId addRow(tRowId id = rowNotFound); // Dodaje wiersz , mozna podac ID
@@ -239,7 +118,7 @@ namespace Stamina { namespace DT {
 		}
 
 
-		DataRow& getRow(tRowId row) throw {
+		DataRow& getRow(tRowId row) throw(...) {
 			row = this->getRowPos(row);
 			if (row == rowNotFound) throw DTException(errNoRow);
 			return *this->_rows[row];
@@ -252,7 +131,7 @@ namespace Stamina { namespace DT {
 		// inne
 		inline int getInt(tRowId row , tColId id) const {
 			Value v = Value(ctypeInt);
-			this->getValue(row, id, &v);
+			this->getValue(row, id, v);
 			return v.vInt;
 		}
 		inline int setInt(tRowId row , tColId id , int val) {
@@ -260,7 +139,7 @@ namespace Stamina { namespace DT {
 		}
 		inline const char * getCh(tRowId row , tColId id) const {
 			Value v = Value(ctypeString);
-			this->getValue(row, id, &v);
+			this->getValue(row, id, v);
 			return v.vChar;
 		}
 		inline int setCh(tRowId row , tColId id , const char * val) {
@@ -269,7 +148,7 @@ namespace Stamina { namespace DT {
 
 		inline TypeBin getbin(tRowId row , tColId id) const {
 			Value v = Value(ctypeBin);
-			this->getValue(row, id, &v);
+			this->getValue(row, id, v);
 			return v.vBin;
 		}
 		inline int setBin(tRowId row , tColId id , void * val , size_t size) {
@@ -281,7 +160,7 @@ namespace Stamina { namespace DT {
 
 		inline __int64 get64(tRowId row , tColId id) const {
 			Value v = Value(ctypeInt64);
-			this->getValue(row, id, &v);
+			this->getValue(row, id, v);
 			return v.vInt64;
 		}
 		inline int set64(tRowId row , tColId id , __int64 val) {
@@ -290,7 +169,7 @@ namespace Stamina { namespace DT {
 
 		inline std::string getStr(tRowId row , tColId id) const {
 			Value v = ValueStr(0, -1); // this way we will get string duplicate
-			this->getValue(row, id, &v);
+			this->getValue(row, id, v);
 			std::string s = v.vChar;
 			free(v.vChar);
 			return s;
@@ -304,7 +183,7 @@ namespace Stamina { namespace DT {
 		}
 
 		void mergeColumns(const ColumnsDesc& columns) {
-			return this->_cols.join(columns);
+			this->_cols.join(columns, false);
 		}
 
 
@@ -330,7 +209,7 @@ namespace Stamina { namespace DT {
 	vChar = * buffSize = 0   - zwracana jest aktualna wartoœæ, a w przypadku liczb u¿ywany jest podany wskaŸnik
 	vChar = * buffSize = #   - wartoœæ jest kopiowana do *
 */
-		bool getValue(tRowId row , tColId col , Value& value);
+		bool getValue(tRowId row , tColId col , Value& value) const;
 		
 		/** Sets the value using conversion.
 		*/
@@ -340,15 +219,56 @@ namespace Stamina { namespace DT {
 			_error = error;
 		}
 		inline void resetError() {
-			_error = 0;
+			_error = errSuccess;
 		}
 		inline int getError() {
 		}
 
-		inline setOldXorKey(const char* key) {
+		inline void setOldXorKey(char* key) {
 			_cxor_key = key;
 		}
+		inline const char* getOldXorKey() {
+			return _cxor_key;
+		}
 
+		static MD5Digest createPasswordDigest(const std::string& pass) {
+			return MD5Digest(pass);
+		}
+
+		/**Generates password digest*/
+		void setPassword(const std::string& pass) {
+			_passwordDigest = createPasswordDigest(pass);
+		}
+
+		/**Sets password digest*/
+		void setPasswordDigest(const MD5Digest& digest) {
+			this->_passwordDigest = digest;
+		}
+
+		const MD5Digest& getPasswordDigest() {
+			return this->_passwordDigest;
+		}
+
+		inline bool paramExists(const std::string& name) {
+			return _params.find(name) != _params.end();
+		}
+
+		inline CStdString getParam(const std::string& name) {
+			if (!paramExists(name)) return "";
+			return _params[name];
+		}
+
+		inline const void setParam(const std::string& name, const std::string& value) {
+			_params[name] = value;
+		}
+
+		inline void resetParams() {
+			_params.clear();
+		}
+
+		const tParams getParamsMap() {
+			return _params;
+		}
 
 	private:
 		tRows _rows;
@@ -359,10 +279,18 @@ namespace Stamina { namespace DT {
 		//int mode;
 		//int notypecheck;
 		char * _cxor_key;
+		MD5Digest _passwordDigest;
 		//unsigned int dbID; // Identyfikator bazy
-		cCriticalSection _cs; // mechanizm blokuj¹cy
+		CriticalSection _cs; // mechanizm blokuj¹cy
 		bool _changed;
 
+		Time64 _timeCreated;
+		Time64 _timeModified;
+		Time64 _timeLastBackup;
+	
+		/**Additional parameters*/
+		tParams _params;
+		
 
 	};
 
@@ -381,11 +309,11 @@ namespace Stamina { namespace DT {
 	private:
 		DataTable* _dt;
 		tRowId _row;
-	}
+	};
 
 
 
-};}; // namespace'y
+} }  // namespace'y
 
 #endif
 

@@ -135,6 +135,12 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath=".\Column.h">
+			</File>
+			<File
+				RelativePath=".\DataRow.h">
+			</File>
+			<File
 				RelativePath=".\DataTable.h">
 			</File>
 			<File
@@ -155,6 +161,10 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
 		</Filter>
+		<File
+			RelativePath=".\dtable.htm"
+			DeploymentContent="TRUE">
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

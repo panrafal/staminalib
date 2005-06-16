@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __DT_FILEBIN__
-#define __DT_FILEBIN__
+#ifndef __DT_FILEBASE__
+#define __DT_FILEBASE__
 
 /*
  *  Stamina.LIB
@@ -18,6 +18,7 @@
 namespace Stamina { namespace DT {
 
 	enum enFileMode {
+		fileClosed = 0,
 		fileRead = 1,
 		fileWrite = 2,
 		fileAppend = 4,
@@ -33,7 +34,12 @@ namespace Stamina { namespace DT {
 		~FileBase();
 
 		/**Assigns a table to this file handler*/
-		void assign(DataTable * table);
+		virtual void assign(DataTable * table);
+
+		/**Resets internal data.
+		Should be always before save when using the same File object for loading & saving.
+		*/
+		virtual void reset();
 
 		inline bool isWriteFailed() {
 			return _writeFailed;
@@ -62,7 +68,7 @@ namespace Stamina { namespace DT {
 		// placeHolders
 
 		/**Opens file in specified mode*/
-		virtual void open (const std::string& fn , enFileMode mode)=0 throw;
+		virtual void open (const std::string& fn , enFileMode mode) throw (...) = 0;
 		virtual void close ()=0; // zamyka plik
 		//virtual examine() {return 0;}; // Zapisuje lokalizacje wierszy
 		//virtual examinePos(tRowId row) {return 0;}; // zapisuje lokalizacje wiersza
@@ -70,7 +76,7 @@ namespace Stamina { namespace DT {
 		//virtual freeRow(int row)=0; // zwalnia wiersz
 
 		/**Reads all rows from file*/
-		virtual void readRows()=0 throw; // wczytuje wiersze
+		virtual void readRows() throw (...) =0; // wczytuje wiersze
 
 		//virtual int next() {return 0;} // przesuwa sie na nastepny
 		//virtual int prev() {return 0;} // przesuwa sie na poprzedni
@@ -80,21 +86,25 @@ namespace Stamina { namespace DT {
 		/**Reads row from current position in file and stores it under @a row
 		If there's nothing to read returns false instead of throwing exception.
 		*/
-		virtual bool readRow(int row)=0 throw; // wczytuje wiersz na aktualnej pozycji do row
+		virtual bool readRow(int row) throw (...) =0; // wczytuje wiersz na aktualnej pozycji do row
 
 		/**Stores data under @a row into current position in file*/
-		virtual void writeRow(int row)=0 throw;
+		virtual void writeRow(int row) throw (...) =0;
 
 		/**Stores column descriptor*/
-		virtual void writeDescriptor()=0 throw;
+		virtual void writeDescriptor() throw (...) =0;
 
 		/**Reads column descriptor*/
-		virtual void readDescriptor()=0 throw;
+		virtual void readDescriptor() throw (...) =0;
+
+
+		virtual void writeHeader() throw (...) =0;
+		virtual void readHeader() throw (...) =0;
 
 		/**Reads only specified rows from current position in file and stores them under @a row.
 		@param columns - null terminated list of columns
 		*/
-		virtual bool readPartialRow(int row , int * columns)=0 throw;
+		virtual bool readPartialRow(int row , int * columns) throw (...) =0;
 
 		/**Goes to next row in file*/
 		virtual bool findNextRow()=0; // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
@@ -103,16 +113,40 @@ namespace Stamina { namespace DT {
 		virtual void seekToBeginning()=0;
 		virtual void seekToEnd()=0;
 
+		virtual enFileMode getFileMode() {
+			return _opened;
+		}
+
+		virtual bool isOpened() {
+			return getFileMode() != fileClosed;
+		}
+
+		/**Checks table's password digest with file's one*/
+		virtual bool isAuthenticated() {
+			return true;
+		}
+
+		/**Runs whole authentication procedure. Should be called after loading descriptor*/
+		virtual void authenticate() throw (...) {
+			if (!this->isAuthenticated()) throw DTException(errNotAuthenticated);
+		}
+
 
 	protected:
 		DataTable * _table;
-		bool _opened;
+		enFileMode _opened;
+		bool _headerLoaded;
 		ColumnsDesc _fcols;
 		std::string _fileName;
 		bool _writeFailed;
 
 	};
 
+	class DTFileException: public DTException {
+		DTFileException():DTException((enError)(errFileError | errno)) {
+		
+		}
+	};
 
 } }
 
