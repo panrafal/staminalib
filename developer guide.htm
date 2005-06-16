@@ -1,0 +1,85 @@
+<HTML>
+	<HEAD>
+		<TITLE></TITLE>
+		<META NAME="GENERATOR" Content="Microsoft Visual Studio .NET 7.1">
+	</HEAD>
+	<BODY>
+		<H1>Stamina.lib - Developer guide</H1>
+		<PRE><FONT size=2>$Id: $</FONT></PRE>
+		<H2>Nazewnictwo</H2>
+		<UL>
+			<LI>
+				nazwy wielocz³onowe zapisujemy ma³ymi literami z ka¿dym cz³onem zaczynaj¹cym 
+				siê z du¿ej (np. doSomethingClever)</LI>
+			<LI>
+				dla podkreœlenia istnienia pewnej równorzêdnej grupy mo¿emy u¿yæ znaku '_' (np. 
+				doSomething_clever, doSomething_stupid)</LI></UL>
+		<H2>Klasy/Struktury</H2>
+		<UL>
+			<LI>
+				Nazwy klas piszemy zawsze&nbsp;Wielk¹ liter¹ (np. Object) nie licz¹c 
+				ewentualnych przedrostków</LI>
+			<LI>
+				Zmienne publiczne, oraz sta³e piszemy z ma³ej litery</LI>
+			<LI>
+				Zmienne prywatne i chronione piszemy z ma³ej i poprzedzamy je znakiem '_' (np. <EM>this-&gt;<STRONG>_</STRONG>items</EM>)</LI>
+			<LI>
+				Ró¿ne implementacje klas ogólnych mo¿emy wyró¿niæ dodaj¹c znak '_'&nbsp;przed 
+				nazw¹ implementacji. (np. klasa ogólna <EM>MenuItem</EM>, oraz implementacja <EM>MenuItem<STRONG>_W32</STRONG></EM></LI>
+			<LI>
+				Nazwy interfejsów poprzedzamy liter¹ 'i' (np. <EM><STRONG>i</STRONG>Object</EM>)</LI>
+			<LI>
+				Nazwy "inteligentnych" wskaŸników do obiektów poprzedzamy liter¹ 'o' (np. <EM><STRONG>o</STRONG>Object</EM>)</LI>
+			<LI>
+				Powtarzamy s³owo kluczowe public:/private:/protected: dla ka¿dej grupy funkcji, 
+				lub zmiennych</LI>
+			<LI>
+				Definicjê klasy konstruujemy w kolejnoœci:</LI>
+			<UL>
+				<LI>
+					Publiczne definicje typów</LI>
+				<LI>
+					Publiczne sta³e</LI>
+				<LI>
+					Publiczne funkcje</LI>
+				<LI>
+					Publiczne zmienne</LI>
+				<LI>
+					Prywatne definicje</LI>
+				<LI>
+					Prywatne funkcje</LI>
+				<LI>
+					Prywatne zmienne</LI></UL>
+			<LI>
+			</LI>
+		</UL>
+		<H2>Przestrzenie nazw</H2>
+		<UL>
+			<LI>
+				Nazwy przestrzeni&nbsp;zawsze z du¿ej litery</LI>
+			<LI>
+				Wszystko powinno byæ przynajmniej w przestrzeni nazw Stamina</LI></UL>
+		<H2>Enumeracje</H2>
+		<UL>
+			<LI>
+				Nazwa z du¿ej litery. Dla czytelnoœci&nbsp;dodajemy&nbsp;przedrostek 'en' (np. 
+				enResultType)</LI>
+			<LI>
+				Elementy enumeracji z ma³ej litery. Wszystkie powinny&nbsp;mieæ ten sam 
+				przedrostek kojarzony z dan¹ enumeracj¹ (np. resultSuccess, resultError)</LI></UL>
+		<H2>Pozosta³e typy</H2>
+		<UL>
+			<LI>
+				Wszystkie deklaracje typów jak zwykle z du¿ej litery</LI>
+			<LI>
+				Dla wyró¿nienia prostych definicji typów (lub aliasów w postaci typedef) mo¿emy 
+				dodaæ przedrostek 't' (np. tRowId, tColumns)</LI></UL>
+		<H2>Dokumentacja</H2>
+		<UL>
+			<LI>
+				U¿ywamy&nbsp;doxygen</LI>
+			<LI>
+				Wszystkie funkcje powinny mieæ pe³ne dokumentacje</LI></UL>
+		<P>&nbsp;</P>
+	</BODY>
+</HTML>
