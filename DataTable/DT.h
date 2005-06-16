@@ -18,6 +18,7 @@
 
 namespace Stamina { namespace DT {
 
+#include <Stamina\Exception.h>
 
 	const unsigned int rowIdFlag = 0x40000000;
 	const unsigned int rowIdMax = 0x3FFFFFFF;
@@ -42,6 +43,10 @@ namespace Stamina { namespace DT {
 
 		errFileNotFound = 0x1000,
 		errNotInitialized = 0x1001,
+		errNotAuthenticated = 0x1002,
+		errNotOpened = 0x1003,
+		errBadFormat = 0x1004,
+		errBadVersion = 0x1005,
 		errFileError = 0x10000000,
 	};
 	typedef enError enResult;
@@ -113,7 +118,7 @@ namespace Stamina { namespace DT {
 	const tRowId allRows = -1;
 	const tColId colNotFound = -1;
 	const tColId colByName = -1;
-	const tRowId rowIdMask = DT_ROWID_MASK;
+//	const tRowId rowIdFlag = DT_ROWID_MASK;
 
 	struct TypeBin {
 		int size;
@@ -196,8 +201,14 @@ namespace Stamina { namespace DT {
 		DTException(enError errorCode):errorCode(errorCode) {
 		}
 		enError errorCode;
+
+		std::string getReason() {
+			return "DTException";
+		}
 	};
 
 
 
 } }
+
+#endif

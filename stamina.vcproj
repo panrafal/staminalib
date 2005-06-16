@@ -504,6 +504,9 @@
 				RelativePath=".\iToolTipX.h">
 			</File>
 			<File
+				RelativePath=".\Lib.h">
+			</File>
+			<File
 				RelativePath=".\ListWndImpl.h">
 			</File>
 			<File
