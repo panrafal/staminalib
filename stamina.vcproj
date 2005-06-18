@@ -192,6 +192,9 @@
 				RelativePath=".\Control.cpp">
 			</File>
 			<File
+				RelativePath=".\CRC32.cpp">
+			</File>
+			<File
 				RelativePath=".\CriticalSection.cpp">
 				<FileConfiguration
 					Name="Release|Win32">
@@ -457,6 +460,9 @@
 			</File>
 			<File
 				RelativePath=".\Control.h">
+			</File>
+			<File
+				RelativePath=".\CRC32.h">
 			</File>
 			<File
 				RelativePath=".\CriticalSection.h">

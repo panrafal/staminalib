@@ -10,7 +10,8 @@
 
 #include "stdafx.h"
 #include <deque>
-
+#include <direct.h>
+#include <io.h>
 #include <stdstring.h>
 #include "Helpers.h"
 
@@ -273,6 +274,53 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 		sscanf(ip , "%u.%u.%u.%u" , &a , &b , &c , &d);
 		return ((BYTE)d << 24) | ((BYTE)c<<16) | ((BYTE)b<<8) | (BYTE)a;
 	}
+
+
+// directories --------------------------------------------------
+
+	int removeDirTree(const std::string& path) {
+		if (path.empty()) return 0;
+		WIN32_FIND_DATA fd;
+		HANDLE hFile;
+		BOOL found;
+		found = ((hFile = FindFirstFile((path + "\\*.*").c_str(), &fd))!=INVALID_HANDLE_VALUE);
+		//   int i = 0;
+		int c = 1;
+		while (found)
+		{
+			if (*fd.cFileName != '.') {
+				std::string file = path + "\\";
+				file += fd.cFileName;
+				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					c += removeDirTree(file);
+				} else {
+					unlink(file.c_str());
+					c++;
+				}
+			}
+			if (!FindNextFile(hFile , &fd)) break; 
+		}
+		FindClose(hFile);
+		_rmdir(path.c_str());
+		return c;
+	}
+
+
+	int createDirectories(const std::string& path) {
+		if (path.empty()) return 0;	
+		int c = 0;
+		if (_access(path.c_str() , 0) != 0) { // nie ma katalogu...
+			size_t slash = path.find_last_of('\\');
+			if (slash != -1) {
+				c = makeDirectories(path.substr(0, slash));
+			}
+			if (_mkdir(path.c_str())) {
+				return c + 1;
+			}
+		}
+		return c;
+	}
+
 
 
 };

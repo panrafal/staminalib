@@ -111,4 +111,17 @@ namespace Stamina {
 #endif
 
 
+// Directories
+
+	/**Removes directory with all contents.
+	@return number of deleted files/dirs
+	*/
+	int removeDirTree(const std::string& path);
+	/**Creates all missing directories on provided path.
+	@return number of created directories
+	*/
+	int createDirectories(const std::string& path);
+
+
+
 };
