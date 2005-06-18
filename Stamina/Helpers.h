@@ -113,6 +113,7 @@ namespace Stamina {
 
 // Directories
 
+#ifdef _STRING_
 	/**Removes directory with all contents.
 	@return number of deleted files/dirs
 	*/
@@ -121,7 +122,7 @@ namespace Stamina {
 	@return number of created directories
 	*/
 	int createDirectories(const std::string& path);
-
+#endif
 
 
 };

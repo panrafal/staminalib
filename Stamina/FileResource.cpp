@@ -70,7 +70,7 @@ namespace Stamina {
 
 // -----------------------------------
 
-	std::string FileVersion::VersionInfo::getString(char elements) const {
+	std::string Version::getString(char elements) const {
 		std::string s;
 		if (elements > 0 || major || minor || release || build)
 			s += inttostr(major);

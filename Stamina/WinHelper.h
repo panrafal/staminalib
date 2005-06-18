@@ -121,4 +121,14 @@ namespace Stamina {
 		while (SleepEx(0, TRUE) == WAIT_IO_COMPLETION) {}
 	}
 
+
+	inline bool processMessages(HWND hwnd) {
+		MSG msg;
+		while (PeekMessage(&msg , hwnd ,0,0,PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		return true;
+	}
+
 };
