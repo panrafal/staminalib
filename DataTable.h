@@ -93,9 +93,14 @@ namespace Stamina { namespace DT {
 		tRowId getNewRowId() {
 	        _lastId++;
 			if (_lastId > rowIdMax) _lastId = rowIdMin;
+			// Je¿eli wiersz z tym id ju¿ istnieje - szukamy nowego...
+			if (this->rowIdExists(_lastId)) return getNewRowId();
 			return _lastId;
 		}
 
+		inline bool rowIdExists(tRowId id) {
+			return this->getRowPos(id) != -1;
+		}
 
 		/** Znajduje wiersz spe³niaj¹cy podane kryteria.
 		@param startPos - numer wiersza od którego zaczynamy szukanie

@@ -84,12 +84,12 @@ namespace Stamina { namespace DT {
 	protected:
 
 		/**Reads row from current position in file and stores it under @a row
-		If there's nothing to read returns false instead of throwing exception.
+		If there's nothing to read returns false instead of throwing an exception.
 		*/
-		virtual bool readRow(int row) throw (...) =0; // wczytuje wiersz na aktualnej pozycji do row
+		virtual enResult readRow(tRowId row) throw (...) =0;
 
 		/**Stores data under @a row into current position in file*/
-		virtual void writeRow(int row) throw (...) =0;
+		virtual void writeRow(tRowId row) throw (...) =0;
 
 		/**Stores column descriptor*/
 		virtual void writeDescriptor() throw (...) =0;
@@ -104,7 +104,7 @@ namespace Stamina { namespace DT {
 		/**Reads only specified rows from current position in file and stores them under @a row.
 		@param columns - null terminated list of columns
 		*/
-		virtual bool readPartialRow(int row , int * columns) throw (...) =0;
+		virtual enResult readPartialRow(tRowId row , tColId* columns) throw (...) =0;
 
 		/**Goes to next row in file*/
 		virtual bool findNextRow()=0; // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)

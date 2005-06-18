@@ -62,7 +62,7 @@ namespace Stamina { namespace DT {
         return;
     }
 
-	tColId ColumnsDesc::setcol (tColId id , enColumnFlag type , DataEntry def , const char * name) {
+	tColId ColumnsDesc::setColumn (tColId id , enColumnFlag type , DataEntry def , const char * name) {
         if (!name) name = "";
         if (id != colNotFound && ((id & 0xFF000000) == 0xFF000000)) 
 			id = colNotFound;
