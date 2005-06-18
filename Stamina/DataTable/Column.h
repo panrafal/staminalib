@@ -5,7 +5,7 @@
  * 
  *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id: $
+ *  $Id$
  */
 #pragma once
 #ifndef __DT_COLUMN__
@@ -22,11 +22,27 @@ namespace Stamina { namespace DT {
 
 		Column();
 
-		enColumnType getType() {
+		inline enColumnType getType() {
 			return (enColumnType) (type & ctypeMask);
 		}
-		enColumnFlag getFlags() {
+		inline enColumnFlag getFlags() {
 			return type;
+		}
+
+		inline tColId getId() {
+			return id;
+		}
+
+		inline bool isIdUnique() {
+			return (id & colIdUniqueFlag) != 0;
+		}
+
+		inline bool empty() {
+			return this->type == ctypeUnknown;
+		}
+
+		inline const std::string& getName() {
+			return name;
 		}
 
 		void setFlag(enColumnFlag flag, bool setting) {
@@ -51,7 +67,7 @@ namespace Stamina { namespace DT {
 		operator = (const ColumnsDesc & x);
 
 		int setColCount (int count, bool expand = false); // ustawia ilosc kolumn
-		tColId setCol (tColId id , enColumnFlag type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
+		tColId setColumn (tColId id , enColumnFlag type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
 		tColId setUniqueCol (const char * name , enColumnFlag type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
 
 		inline int getColCount () const {

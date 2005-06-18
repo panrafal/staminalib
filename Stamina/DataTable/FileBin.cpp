@@ -116,13 +116,18 @@ namespace Stamina { namespace DT {
 		if (((mode & fileAppend) || (mode & fileWrite && mode & fileRead))) {
 			openmode = fileExists ? "w+b" : "r+b";
 			_recreating = (fileExists == false);
+			_table->_timeModified.now();
 		} else if (mode & fileWrite) {
 			openmode = "wb";
 			_recreating = true;
+			_table->_timeModified.now();
 		} else {
 			openmode = "rb";
 			_recreating = false;
 		}
+
+		if (_table->_timeCreated.empty()) 
+			_table->_timeCreated.now();
 
 		_file=fopen(this->getOpenedFileName().c_str(), openmode);
 
@@ -135,6 +140,7 @@ namespace Stamina { namespace DT {
 
 		if (!_file) throw DTFileException();
 
+		this->updateFileSize();
 
 		this->_opened = mode;
 
@@ -151,7 +157,7 @@ namespace Stamina { namespace DT {
     void FileBin::close () {
 		if (!this->isOpened()) return;
 
-		this->writeSize();
+		this->writeCount();
         fclose(_file);
 		
 		if (this->isWriteFailed()) {
@@ -219,6 +225,7 @@ namespace Stamina { namespace DT {
 			flag = 0;
 		}
 
+		_pos_count = ftell(_file);
 		// £adujemy liczbê wierszy
 		readData(&_storedRowsCount, 4);  // rowc
 		_table->_size = _storedRowsCount;
@@ -244,8 +251,10 @@ namespace Stamina { namespace DT {
 
         // £adujemy wszystkie wyszczególnione pola
 		if (_dataFlag & dflagLastId) {
+			_pos_dataLastId = ftell(_file);
 			readData(&_table->_lastId , 4, &dataLeft);
 		} else {
+			_pos_dataLastId = 0;
 			_table->_lastId = rowIdMin;
 		}
         
@@ -330,411 +339,462 @@ namespace Stamina { namespace DT {
 	void FileBin::writeHeader() {
 		if (!isOpened()) throw DTException(errNotOpened);
 
-		// generujemy nowe has³o i maskê xor z nowymi saltami
-		this->generatePasswordDigest(true);
-		this->generateXorDigest(true);
+		try {
 
-		_verMaj = versionMajor;
-		_verMin = versionMinor;
+			// generujemy nowe has³o i maskê xor z nowymi saltami
+			this->generatePasswordDigest(true);
+			this->generateXorDigest(true);
 
-		writeData("DTBIN", 5); 
+			_verMaj = versionMajor;
+			_verMin = versionMinor;
 
-		writeData(&_verMaj, 1);
-		writeData(&_verMin, 1);
+			writeData("DTBIN", 5); 
 
-		writeData(&_fileFlag, 4); // flag
+			writeData(&_verMaj, 1);
+			writeData(&_verMin, 1);
 
-		writeData(&(_table->getRowCount()), 4);    // rowc
+			writeData(&_fileFlag, 4); // flag
 
-		_dataSize = 0x7FFFFFFF;
-		// placeholder do zapisania trochê póŸniej. Specjalnie zapisujemy du¿¹ wartoœæ, ¿eby w razie pozostawienia tego w takim stanie w pliku spowodowaæ "bezpieczny" b³¹d podczas wczytywania
-		writeData(&_dataSize, 4);
+			_pos_count = ftell(_file);
+			writeData(&(_table->getRowCount()), 4);    // rowc
 
-		_pos_data = ftell(_file);
+			_dataSize = 0x7FFFFFFF;
+			// placeholder do zapisania trochê póŸniej. Specjalnie zapisujemy du¿¹ wartoœæ, ¿eby w razie pozostawienia tego w takim stanie w pliku spowodowaæ "bezpieczny" b³¹d podczas wczytywania
+			writeData(&_dataSize, 4);
 
-		// usuwamy nie obs³ugiwane flagi
-		_dataFlag = (enDataFlags)(_dataFlag & ~(deprecatedDataFlags));
-		// dodajemy wymagane obs³ugiwane flagi
-		_dataFlag = (enDataFlags)(_dataFlag | requiredDataFlags);
+			_pos_data = ftell(_file);
 
-		if (! _table->getParamsMap().empty()) {
-			_dataFlag = (enDataFlags)(_dataFlag | dflagParams);
-		}
+			// usuwamy nie obs³ugiwane flagi
+			_dataFlag = (enDataFlags)(_dataFlag & ~(deprecatedDataFlags));
+			// dodajemy wymagane obs³ugiwane flagi
+			_dataFlag = (enDataFlags)(_dataFlag | requiredDataFlags);
 
-		if (_dataFlag) {
-			writeData(&_dataFlag, 4, &_dataSize);
-		}
-
-		if (_dataFlag & dflagLastId) {
-			writeData(&_table->lastid, 4, &_dataSize);
-		}
-		if (_dataFlag & dflagPasswordDigest) {
-			writeData(_passwordDigest.getDigest(), 16, &_dataSize);
-		}
-
-		if (_dataFlag & dflagParams) {
-			writeData(&(_table->getParamsMap().size()), 4, &_dataSize);
-			for (DataTable::tParams::iterator it = _table->getParamsMap().begin(); it != _table->getParamsMap().end(); it++) {
-				writeString(it->first, &_dataSize);				
-				writeString(it->second, &_dataSize);				
+			if (! _table->getParamsMap().empty()) {
+				_dataFlag = (enDataFlags)(_dataFlag | dflagParams);
 			}
-		}
-		if (_dataFlag & dflagCreated) {
-			writeData(&_table->_timeCreated, 8, &_dataSize);
-		}
 
-		if (_dataFlag & dflagModified) {
-			writeData(&_table->_timeModified, 8, &_dataSize);
-		}
+			if (_dataFlag) {
+				writeData(&_dataFlag, 4, &_dataSize);
+			}
 
-		if (_dataFlag & dflagLastBackup) {
-			writeData(&_table->_timeLastBackup, 8, &_dataSize);
-		}
+			if (_dataFlag & dflagLastId) {
+				_pos_dataLastId = ftell(_file);
+				writeData(&_table->lastid, 4, &_dataSize);
+			} else {
+				_pos_dataLastId = 0;
+			}
 
-		if (_dataFlag & dflagPassSalt) {
-			writeData(&_passwordSalt, 4, &_dataSize);
-		}
+			if (_dataFlag & dflagPasswordDigest) {
+				writeData(_passwordDigest.getDigest(), 16, &_dataSize);
+			}
 
-		if (_dataFlag & dflagXorSalt) {
-			writeData(&_xorSalt, 4, &_dataSize);
-		}
+			if (_dataFlag & dflagParams) {
+				writeData(&(_table->getParamsMap().size()), 4, &_dataSize);
+				for (DataTable::tParams::iterator it = _table->getParamsMap().begin(); it != _table->getParamsMap().end(); it++) {
+					writeString(it->first, &_dataSize);				
+					writeString(it->second, &_dataSize);				
+				}
+			}
+			if (_dataFlag & dflagCreated) {
+				writeData(&_table->_timeCreated, 8, &_dataSize);
+			}
 
-		// Zapisujemy w³aœciwy rozmiar...
-		this->setFilePosition(_pos_data - 4, fromBeginning);
-		writeData(&_dataSize, 4);
-        this->setFilePosotion(_dataSize, fromCurrent);
+			if (_dataFlag & dflagModified) {
+				writeData(&_table->_timeModified, 8, &_dataSize);
+			}
+
+			if (_dataFlag & dflagLastBackup) {
+				writeData(&_table->_timeLastBackup, 8, &_dataSize);
+			}
+
+			if (_dataFlag & dflagPassSalt) {
+				writeData(&_passwordSalt, 4, &_dataSize);
+			}
+
+			if (_dataFlag & dflagXorSalt) {
+				writeData(&_xorSalt, 4, &_dataSize);
+			}
+
+			// Zapisujemy w³aœciwy rozmiar...
+			this->setFilePosition(_pos_data - 4, fromBeginning);
+			writeData(&_dataSize, 4);
+			// Ustawiamy siê z powrotem za danymi
+			this->setFilePosotion(_dataSize, fromCurrent);
+
+			this->updateFileSize();
+
+		} catch (DTException e) {
+			this->setWriteFailed(true);
+			throw e;
+		}
 	}
 
 // DESCRIPTOR ** READ -------------------------------------------------------
 
-    int FileBin::freaddesc() {
-      if (!opened) return 1;
+	void FileBin::readDescriptor() {
+		if (!isOpened()) throw DTException(errNotOpened);
 
-      fread(&csize, 4, 1 , file);
-      fcols.setcolcount(csize);
-      for (int i=0; i<csize; i++) { // columns definitions
-        fread(&a, 4, 1 , file);
-        fread(&b, 4, 1 , file);
-        int id = a;
-        int type = b;
-        char * name = 0;
-        if (_verMaj>'2') { // version 3x only
-            char c;
-            fread(&c , 1 , 1 , file);
-            if (c) {
-                 name = new char [c+1];
-                 fread(name , c , 1 , file);
-                 name[c]=0;
-            }
-            fread(&b , 4 , 1 , file);
-            if (b) fseek(file , b , SEEK_CUR); // We have to pass unprocessed data.
-        }
-        fcols.setcol(id , type , 0 , name?name:"");
-        if (name) delete [] name;
-      }
-      pos_row = ftell(file);
-      return 0;
-    }
+		this->setFilePosition(_pos_cols, fromBeginning);
+
+		int count;
+		readData(&count, 4);
+		_fcols.setcolcount(count);
+		for (int i = 0; i < count; i++) { // columns definitions
+			int id;
+			int type;
+			readData(&id, 4);
+			readData(&type, 4);
+			std::string name;
+			/*Wczytujemy nazwê kolumny i dane dodatkowe (od v3.0)*/
+			if (_verMaj>'2') {
+				char length;
+				readData(&length, 1);
+				if (length) {
+					readData(stringBuffer(name, length), length);
+					stringRelease(name, length);
+				}
+				int dataSize;
+				readData(&dataSize , 4);
+				if (dataSize) {
+					setFilePosition(dataSize, fromCurrent); // We have to get past unprocessed data.
+				}
+			}
+			_fcols.setColumn(id, type, 0, name.c_str());
+		}
+		_pos_rows = ftell(_file);
+	}
 
 // DESCRIPTOR ** WRITE-------------------------------------------------------
 
-    int FileBin::fwritedesc() {
-      if (!opened) return 1;
+	void FileBin::writeDescriptor() {
+		if (!isOpened()) throw DTException(errNotOpened);
 
-      b = fcols.getcolcount();
-	  if (fwrite(&b, 4, 1 , file) != 1)    // colc
-	      goto writefailed;
+		try {
 
-      for (i=0; i < fcols.getcolcount() ; i++) {  // Columns definitions
-        Column * cdi = &fcols.cols[i];
-        fwrite(&cdi->id, 4, 1 , file);   //id
-		int type = cdi->type & (~DT_CF_NOSAVEFLAGS); 
-        fwrite(&type, 4, 1 , file);   //type
-        char c= (cdi->name.size() > 255)?255:cdi->name.size();
-        fwrite(&c , 1 , 1 , file); // name length
-        if (c) fwrite(cdi->name.c_str() , c , 1 , file); // name
-        b = 0;
-		if (fwrite(&b , 4 , 1, file) != 1) // 0-length data field. For future use maybe.
-	        goto writefailed;
+			writeData(&(_fcols.getColCount()), 4);
 
-      }
-      pos_row = ftell(file);
-      return 0;
-writefailed:
-	  this->write_failed = true;
-	  return 2;
-    }
+			for (i = 0; i < _fcols.getColCount(); i++) {
+				const Column& col = _fcols.getColumnByIndex(i);
+				writeData(&col.id, 4);   //id
+				int type = col.getFlags() & (~DT_CF_NOSAVEFLAGS); 
+				writeData(&type, 4);   //type
+				unsigned char nameLength = min(255, col.name.size());
+				writeData(&nameLength , 1); // name length
+				if (nameLength) 
+					writeData(col.name.c_str(), nameLength); // name
+				dataSize = 0;
+				writeData(&dataSize, 4); // For future use maybe.
+			}
+	      
+			_pos_rows = ftell(_file);
+
+			this->updateFileSize();
+
+		} catch (DTException e) {
+			this->setWriteFailed(true);
+			throw e;
+		}
+	}
 
 // SIZE ** READ -------------------------------------------------------------
 
-    int FileBin::freadsize() {
-      if (!opened) return 1;
-      fseek(file , (_verMaj>'1')?11:6 , SEEK_SET);
-      fread(&_storedRowsCount, 4, 1 , file);
-//      MessageBox(0 , inttoch(_storedRowsCount) , "" , 0);
-      return 0;
+	void FileBin::readCount() {
+		if (!isOpened()) throw DTException(errNotOpened);
+		// Ustawiamy siê na pozycjê zawieraj¹c¹ rozmiar
+		setFilePosition(_pos_count, fromBeginning);
+		readData(&_storedRowsCount, 4);
     }
 
 // SIZE ** WRITE ------------------------------------------------------------
 
-	int FileBin::fwritesize() {
-      if (!opened) return 1;
-      if (mode & (DT_WRITE | DT_APPEND) && _storedRowsCount != -1) {
-        fseek(file , (_verMaj>'1')?11:6 , SEEK_SET);
-        if (fwrite(&_storedRowsCount, 4, 1 , file) != 1)
-		    goto writefailed;
-        if (table && _verMaj>'1' && (_dataFlag & DT_BIN_DFID) && (_dataSize >= 8)) {
-          fseek(file , 23 , SEEK_SET);
-		  if (fwrite(&table->lastid , 4 , 1 , file) != 1)
-		      goto writefailed;
-        }
-      }
-      return 0;
-writefailed:
-	  this->write_failed = true;
-	  return 2;
+	void FileBin::writeCount() {
+		if (!isOpened()) throw DTException(errNotOpened);
+		try {
+			if ((getFileMode() & (fileWrite | fileAppend)) && _storedRowsCount != -1) {
+                setFilePosition(_pos_count , fromBeginning);
+				writeData(&_storedRowsCount, 4);
+				// zapisujemy lastId (od v2.0)
+				if (_table && _verMaj > '1' && _pos_dataLastId > 0) {
+					setFilePosition(_pos_dataLastId, fromBeginning);
+					writeData(&_table->_lastId, 4);
+				}
+			}
+		} catch (DTException e) {
+			this->setWriteFailed(true);
+			throw e;
+		}
     }
-
-
 
 // ROW ** READ --------------------------------------------------------------
 
-    int FileBin::freadpartialrow(int row , int * columns) {
-        start:
-      if (feof(file)) return 1;
-      row = DT_GETPOS(table , row);
-      if (!opened) return 1;
-	  size_t filesize = _filelength(file->_file);
-      table->notypecheck=1;  // wylacza sprawdzanie typow ...
-      DataRow * rowObj = table->rows[row];
-      rowObj->pos = ftell(file);
-      if (fgetc(file) != '\n') return 1;
-      if (feof(file)) return 1;
-      int b , ctype , cflag , id;
-      Td64 d;
-      char * c;
-      table->lastid++;
-      rowObj->id = table->lastid;
-      int siz1 , siz2 , p;
-      if (_verMaj > '1') {
-        fread(&siz1 , 4 , 1 , file); // size
-        p = ftell(file); // pocz¹tek danych...
-		if (p + siz1 + 4 > filesize)
-			return 1;
-        if (fseek(file , siz1 , SEEK_CUR))
-			return 1;
-        if (!fread(&siz2 , 4 , 1 , file)) // size2
-			return 1;
-        fseek(file , p , SEEK_SET); // Wracamy do pozycji
-        if (siz1 != siz2) 
-			return 1; // Oba rozmiary nie s¹ zgodne!!!
-        if (!fread(&rowObj->flag  , 4 , 1 , file))
-			return 1; // flag
-        // Sprawdzamy czy flaga jest równa -1 czyli czy element
-        // nie jest oznaczony jako usuniêty
-        if (rowObj->flag == -1) {
-            fseek(file , siz1 , SEEK_CUR); // przesuwamy siê o p + size + 4 (rozmiar, wczytany jako flaga)...
-            table->lastid --;
-            goto start; // Wczytujemy nastêpn¹ pozycjê
-        }
+	enResult FileBin::readPartialRow(tRowId row , tColId* columns) {
+		if (!isOpened()) throw DTException(errNotOpened);
 
-        int dsiz;
-        fread(&dsiz , 4 , 1 , file); // dsiz
-		if ((p + siz1) < ftell(file) + dsiz)
-			return 1;
-        if (dsiz) {
-          int _dataFlag;
-          fread(&_dataFlag , 4 , 1 , file); // _dataFlag
-          dsiz -=4;
-          if (_dataFlag & DT_BIN_DFID)
-               {fread(&rowObj->id , 4 , 1 , file);
-                if (rowObj->id > table->lastid) table->lastid = rowObj->id+1;
-                table->lastid--;
-                dsiz -=4;}
-        }
+		// Pokojowe wyjœcie - nie ma co czytaæ wiêc koñczymy
+		if ( feof(_file) ) return resNothingToRead;
+		// Od tego momentu wszystko czego nie da siê wczytaæ oznacza z³y format!
 
-        if (dsiz>0) fseek(file , dsiz , SEEK_CUR);
+		row = _table->getRowPos(row);
+	  
+		//_table->notypecheck=1;  // wylacza sprawdzanie typow ...
+      
+		DataRow& rowObj = _table->getRow(row);
+		
+		// zapiujemy pozycjê wiersza
+		rowObj._filePos = ftell(_file);
 
-      }
+		// Znacznik rozpoczêcia nowego wiersza
+		if (fgetc(_file) != '\n') throw DTException(errBadFormat);
 
-      for (unsigned int i =0; i<fcols.cols.size(); i++) {
-        cflag = fcols.cols[i].type;
-        ctype = cflag & 0xFF;
-        id = fcols.cols[i].id;
-        if (id & DT_COLID_UNIQUE) { 
-            id = table->cols.getnameid(fcols.cols[i].name.c_str()); 
-        }
-        if (cflag & DT_CT_DONTSAVE) continue;
-		  bool skip = false; // Czy OMIN¥Æ kolumnê?
-		  if (columns) { // szukamy, czy ID aktualnej, jest na liœcie, jak nie to omijamy...
-			  skip = true;
-			  int i = 0;
-			  do {
-				  if (id == columns[i]) {
-					  skip = false;
-					  break;
-				  }
-				  i++;
-			  } while (columns[i]);
-		  }
+		unsigned int rowSize;
+		unsigned int rowDataSize;
+		enRowDataFlags rowDataFlag;
+		unsigned int rowDataLeft;
 
-		switch (ctype) {
-          case DT_CT_INT:
-			  if (skip)
-				  fseek(file , 4 , SEEK_CUR);
-			  else {
-				fread(&b, 4, 1 , file);
-				table->setint(row , id , b);
-			  }
-              break;
-          case DT_CT_64:
-			  if (skip)
-				  fseek(file , 8 , SEEK_CUR);
-			  else {
-				fread(&d , 8 , 1 , file);
-				table->set64(row , id , d);
-			  }
-				break;
-          case DT_CT_PCHAR: case DT_CT_STRING:
-            fread(&b, 4, 1 , file);
-			if ((p + siz1) < ftell(file) + b)
-				return 1;
-			if (skip)
-				fseek(file , b , SEEK_CUR);
-			else {
-				c=new char [b+1];
-				c[b]='\0';
-				if (b) fread(c , b , 1 , file);
-				if (cflag & DT_CT_CXOR) {
-				sc_decrypt((unsigned char*)table->cxor_key , (unsigned char*)c , b);
-				}
-				if (ctype == DT_CT_PCHAR) table->setch(row , id , c);
-				else table->setstr(row , id , c);
-				delete [] c;
+		// rozmiar wiersza oraz flagi od v2.0
+		if (_verMaj > '1') {
+			readData(&rowSize, 4);
+			// Sprawdzamy czy ten row jest w stanie siê tu w ogóle zmieœciæ
+			if (ftell(file) + rowSize + 4 > _fileSize)
+				throw DTException(errBadFormat);
+
+			//TODO: mo¿e to wy³¹czyæ??
+			// Skaczemy do przodu ¿eby sprawdziæ czy rozmiary siê zgadzaj¹
+			setFilePosition(rowSize , fromCurrent);
+			unsigned int rowSize2;
+			readData(&rowSize2 , 4);
+			setFilePosition(-rowSize - 4, fromCurrent); // Wracamy do pozycji
+			if (rowSize != rowSize2) 
+				throw DTException(errBadFormat);
+            
+			readData(&rowObj._flag, 4);
+
+			// Sprawdzamy czy flaga jest równa -1 czyli czy element
+			// nie jest oznaczony jako usuniêty
+			if (rowObj._flag == -1) {
+				setFilePosition(rowSize, fromCurrent);
+				// wywo³ywanie rekurencyjne jest potencjalnie niebezpieczne...
+				return resSkipped;
 			}
-            break;
-          case DT_CT_BIN:{
-            TypeBin bin;
-            bin.buff = 0;
-            fread(&bin.size, 4, 1 , file); // wczytujemy rozmiar
-			if ((p + siz1) < ftell(file) + bin.size)
-				return 1;
-			if (skip)
-				fseek(file , bin.size , SEEK_CUR);
-			else {
-				if (bin.size) {
-					bin.buff = new char [bin.size];
-					fread(bin.buff , bin.size , 1 , file);
-				}
-				table->setbin(row , id , &bin);
-				delete [] bin.buff;
+
+			readData(&rowDataSize, 4);
+			if (rowDataSize > rowSize - 8)
+				throw DTException(errBadFormat);
+
+			rowDataLeft = rowDataSize;
+
+			if (rowDataSize) {
+				readData(&rowDataFlag, 4, &rowDataLeft);
+			} else {
+				rowDataFlag = rdflagNone;
 			}
-            break;}
+			
+		} else { // v >= 2.0
+			rowDataFlag = rdflagNone;
+			rowDataSize = 0;
+			rowDataLeft = 0;
+		}
 
-        }
-        if (fgetc(file) != '\t')
-			return 1;
-      }
 
-	  if (_verMaj > '1') {
-        fread(&siz2 , 4 , 1 , file); // size
-		if (siz1 != siz2) return 1;
-	  }
-      table->notypecheck=0;
-      return 0;
+		if (rowDataFlag & rdflagRowId) {
+			tRowId id;
+			readData(&id, 4, &rowDataLeft);
+			if (id != rowObj.getId()) {
+				if (_table->rowIdExists(id)) {
+					id = _table->getNewRowId();
+				}
+				rowObj.setId(id);
+			}
+		} else {
+			// w zasadzie nie ma potrzeby przydzielaæ nowego ID, bo jest ju¿ przydzielony przy okazji utworzenia wiersza... Poza tym ka¿dy szanuj¹cy siê DTB zawiera t¹ wartoœæ...
+			// TODO: sprawdziæ!
+		}
+
+		// Pomijamy dane których nie rozumiemy...
+		if (rowDataLeft > 0) setFilePosition(rowDataLeft, fromCurrent);
+
+		// £adujemy dane
+		for (unsigned int colIndex = 0; colIndex < _fcols.getColCount(); colIndex++) {
+			const Column& col = _fcols.getColumnByIndex(colIndex);
+
+			// skoro kolumna nie s³u¿y do zapisywania - nie mamy co wczytywaæ...
+			if (col.hasFlag(cflagDontSave)) continue;
+
+			// identyfikator kolumny w TABLICY
+			tColId colId = col.getId();
+
+			if (col.isIdUnique()) { 
+				colId = _table->getColumns().getNameId(col.getName().c_str()); 
+			}
+
+			bool skip = (colId == colNotFound); // Czy OMIN¥Æ dane kolumny?
+
+			// szukamy, czy ID aktualnej, jest na liœcie, jak nie to omijamy...
+			if (columns) { 
+				skip = true;
+				int i = 0;
+				do {
+					if (colId == columns[i]) {
+						skip = false;
+						break;
+					}
+					i++;
+				} while (columns[i]);
+			}
+
+			unsigned int skipBytes = 0;
+
+			switch (col.getType()) {
+				case ctypeInt:
+					if (skip)
+						skipBytes = 4;
+					else {
+						int val;
+						readCryptedData(col, &val, 4);
+						rowObj.setByIndex(colIndex, (DataEntry)val);
+					}
+					break;
+				case ctypeInt64:
+					if (skip) {
+						skipBytes = 8;
+					} else {
+						__int64 val;
+						readCryptedData(col, &val, 8);
+						rowObj.setByIndex(colIndex, (DataEntry)&val);
+					}
+					break;
+				case ctypeString: {
+					unsigned int length;
+					readData(&length, 4);
+					if (ftell(_file) + length > _fileSize)
+						throw DTException(errBadFormat);
+					if (skip) {
+						skipBytes = length;
+					} else if (length > 0) {
+						char buffer = new char [length + 1];
+						buffer[length] = 0;
+						readCryptedData(col, buffer, length);
+						rowObj.setByIndex(colIndex, (DataEntry)buffer);
+						delete [] buffer;
+					} else {
+						rowObj.setByIndex(colIndex, (DataEntry)"");
+					}
+					break;}
+				case ctypeBin: {
+					TypeBin bin;
+					bin.buff = 0;
+					readData(&bin.size, 4); // wczytujemy rozmiar
+					if (ftell(_file) + bin.size > _fileSize)
+						throw DTException(errBadFormat);
+					if (skip) {
+						skipBytes = bin.size;
+					} else if (bin.size > 0) {
+						bin.buff = new char [bin.size];
+						readCryptedData(col, bin.buff, bin.size);
+						rowObj.setByIndex(colIndex, (DataEntry)&bin);
+						delete [] bin.buff;
+					} else {
+						rowObj.setByIndex(colIndex, (DataEntry)&bin);
+					}
+					break; }
+
+			}
+			if (fgetc(file) != '\t')
+				throw DTException(errBadFormat);
+		} // kolumny
+
+		// drugi rozmiar od v2.0
+		if (_verMaj > '1') {
+			unsigned int rowSize2;
+			readData(&rowSize2, 4);
+			if (rowSize != rowSize2) 
+				throw DTException(errBadFormat);
+		}
+		return success;
     }
 
 
 // ROW ** WRITE -------------------------------------------------------------
 
-    int FileBin::fwriterow(int row) {
-      row = DT_GETPOS(table , row);
-      if (!opened) return 1;
-      _storedRowsCount++;
-      if (fputc('\n' , file) == EOF)
-		  goto writefailed;
-      int b , ctype , cflag , id;
-      char * c , * c2;
-      Td64 * d;
-      int bsize = 0;
-      int pos_size = ftell(file);
-      b = 0;
-      if (_verMaj > '1') {
-        fwrite(&b , 4 , 1, file);  //_storedRowsCount
-        fwrite(&table->rows[row]->flag , 4 , 1 , file); // flag
-        bsize+=4;
-        b = 8;
-        fwrite(&b , 4 , 1 , file); // dsiz , dat
-        bsize+=b;
-        if (b>0) {
-          b = DT_BIN_DFID;
-          fwrite(&b , 4 , 1 , file);
-          if (fwrite(&table->rows[row]->id , 4 , 1 , file) != 1)
-			  goto writefailed;
-        }
-      }
-      for (unsigned int i =0; i<fcols.cols.size(); i++) {
-        cflag = fcols.cols[i].type;
-        ctype = cflag & 0xFF;
-        id = fcols.cols[i].id;
-        if (id & DT_COLID_UNIQUE) { 
-            id = table->cols.getnameid(fcols.cols[i].name.c_str()); 
-        }
-        if (cflag & DT_CT_DONTSAVE) continue;
-        switch (ctype) {
-          case DT_CT_INT: b=(int)table->get(row , id);
-            fwrite(&b, 4, 1 , file);
-            bsize +=4;
-            break;
-          case DT_CT_64:
-            d = (Td64*)table->get(row , id);
-            if (!d) {Td64 db; fwrite(&db , 8 , 1 , file);bsize+=8;break;}
-            fwrite(d , 8 , 1 , file);
-            bsize+=8;
-            break;
-          case DT_CT_PCHAR: case DT_CT_STRING:
-            c=(ctype==DT_CT_PCHAR)? (char *)table->get(row , id)
-                               : (char*)(*(string *)table->get(row , id)).c_str()
-                               ;
-            if (!c) {b=0;fwrite(&b, 4, 1 , file);bsize+=4;break;}
-            b=strlen(c);
-            if (cflag & DT_CT_CXOR) {
-               c2 = strdup(c);
-               sc_encrypt((unsigned char*)table->cxor_key , (unsigned char*)c2 , b);
-			} else {c2 = c;}
-            fwrite(&b, 4, 1 , file);
-            fwrite(c2 , b , 1 , file);
-            if (cflag & DT_CT_CXOR) {
-               free(c2);
-            }
-            bsize += 4+b;
-            break;
-          case DT_CT_BIN: {
-              TypeBin bin = table->getbin(row , id);
-              fwrite(&bin.size, 4, 1 , file);
-              if (bin.size) fwrite(bin.buff , bin.size , 1 , file);
-              bsize+=4+bin.size;
-              break;}
-        }
-		if (fputc('\t' , file) == EOF) // sprawdzamy tylko ostatnie write'y
-		    goto writefailed;
-        bsize+=1;
-      }
-      if (_verMaj > '1') {
-        bsize+=4;
-        fwrite(&bsize , 4 , 1, file); // size
-        b = ftell(file);
-        fseek(file , pos_size , SEEK_SET);
-		if (fwrite(&bsize , 4 , 1, file) != 1) // size
-		    goto writefailed;
+	void FileBin::writeRow(tRowId row) {
+		if (!isOpened()) throw DTException(errNotOpened);
 
-        fseek(file , b , SEEK_SET);
-      }
-      return 0;
-writefailed:
-	  this->write_failed = true;
-	  return 2;
-    }
+		row = _table->getRowPos(row);
+
+		if (fputc('\n' , _file) == EOF)
+			throw DTFileException();
+
+		DataRow& rowObj = _table->getRow(row);
+
+		unsigned int rowSize = 0;
+
+		// rozmiar, flagi - od v2.0
+		if (_verMaj > '1') {
+			writeData(&rowSize, 4);  //rowSize - placeholder
+			writeData(&(rowObj.getFlags()), 4, &rowSize); // flag
+			unsigned int dataSize = 8; // flag + lastId, na razie nie ma wiêcej
+			writeData(&dataSize, 4, &rowSize);
+			enRowDataFlags flags = rdflagRowId;
+			writeData(&flags, 4, &rowSize);
+			writeData(&(rowObj.getId()), 4, &rowSize);
+		}
+		for (unsigned int colIndex =0; colIndex < fcols.cols.size(); colIndex++) {
+			const Column& col = _fcols.getColumnByIndex(colIndex);
+
+			if (col.hasFlag(rflagDontSave)) continue;
+
+			tColId id = col.getId();
+			if (col.isIdUnique()) { 
+				id = _table->getColumns().getNameId(col.getName().c_str()); 
+			}
+
+			switch (col.getType()) {
+				case ctypeInt: {
+					int val = (int)rowObj.getByIndex(colIndex);
+					writeCryptedData(col, &val, 4, &rowSize);
+					break;}
+				case ctype64: {
+					__int64* val = (__int64*)rowObj.getByIndex(colIndex);
+					if (!val) {
+						// zapisujemy 0
+						__int64 null = 0;
+						writeCryptedData(col, &null, 8, &rowSize);
+					} else {
+						writeCryptedData(col, val, 8, &rowSize);
+					}
+					break;}
+				case ctypeString: {
+					char * val = (char *)rowObj.getByIndex(colIndex);
+					unsigned int length = (val == 0 ? 0 : strlen(val));
+					writeData(&length, 4, &rowSize);
+					if (val && length > 0) {
+						writeCryptedData(col, val, length, &rowSize);
+					}
+					break;}
+				case ctypeBin: {
+					TypeBin* val = (TypeBin*)rowObj.getByIndex(colIndex);
+					writeData(&val->size, 4, &rowSize);
+					if (val->buff && val->size > 0) {
+						writeCryptedData(col, val->buff, val->size, &rowSize);
+					}
+					break;}
+			}
+
+			if (fputc('\t' , _file) == EOF)
+				throw DTFileException();
+			rowSize++;
+		}
+		// zapisujemy wynik od v2.0
+		if (_verMaj > '1') {
+			writeData(&rowSize, 4); // size
+			// cofamy siê o ca³y wiersz i oba zapisane size'y
+			setFilePosition(- rowSize - 8, fromCurrent);
+			writeData(&rowSize, 4);
+			// idziemy do przodu o ca³y wiersz i ostatni size...
+			setFilePosition(rowSize + 4, fromCurrent);
+		}
+		_storedRowsCount++;
+	}
 
 
 // ----------------------------------------------------------------------
@@ -744,7 +804,7 @@ writefailed:
 
     int FileBin::fseterasedrow(bool overwrite , int testIndex) {
         if (feof(file)) return 1;
-        if (!opened) return 1;
+		if (!isOpened()) throw DTException(errNotOpened);
         if (fgetc(file) != '\n') return 1; // wczytuje '\n'
         if (feof(file)) return 1;
         if (_verMaj && _verMaj < '3') return 1;

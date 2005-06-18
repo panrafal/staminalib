@@ -56,6 +56,11 @@ namespace Stamina { namespace DT {
 			requiredDataFlags = dflagLastId | dflagPasswordDigest | dflagPassSalt | dflagXorSalt,
 		};
 
+		enum enRowDataFlags {
+			rdflagRowId = 1,
+			rdflagNone = 0,
+		};
+
 		enum enPositionOrigin {
 			fromCurrent = SEEK_CUR,
 			fromEnd = SEEK_END,
@@ -80,11 +85,11 @@ namespace Stamina { namespace DT {
 
 	protected:
 
-		bool readRow(int row) throw (...) {
+		enResult readRow(tRowId row) throw (...) {
 			return readPartialRow(row, 0);
 		}
 
-		void writeRow(int row) throw (...);
+		void writeRow(tRowId row) throw (...);
 
 		virtual void writeHeader() throw (...);
 
@@ -94,7 +99,7 @@ namespace Stamina { namespace DT {
 
 		void readDescriptor() throw (...);
 
-		bool readPartialRow(int row , int * columns) throw (...);
+		enResult readPartialRow(tRowId row , tColId* columns) throw (...);
 
 		bool findNextRow();
 
@@ -105,14 +110,15 @@ namespace Stamina { namespace DT {
 			this->setFilePosition(0, fromEnd);
 		}
 
-		void writeSize() throw (...);
-		void readSize() throw (...);
+		void writeCount() throw (...);
+		void readCount() throw (...);
 
 		void setErasedRow(bool overwrite=true , int testIndex=0) throw (...);
 
 
-		void setFilePosition(int pos , enPositionOrigin origin) {
-			fseek(_file , pos , origin);
+		void setFilePosition(int pos , enPositionOrigin origin) throw(...) {
+			if (fseek(_file , pos , origin))
+				throw DTFileException();
 		}
 
 		/**Checks table's password digest with file's one*/
@@ -161,7 +167,7 @@ namespace Stamina { namespace DT {
 				*decrement -= size;
 		}
 
-		inline void writeData(void* buffer, int size, int* increment = 0) throw(...) {
+		inline void writeData(const void* buffer, int size, int* increment = 0) throw(...) {
 			if (fread(buffer, size, 1, _file) < 1) {
 				throw DTFileException();
 			}
@@ -172,6 +178,7 @@ namespace Stamina { namespace DT {
 		inline std::string readString(int* decrement = 0) throw(...) {
 			int size;
 			readData(&size, 4, decrement);
+			if (ftell(_file) + size > _fileSize) throw DTException(errBadFormat);
 			std::string<char> s;
 			readData(stringBuffer(s, size), size, decrement);
 			stringRelease(s, size);
@@ -181,6 +188,10 @@ namespace Stamina { namespace DT {
 		inline void writeString(const std::string<char>& s, int* increment = 0) throw(...) {
 			writeData(&(s.length()), 4, increment);
 			writeData(s.c_str(), s.length(), increment);
+		}
+
+		inline void updateFileSize() {
+			_fileSize = _filelength(_file->_file);
 		}
 
 	public:
@@ -194,6 +205,8 @@ namespace Stamina { namespace DT {
 		int _pos_data;
 		int _pos_rows;
 		int _pos_cols;
+		int _pos_dataLastId;
+		int _pos_count;
 		int _storedRowsCount;
 		//int mode;
 		char _verMaj , _verMin;
@@ -213,6 +226,8 @@ namespace Stamina { namespace DT {
 
 		bool _temp_enabled;
 		CStdString _temp_fileName; // Podczas uzywania tempa plik z ... tempem :)
+
+		unsigned int _fileSize;
 	};
 
 } }
