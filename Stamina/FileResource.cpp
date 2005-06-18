@@ -48,25 +48,12 @@ namespace Stamina {
 	}
 
 
-	VS_FIXEDFILEINFO* FileVersion::getFixedFileInfo() {
+	VS_FIXEDFILEINFO* FileVersion::getFixedFileInfo() const {
 		VS_FIXEDFILEINFO * vi;
 		this->queryValue("\\" , (void **)&vi);
 		return vi;
 	}
 
-	std::string FileVersion::VersionInfo::getString(char elements) {
-		std::string s;
-		if (elements > 0 || major || minor || release || build)
-			s += inttostr(major);
-		if (elements > 1 || minor || release || build)
-			s += "." + inttostr(minor);
-		if (elements > 2 || release || build)
-			s += "." + inttostr(minor);
-		if (elements > 3 || build)
-			s += "." + inttostr(minor);
-		return s;
-	}
-	
 	bool FileVersion::chooseTranslation(int index) {
         struct LANGANDCODEPAGE {
 			WORD wLanguage;
@@ -81,6 +68,20 @@ namespace Stamina {
 		return true;
 	}
 
+// -----------------------------------
+
+	std::string FileVersion::VersionInfo::getString(char elements) const {
+		std::string s;
+		if (elements > 0 || major || minor || release || build)
+			s += inttostr(major);
+		if (elements > 1 || minor || release || build)
+			s += "." + inttostr(minor);
+		if (elements > 2 || release || build)
+			s += "." + inttostr(minor);
+		if (elements > 3 || build)
+			s += "." + inttostr(minor);
+		return s;
+	}
 
 
 };

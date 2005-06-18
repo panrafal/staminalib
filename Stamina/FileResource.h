@@ -51,18 +51,18 @@ namespace Stamina {
 				this->build = build;
 			}
 
-			bool empty() {
+			bool empty() const {
 				return !major && !minor && !release && !build;
 			}
 
-			int getInt() {
+			int getInt() const {
 				return ((((major)&0xF)<<28) | (((minor)&0xFF)<<20) | (((release)&0xFF)<<12) | ((build)&0xFFF));
 			}
 
 			/**Returns version string (x.x.x.x).
 			@param Minimum number of version parts to return
 			*/
-			std::string getString(char elements = 2);
+			std::string getString(char elements = 2) const;
 		public:
 			short major, minor, release, build;
 		};
@@ -71,19 +71,19 @@ namespace Stamina {
 
 		~FileVersion();
 
-		bool empty() {
+		bool empty() const {
 			return _buffer == 0;
 		}
 
-		VS_FIXEDFILEINFO* getFixedFileInfo();
+		VS_FIXEDFILEINFO* getFixedFileInfo() const;
 
-		VersionInfo getFileVersion() {
+		VersionInfo getFileVersion() const {
 			VS_FIXEDFILEINFO * vi = getFixedFileInfo();
 			if (!vi) return VersionInfo(0);
 			return VersionInfo(vi->dwFileVersionMS, vi->dwFileVersionLS);
 		}
 
-		VersionInfo getProductVersion() {
+		VersionInfo getProductVersion() const {
 			VS_FIXEDFILEINFO * vi = getFixedFileInfo();
 			if (!vi) return VersionInfo(0);
 			return VersionInfo(vi->dwProductVersionMS, vi->dwProductVersionLS);
@@ -93,7 +93,7 @@ namespace Stamina {
 
 		std::string getString(const std::string& name);
 
-		unsigned int queryValue(const TCHAR* subBlock, LPVOID * buffer) {
+		unsigned int queryValue(const TCHAR* subBlock, LPVOID * buffer) const {
 			if (_buffer == 0) return 0;
 			unsigned int length;
 			if (VerQueryValue(_buffer, (TCHAR*)subBlock, buffer, &length))
