@@ -105,7 +105,6 @@ namespace Stamina {
 
 	bool windowBelongsTo(HWND window, HWND parent);
 
-	void * loadResourceData(HMODULE inst, const char* name, const char* type, HGLOBAL& rsrc, int* size);
 
 #ifdef _STRING_
 	std::string expandEnvironmentStrings(const char * src, unsigned int size=300);

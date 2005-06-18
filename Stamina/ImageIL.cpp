@@ -18,6 +18,7 @@
 #include "Helpers.h"
 #include "WinHelper.h"
 #include "RegEx.h"
+#include "FileResource.h"
 
 namespace Stamina {
 

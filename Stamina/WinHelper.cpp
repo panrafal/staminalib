@@ -503,16 +503,6 @@ end:
 	}
 
 
-	void * loadResourceData(HMODULE inst, const char* name, const char* type, HGLOBAL& rsrc, int* size) {
-		HRSRC found = FindResource(inst, name, type);
-		rsrc = 0;
-		if (!found) return 0;
-		rsrc = LoadResource(inst, found);
-		if (!rsrc) return 0;
-		if (size)
-			*size = SizeofResource(inst, found);
-		return LockResource(rsrc);
-	}
 
 
 
