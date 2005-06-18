@@ -216,6 +216,9 @@
 				RelativePath=".\DrawableGauge.cpp">
 			</File>
 			<File
+				RelativePath=".\FileResource.cpp">
+			</File>
+			<File
 				RelativePath=".\FindFile.cpp">
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -478,6 +481,9 @@
 			</File>
 			<File
 				RelativePath=".\Exception.h">
+			</File>
+			<File
+				RelativePath=".\FileResource.h">
 			</File>
 			<File
 				RelativePath=".\FindFile.h">
