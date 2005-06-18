@@ -100,6 +100,10 @@ namespace Stamina {
 	Size getTextSize(HDC hdc, const char* text, int width = 0);
 	Size getTextSize(HWND hwnd, HFONT font, const char* text, int width = 0);
 
+	inline unsigned int pixelsToFontHeight(int px) {
+		return 15 * px;
+	}
+
 	Point getLocalPoint(HWND window, const Point& screen, int scrollX=-1, int scrollY=-1);
 	Point getScreenPoint();
 

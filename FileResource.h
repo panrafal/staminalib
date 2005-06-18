@@ -12,7 +12,7 @@
 
 namespace Stamina {
 
-	void * loadResourceData(HMODULE inst, const char* name, const char* type, HGLOBAL& rsrc, int* size) {
+	inline void * loadResourceData(HMODULE inst, const char* name, const char* type, HGLOBAL& rsrc, int* size) {
 		HRSRC found = FindResource(inst, name, type);
 		rsrc = 0;
 		if (!found) return 0;

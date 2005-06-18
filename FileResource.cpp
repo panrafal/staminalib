@@ -50,8 +50,10 @@ namespace Stamina {
 
 	VS_FIXEDFILEINFO* FileVersion::getFixedFileInfo() const {
 		VS_FIXEDFILEINFO * vi;
-		this->queryValue("\\" , (void **)&vi);
-		return vi;
+		if (this->queryValue("\\" , (void **)&vi) > 0)
+			return vi;
+		else
+			return 0;
 	}
 
 	bool FileVersion::chooseTranslation(int index) {
