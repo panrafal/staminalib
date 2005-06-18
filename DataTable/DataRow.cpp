@@ -110,35 +110,34 @@ namespace Stamina { namespace DT {
     const DataEntry DataRow::get(tColId id) {
 		LockerCS lock(_cs);
 	    _table->resetError();
-		int index = _table->getColumns().colIndex(id);
-		if (index >= _size || index<0) {
-			_table->setError(errNoRow);
+		return getByIndex(_table->getColumns().colIndex(id));
+	}
+	const DataEntry DataRow::getByIndex (unsigned int colIndex); // Pobiera wartosc kolumny
+		if (! this->hasColumnData()) {
+			_table->setError(errNoColumn);
 			return 0;
 		}
-#ifdef DT_CHECKTYPE
-		DataEntry r = _data[i];
-		if ((_table)->getColumns().getColumnByIndex(index).getType == ctypeString && !r) {
+		const Column& col = this->_table->getColumns().getColumnByIndex(colIndex);
+		DataEntry r = _data[colIndex];
+		if (col.getType() == ctypeString && r == 0) {
 			r = (DataEntry)"";
 		}
 		return r;
-#else
-		return data [i];
-#endif
     }
 
-    const DataEntry DataRow::getByIndex (int index) {
-		if (index >= _size || _index<0) {
-			_table->setError(errNoRow);
-			return 0;
-		}
-		return data [index];
-    }
 
-    int DataRow::set (tColId id , DataEntry val) {
-		int index = _table->getColumns().colIndex(id);
-		if (index >= _size || index < 0) return 0;
-		const Column& col = _table->getColumns().getColumnByIndex(index);
+    bool DataRow::set (tColId id , DataEntry val) {
 		LockerCS lock(_cs);
+	    _table->resetError();
+		return this->setByIndex(_table->getColumns().colIndex(id), val);
+	}
+
+	bool DataRow::setByIndex (unsigned int colIndex, DataEntry val); // ustawia wartosc kolumny
+		if (! this->hasColumnData()) {
+			_table->setError(errNoColumn);
+			return false;
+		}
+		const Column& col = this->_table->getColumns().getColumnByIndex(colIndex);
 
 		switch (col.getType()) {
 			case ctypeInt64:
@@ -180,7 +179,7 @@ namespace Stamina { namespace DT {
 				_data[i] = val;
 
       }
-      return 0;
+      return true;
     }
 
 

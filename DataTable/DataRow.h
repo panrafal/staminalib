@@ -5,7 +5,7 @@
  * 
  *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id: $
+ *  $Id$
  */
 #pragma once
 #ifndef __DT_DATAROW__
@@ -20,12 +20,21 @@ namespace Stamina { namespace DT {
 
 	class DataRow {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
 	public:
-		int allocData();
-		int freeData();
+		friend class FileBin;
+	public:
+		bool allocData();
+		bool freeData();
 		const DataEntry get (tColId id); // Pobiera wartosc kolumny
-		int set (tColId id , DataEntry val); // ustawia wartosc kolumny
+		const DataEntry getByIndex (unsigned int colIndex); // Pobiera wartosc kolumny
+		/**Sets the column value (without conversion!)*/
+		bool set (tColId id, DataEntry val);
+		/**Sets the column value (without conversion and without locking and column lookup)*/
+		bool setByIndex (unsigned int colIndex, DataEntry val);
 
-		const DataEntry getByIndex (int index); // Pobiera wartosc kolumny
+
+		inline bool hasColumnData(unsigned int colIndex) {
+			return (colIndex >= 0 && colIndex < this->_slots);
+		}
 
 		DataRow (const DataRow & v);
 
@@ -71,7 +80,7 @@ namespace Stamina { namespace DT {
 		class DataTable * _table; ///< Parent table
 		int _size;  ///< Data slots count
 		DataEntry * _data; ///< Data slots
-		//unsigned int _pos;
+		unsigned int _filePos;
 		//int _index;
 		tRowId _id;    // identyfikator wiersza
 		enRowFlag _flag;

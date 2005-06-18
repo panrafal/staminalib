@@ -37,6 +37,7 @@ namespace Stamina { namespace DT {
 	enum enError {
 		errSuccess = 0,
 		success = 0,
+
 		errNoColumn = 100,
 		errNoRow = 200,
 		errBadType = 300,
@@ -48,6 +49,10 @@ namespace Stamina { namespace DT {
 		errBadFormat = 0x1004,
 		errBadVersion = 0x1005,
 		errFileError = 0x10000000,
+
+		resSkipped = 1,
+		resNothingToRead = 2,
+
 	};
 	typedef enError enResult;
 
