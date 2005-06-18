@@ -312,7 +312,7 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 		if (_access(path.c_str() , 0) != 0) { // nie ma katalogu...
 			size_t slash = path.find_last_of('\\');
 			if (slash != -1) {
-				c = makeDirectories(path.substr(0, slash));
+				c = createDirectories(path.substr(0, slash));
 			}
 			if (_mkdir(path.c_str())) {
 				return c + 1;
