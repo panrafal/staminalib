@@ -11,6 +11,7 @@
 //#include <mem.h>
 #include "stdafx.h"
 #include "FileBin.h"
+#include "Crypt.h"
 
 
 using namespace std;
@@ -35,7 +36,8 @@ namespace Stamina { namespace DT {
 		_xorSalt = 0;
 
 		_fcols.setLoader(true);
-		_pos_data = _pos_rows = _pos_cols = _fileFlag = 0;
+		_pos_data = _pos_rows = _pos_cols = 0;
+		_fileFlag = fflagNone;
 		_dataSize = 0;
 		_dataFlag = basicDataFlags;
 		useTempFile = false;
@@ -84,19 +86,19 @@ namespace Stamina { namespace DT {
 		_xorDigest.addSalt(_xorSalt);
 	}
 
-	void FileBin::open (const std::string& fn , enFileMode mode) {
+	void FileBin::open (const std::string& fileToOpen , enFileMode mode) {
 		this->close();
-
+		std::string fn = fileToOpen;
 		this->setWriteFailed( false );
 		_storedRowsCount=0;
 		
 		this->_opened = fileClosed;
 		if (mode & fileRead) {
-			_table->lastid = rowIdMin;
-	        _table->dbID = -1;
+			_table->_lastId = rowIdMin;
+	        //_table->_db = -1;
 		}
 
-		fn = getFullPathName(fn);
+		fn = getFullPathName(fn.c_str());
 		this->_fileName = fn;
 	    
 		if (useTempFile && (mode & fileWrite) && !(mode & fileRead)) {
@@ -163,7 +165,7 @@ namespace Stamina { namespace DT {
 		if (this->isWriteFailed()) {
 		    _opened = fileClosed;
 #ifdef _WINDOWS_
-			std::string msg = string("Wyst¹pi³ b³¹d podczas zapisywania danych!\r\nUszkodzona kopia znajduje siê w:\r\n\t%s%s" , _temp_enabled ? _temp_fileName.c_str() : _filename.c_str(), _temp_enabled ? "\r\n\r\nOryginalny plik pozosta³ bez zmian..." : "\r\n\r\nB³¹d wyst¹pi³ podczas zapisywania oryginalnej kopii!");
+			std::string msg = stringf("Wyst¹pi³ b³¹d podczas zapisywania danych!\r\nUszkodzona kopia znajduje siê w:\r\n\t%s%s" , _temp_enabled ? _temp_fileName.c_str() : _fileName.c_str(), _temp_enabled ? "\r\n\r\nOryginalny plik pozosta³ bez zmian..." : "\r\n\r\nB³¹d wyst¹pi³ podczas zapisywania oryginalnej kopii!");
 			int r = MessageBox(0 , msg.c_str() , "B³¹d zapisu .DTB" , MB_OK | MB_ICONERROR | MB_TASKMODAL);
 #endif
 			return;
@@ -173,8 +175,8 @@ namespace Stamina { namespace DT {
             bool success = true;
 			int retries = 0;
             while (1) {
-				_unlink(_fileName);
-				if (rename(_temp_fileName , _fileName) == 0)
+				_unlink(_fileName.c_str());
+				if (rename(_temp_fileName.c_str() , _fileName.c_str()) == 0)
 					break; // uda³o siê!
 
 				if (++retries < 8) { // czekamy 2 sekundy
@@ -214,7 +216,7 @@ namespace Stamina { namespace DT {
 		if (strcmp("DTBIN" , sig)) throw DTException(errBadFormat);
 
 		readData(&_verMaj , 1);
-		if (_verMaj > versionMajor) throw DTException(errBadVersion);
+		if (_verMaj > DT::binVersionMaj) throw DTException(errBadVersion);
 
 		// £adujemy drugi cz³on wersji, oraz flagi (dostêpne od v2.0)
 	    if (_verMaj > '1') {
@@ -224,20 +226,15 @@ namespace Stamina { namespace DT {
 		} else {
 			_pos_state = ftell(_file);
 			_verMin = 0; 
-			flag = 0;
+			_fileFlag = fflagNone;
 		}
 
 		// £adujemy liczbê wierszy
 		readData(&_storedRowsCount, 4);  // rowc
 		_table->_size = _storedRowsCount;
       
-		int csize , a , b;
-		_table->_lastId = DT_ROWID_MIN;
-		md5digest[0]=0;
-		table->dbID = -1;
-
 		_dataFlag = dflagNone;
-        int dataLeft;
+        unsigned int dataLeft;
 		// Pole DATA (od v2.0)
 		if (_verMaj > '1') {
 			readData(&_dataSize , 4);
@@ -305,7 +302,7 @@ namespace Stamina { namespace DT {
 		if (_dataFlag & dflagLastBackup) {
 			readData(&_table->_timeLastBackup, 8, &dataLeft);
 		} else {
-			_table->_timeCreated = 0;
+			_table->_timeCreated.clear();
 		}
 
 		if (_dataFlag & dflagPassSalt) {
@@ -346,8 +343,8 @@ namespace Stamina { namespace DT {
 			this->generatePasswordDigest(true);
 			this->generateXorDigest(true);
 
-			_verMaj = versionMajor;
-			_verMin = versionMinor;
+			_verMaj = DT::binVersionMaj;
+			_verMin = DT::binVersionMin;
 
 			writeData("DTBIN", 5); 
 
@@ -358,7 +355,8 @@ namespace Stamina { namespace DT {
 
 			writeData(&_fileFlag, 4); // flag
 
-			writeData(&(_table->getRowCount()), 4);    // rowc
+			unsigned int rowCount = _table->getRowCount();
+			writeData(&rowCount, 4);    // rowc
 
 			_dataSize = 0x7FFFFFFF;
 			// placeholder do zapisania trochê póŸniej. Specjalnie zapisujemy du¿¹ wartoœæ, ¿eby w razie pozostawienia tego w takim stanie w pliku spowodowaæ "bezpieczny" b³¹d podczas wczytywania
@@ -381,7 +379,7 @@ namespace Stamina { namespace DT {
 
 			if (_dataFlag & dflagLastId) {
 				_pos_dataLastId = ftell(_file);
-				writeData(&_table->lastid, 4, &_dataSize);
+				writeData(&_table->_lastId, 4, &_dataSize);
 			} else {
 				_pos_dataLastId = 0;
 			}
@@ -391,8 +389,9 @@ namespace Stamina { namespace DT {
 			}
 
 			if (_dataFlag & dflagParams) {
-				writeData(&(_table->getParamsMap().size()), 4, &_dataSize);
-				for (DataTable::tParams::iterator it = _table->getParamsMap().begin(); it != _table->getParamsMap().end(); it++) {
+				unsigned int paramsCount = _table->getParamsMap().size();
+				writeData(&paramsCount, 4, &_dataSize);
+				for (DataTable::tParams::const_iterator it = _table->getParamsMap().begin(); it != _table->getParamsMap().end(); it++) {
 					writeString(it->first, &_dataSize);				
 					writeString(it->second, &_dataSize);				
 				}
@@ -421,7 +420,7 @@ namespace Stamina { namespace DT {
 			this->setFilePosition(_pos_data - 4, fromBeginning);
 			writeData(&_dataSize, 4);
 			// Ustawiamy siê z powrotem za danymi
-			this->setFilePosotion(_dataSize, fromCurrent);
+			this->setFilePosition(_dataSize, fromCurrent);
 
 			this->updateFileSize();
 
@@ -440,10 +439,10 @@ namespace Stamina { namespace DT {
 
 		int count;
 		readData(&count, 4);
-		_fcols.setcolcount(count);
+		_fcols.setColCount(count);
 		for (int i = 0; i < count; i++) { // columns definitions
-			int id;
-			int type;
+			tColId id;
+			enColumnType type;
 			readData(&id, 4);
 			readData(&type, 4);
 			std::string name;
@@ -473,18 +472,20 @@ namespace Stamina { namespace DT {
 
 		try {
 
-			writeData(&(_fcols.getColCount()), 4);
+			unsigned int colCount = _fcols.getColCount();
+			writeData(&colCount, 4);
 
-			for (i = 0; i < _fcols.getColCount(); i++) {
-				const Column& col = _fcols.getColumnByIndex(i);
-				writeData(&col.id, 4);   //id
-				int type = col.getFlags() & (~DT_CF_NOSAVEFLAGS); 
+			for (unsigned int colIndex = 0; colIndex < colCount; colIndex++) {
+				const Column& col = _fcols.getColumnByIndex(colIndex);
+				tColId id = col.getId();
+				writeData(&id, 4);   //id
+				int type = col.getFlags(); 
 				writeData(&type, 4);   //type
-				unsigned char nameLength = min(255, col.name.size());
+				unsigned char nameLength = min(255, col.getName().size());
 				writeData(&nameLength , 1); // name length
 				if (nameLength) 
-					writeData(col.name.c_str(), nameLength); // name
-				dataSize = 0;
+					writeData(col.getName().c_str(), nameLength); // name
+				unsigned int dataSize = 0;
 				writeData(&dataSize, 4); // For future use maybe.
 			}
 	      
@@ -565,7 +566,7 @@ namespace Stamina { namespace DT {
 		if (_verMaj > '1') {
 			readData(&rowSize, 4);
 			// Sprawdzamy czy ten row jest w stanie siê tu w ogóle zmieœciæ
-			if (ftell(file) + rowSize + 4 > _fileSize)
+			if (ftell(_file) + rowSize + 4 > _fileSize)
 				throw DTException(errBadFormat);
 
 			//TODO: mo¿e to wy³¹czyæ??
@@ -573,7 +574,7 @@ namespace Stamina { namespace DT {
 			setFilePosition(rowSize , fromCurrent);
 			unsigned int rowSize2;
 			readData(&rowSize2 , 4);
-			setFilePosition(-rowSize - 4, fromCurrent); // Wracamy do pozycji
+			setFilePosition(- (signed int)rowSize - 4, fromCurrent); // Wracamy do pozycji
 			if (rowSize != rowSize2) 
 				throw DTException(errBadFormat);
             
@@ -681,7 +682,7 @@ namespace Stamina { namespace DT {
 					if (skip) {
 						skipBytes = length;
 					} else if (length > 0) {
-						char buffer = new char [length + 1];
+						char * buffer = new char [length + 1];
 						buffer[length] = 0;
 						readCryptedData(col, buffer, length);
 						rowObj.setByIndex(colIndex, (DataEntry)buffer);
@@ -709,7 +710,7 @@ namespace Stamina { namespace DT {
 					break; }
 
 			}
-			if (fgetc(file) != '\t')
+			if (fgetc(_file) != '\t')
 				throw DTException(errBadFormat);
 		} // kolumny
 
@@ -741,17 +742,19 @@ namespace Stamina { namespace DT {
 		// rozmiar, flagi - od v2.0
 		if (_verMaj > '1') {
 			writeData(&rowSize, 4);  //rowSize - placeholder
-			writeData(&(rowObj.getFlags()), 4, &rowSize); // flag
+			enRowFlag rowFlags = rowObj.getFlags();
+			writeData(&rowFlags, 4, &rowSize); // flag
 			unsigned int dataSize = 8; // flag + lastId, na razie nie ma wiêcej
 			writeData(&dataSize, 4, &rowSize);
 			enRowDataFlags flags = rdflagRowId;
 			writeData(&flags, 4, &rowSize);
-			writeData(&(rowObj.getId()), 4, &rowSize);
+			tRowId rowId = rowObj.getId();
+			writeData(&rowId, 4, &rowSize);
 		}
-		for (unsigned int colIndex =0; colIndex < fcols.cols.size(); colIndex++) {
+		for (unsigned int colIndex =0; colIndex < _fcols.getColCount(); colIndex++) {
 			const Column& col = _fcols.getColumnByIndex(colIndex);
 
-			if (col.hasFlag(rflagDontSave)) continue;
+			if (col.hasFlag(cflagDontSave)) continue;
 
 			tColId id = col.getId();
 			if (col.isIdUnique()) { 
@@ -798,7 +801,7 @@ namespace Stamina { namespace DT {
 		if (_verMaj > '1') {
 			writeData(&rowSize, 4); // size
 			// cofamy siê o ca³y wiersz i oba zapisane size'y
-			setFilePosition(- rowSize - 8, fromCurrent);
+			setFilePosition(- (signed int)rowSize - 8, fromCurrent);
 			writeData(&rowSize, 4);
 			// idziemy do przodu o ca³y wiersz i ostatni size...
 			setFilePosition(rowSize + 4, fromCurrent);
@@ -916,23 +919,25 @@ namespace Stamina { namespace DT {
 		}
 	}
 
-	void FileBin::readCryptedData(const Column& col, void* buffer, int size, int* decrement = 0) {
+	void FileBin::readCryptedData(const Column& col, void* buffer, int size, unsigned int* decrement) {
 		this->readData(buffer, size, decrement);
 		if (col.hasFlag(cflagXor) || this->hasFileFlag(fflagCryptAll)) {
 			if (this->versionNewCrypt()) {
+				xor2_decrypt(_xorDigest.getDigest(), (unsigned char*)buffer, size, ftell(_file));
 			} else {
-				xor1_decrypt(_table->getOldXorKey(), (unsigned char*)buffer, size);				
+				xor1_decrypt(_table->getXor1Key(), (unsigned char*)buffer, size);				
 			}
 		}
 	}
 
-	void FileBin::writeCryptedData(const Column& col, void* buffer, int size, int* increment = 0) {
+	void FileBin::writeCryptedData(const Column& col, void* buffer, int size, unsigned int* increment) {
 		if (col.hasFlag(cflagXor) || this->hasFileFlag(fflagCryptAll)) {
 			unsigned char* crypted = new unsigned char [size];
 			memcpy(crypted, buffer, size);
 			if (this->versionNewCrypt()) {
+				xor2_encrypt(_xorDigest.getDigest(), crypted, size, ftell(_file));
 			} else {
-				xor1_encrypt(_table->getOldXorKey(), crypted, size);
+				xor1_encrypt(_table->getXor1Key(), crypted, size);
 			}
 			this->writeData(crypted, size, increment);
 			delete [] crypted;

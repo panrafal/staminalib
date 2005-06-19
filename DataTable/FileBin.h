@@ -33,6 +33,8 @@ namespace Stamina { namespace DT {
 			fflagFragmented = 0x10000,
 			/**Uses crypt procedures on all fields*/
 			fflagCryptAll = 0x20000,
+
+			fflagNone = 0,
 		};
 
 		enum enDataFlags {
@@ -100,8 +102,8 @@ namespace Stamina { namespace DT {
 		}
 
 		std::string getOpenedFileName() {
-			if (! _temp_filename.empty())
-				return _temp_filename;
+			if (! _temp_fileName.empty())
+				return _temp_fileName;
 			else
 				return _fileName;
 		}
@@ -109,7 +111,7 @@ namespace Stamina { namespace DT {
 		/**Returns true if file is in the version that supports new crypt functions*/
 		inline bool versionNewCrypt() {
 			if (_verMaj > '3') return true;
-			if (_verMak < '3') return false;
+			if (_verMaj < '3') return false;
 			return _verMin >= '5';
 		}
 
@@ -177,7 +179,7 @@ namespace Stamina { namespace DT {
 		void generateXorDigest(bool newSalt);
 
 
-		inline void readData(void* buffer, int size, int* decrement = 0) throw(...) {
+		inline void readData(void* buffer, int size, unsigned int* decrement = 0) throw(...) {
 			if (fread(buffer, size, 1, _file) < 1) {
 				throw DTFileException();
 			}
@@ -185,32 +187,33 @@ namespace Stamina { namespace DT {
 				*decrement -= size;
 		}
 
-		inline void writeData(const void* buffer, int size, int* increment = 0) throw(...) {
-			if (fread(buffer, size, 1, _file) < 1) {
+		inline void writeData(const void* buffer, int size, unsigned int* increment = 0) throw(...) {
+			if (fwrite(buffer, size, 1, _file) < 1) {
 				throw DTFileException();
 			}
 			if (increment)
 				*increment += size;
 		}
 
-		inline std::string readString(int* decrement = 0) throw(...) {
-			int size;
+		inline std::string readString(unsigned int* decrement = 0) throw(...) {
+			unsigned int size;
 			readData(&size, 4, decrement);
 			if (ftell(_file) + size > _fileSize) throw DTException(errBadFormat);
-			std::string<char> s;
+			std::basic_string<char> s;
 			readData(stringBuffer(s, size), size, decrement);
 			stringRelease(s, size);
 			return s;
 		}
 
-		inline void writeString(const std::string<char>& s, int* increment = 0) throw(...) {
-			writeData(&(s.length()), 4, increment);
+		inline void writeString(const std::basic_string<char>& s, unsigned int* increment = 0) throw(...) {
+			unsigned int length = s.length();
+			writeData(&length, 4, increment);
 			writeData(s.c_str(), s.length(), increment);
 		}
 
-		void readCryptedData(const Column& col, void* buffer, int size, int* decrement = 0) throw(...);
+		void readCryptedData(const Column& col, void* buffer, int size, unsigned int* decrement = 0) throw(...);
 
-		void writeCryptedData(const Column& col, void* buffer, int size, int* increment = 0) throw(...);
+		void writeCryptedData(const Column& col, void* buffer, int size, unsigned int* increment = 0) throw(...);
 
 
 		inline void updateFileSize() {
@@ -234,9 +237,9 @@ namespace Stamina { namespace DT {
 		int _storedRowsCount;
 		//int mode;
 		char _verMaj , _verMin;
-		int _fileFlag;
-		int _dataSize;
-		int _dataFlag;
+		enFileFlags _fileFlag;
+		unsigned int _dataSize;
+		enDataFlags _dataFlag;
 
 		bool _recreating;
 

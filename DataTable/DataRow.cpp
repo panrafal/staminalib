@@ -19,9 +19,9 @@ namespace Stamina { namespace DT {
 
     DataRow::DataRow (DataTable * table, char allocate) {
 		_id = 0;
-		_flag = 0;
+		_flag = rflagNone;
 		_size=0;
-		_table=t;
+		_table = table;
 		if (allocate) {
 			allocData();
 		}
@@ -31,32 +31,32 @@ namespace Stamina { namespace DT {
 		freeData(); 
 	}
 
-    int DataRow::allocData() {
+    bool DataRow::allocData() {
 		LockerCS lock (_cs);
         this->freeData();
-		_size = _table->getColumns().size();
-		if (!size) {
-			return 0;
+		_size = _table->getColumns().getColCount();
+		if (!_size) {
+			return false;
 		}
 
-		this->_data = new DataEntry [size];
-	    for (int i = 0 ; i < size ; i++) {
+		this->_data = new DataEntry [_size];
+	    for (unsigned int i = 0 ; i < _size ; i++) {
         #ifdef DT_SETBLANKSBYTYPE
 			const Column& col = _table->getColumns().getColumnByIndex(i);
 			switch (col.getType()) {
-				case ctypeInt: _data[i] = col.def; break;
+				case ctypeInt: _data[i] = col.getDefValue(); break;
 				case ctypeInt64: 
 					_data[i]=(void*)new __int64;
-					if (col.def) {
-						*(__int64*)_data[i]=*(__int64*)col.def;
+					if (col.getDefValue()) {
+						*(__int64*)_data[i]=*(__int64*)col.getDefValue();
 					} else {
 						*(__int64*)_data[i]=0;
 					}
 					break;
 				case ctypeString:
-					if (col.def) {
-						_data[i] = (void*)new char [strlen((char *)col.def)+1];
-		                _data[i] = (void*)strcpy((char *)_data[i] , (char *)col.def);
+					if (col.getDefValue()) {
+						_data[i] = (void*)new char [strlen((char *)col.getDefValue())+1];
+		                _data[i] = (void*)strcpy((char *)_data[i] , (char *)col.getDefValue());
 					} else _data[i]=0;
 					break;
 /*				case DT_CT_STRING:
@@ -66,8 +66,8 @@ namespace Stamina { namespace DT {
                  else data[i]=0;
                break;*/
 				case ctypeBin:
-					if (col.def) {
-						TypeBin * bin = (TypeBin*) col.def;
+					if (col.getDefValue()) {
+						TypeBin * bin = (TypeBin*) col.getDefValue();
 						_data[i]=(void*)new char [4+bin->size];
 						memcpy((void*)_data[i] , &bin->size , 4);
 						if (bin->buff && bin->size) 
@@ -79,14 +79,14 @@ namespace Stamina { namespace DT {
 			_data[i]=0;
         #endif
 		}
-		return 1;
+		return true;
     }
 
-    int DataRow::freeData() {
+    bool DataRow::freeData() {
 		LockerCS lock (_cs);
 	    if (_size) {/*cout << "f" ;*/
-			for (int i = 0 ; i < _size ; i++) {
-				switch (_table->getColumns().getColumnByIndex(i)) {
+			for (unsigned int i = 0 ; i < _size ; i++) {
+				switch (_table->getColumns().getColumnByIndex(i).getType()) {
 					case ctypeInt64:
 						if (_data[i]) delete _data[i];
 						break;
@@ -104,7 +104,7 @@ namespace Stamina { namespace DT {
 			delete [] _data;
 			_size=0;
 		}
-	    return 1;
+	    return true;
     }
 
     const DataEntry DataRow::get(tColId id) {
@@ -112,8 +112,8 @@ namespace Stamina { namespace DT {
 	    _table->resetError();
 		return getByIndex(_table->getColumns().colIndex(id));
 	}
-	const DataEntry DataRow::getByIndex (unsigned int colIndex); // Pobiera wartosc kolumny
-		if (! this->hasColumnData()) {
+	const DataEntry DataRow::getByIndex (unsigned int colIndex) { // Pobiera wartosc kolumny
+		if (! this->hasColumnData(colIndex)) {
 			_table->setError(errNoColumn);
 			return 0;
 		}
@@ -132,8 +132,8 @@ namespace Stamina { namespace DT {
 		return this->setByIndex(_table->getColumns().colIndex(id), val);
 	}
 
-	bool DataRow::setByIndex (unsigned int colIndex, DataEntry val); // ustawia wartosc kolumny
-		if (! this->hasColumnData()) {
+	bool DataRow::setByIndex (unsigned int colIndex, DataEntry val) { // ustawia wartosc kolumny
+		if (! this->hasColumnData(colIndex)) {
 			_table->setError(errNoColumn);
 			return false;
 		}
@@ -141,20 +141,20 @@ namespace Stamina { namespace DT {
 
 		switch (col.getType()) {
 			case ctypeInt64:
-				if (!_data[i]) _data[i]=(void*)new __int64;
-				if (val) *((__int64*)_data[i]) = *((__int64*)val);
+				if (!_data[colIndex]) _data[colIndex]=(void*)new __int64;
+				if (val) *((__int64*)_data[colIndex]) = *((__int64*)val);
 				break;
 			case ctypeString: {
 				size_t valLen = strlen((char *)val);
-				size_t curLen = strlen((char *)_data[i]);
-				if (_data[i] && (valLen > curLen || valLen < curLen/2)) {
-					delete [] _data[i];
-					_data[i]=0;
+				size_t curLen = strlen((char *)_data[colIndex]);
+				if (_data[colIndex] && (valLen > curLen || valLen < curLen/2)) {
+					delete [] _data[colIndex];
+					_data[colIndex]=0;
 				}
-				if (!_data[i]) {
-					_data[i] = new char [valLen + 1];
+				if (!_data[colIndex]) {
+					_data[colIndex] = new char [valLen + 1];
 				}
-				_data[i] = (void*)strcpy((char *)_data[i] , (char *)val);
+				_data[colIndex] = (void*)strcpy((char *)_data[colIndex] , (char *)val);
 				break;}
 			/*case DT_CT_STRING:
 				if (!data[i]) data[i]=(void*)new string(*((string *)val));
@@ -162,21 +162,21 @@ namespace Stamina { namespace DT {
 				break;*/
 			case ctypeBin: {
 				TypeBin * bin = (TypeBin *)val;
-				TypeBin * cur = (TypeBin *)_data[i];
-				if (_data[i] && (bin->size > cur->size || bin->size < cur->size/2)  < ) {
-					delete [] _data[i];
-					_data[i]=0;
+				TypeBin * cur = (TypeBin *)_data[colIndex];
+				if (_data[colIndex] && (bin->size > cur->size || bin->size < cur->size/2)) {
+					delete [] _data[colIndex];
+					_data[colIndex]=0;
 				}
-				if (_data[i] == 0) {
-					_data[i] = new char [4 + bin->size];
+				if (_data[colIndex] == 0) {
+					_data[colIndex] = new char [4 + bin->size];
 				}
-				memcpy(data[i] , &bin->size , 4);
+				memcpy(_data[colIndex] , &bin->size , 4);
 				if (bin->size && bin->buff) {
-					memcpy((char *)_data[i] + 4 , bin->buff , bin->size);
+					memcpy((char *)_data[colIndex] + 4 , bin->buff , bin->size);
 				}
 				break;}
 			default:
-				_data[i] = val;
+				_data[colIndex] = val;
 
       }
       return true;

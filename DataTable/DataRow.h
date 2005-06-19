@@ -33,7 +33,7 @@ namespace Stamina { namespace DT {
 
 
 		inline bool hasColumnData(unsigned int colIndex) {
-			return (colIndex >= 0 && colIndex < this->_slots);
+			return (colIndex >= 0 && colIndex < this->_size);
 		}
 
 		DataRow (const DataRow & v);
@@ -47,15 +47,15 @@ namespace Stamina { namespace DT {
 		inline void unlock() {
 			_cs.unlock();
 		}
-		inline bool canAccess() {
-			_cs.canAccess();
+		inline bool canAccess()  {
+			return _cs.canAccess();
 		}
 
 		inline Lock& getCS() {
 			return _cs;
 		}
 	
-		enRowFlag getFlags() {
+		enRowFlag getFlags() const {
 			return _flag;
 		}
 		void setFlag(enRowFlag flag, bool setting) {
@@ -64,7 +64,7 @@ namespace Stamina { namespace DT {
 			else
 				_flag = (enRowFlag) (_flag & (~flag));
 		}
-		bool hasFlag(enRowFlag flag) {
+		bool hasFlag(enRowFlag flag) const {
 			return (_flag & flag) != 0;
 		}
 
@@ -72,13 +72,13 @@ namespace Stamina { namespace DT {
 			_id = id;
 		}
 
-		inline tRowId getId() {
+		inline tRowId getId() const {
 			return _id;
 		}
 
 	private:
 		class DataTable * _table; ///< Parent table
-		int _size;  ///< Data slots count
+		unsigned int _size;  ///< Data slots count
 		DataEntry * _data; ///< Data slots
 		unsigned int _filePos;
 		//int _index;

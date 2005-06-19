@@ -44,24 +44,24 @@ namespace Stamina {
 			Compiled(const std::string& pattern, const oLocale& locale=oLocale(), int addFlags=0) throw(CompileException);
 			~Compiled();
 
-			int getSubpatternsCount();
-			int getNamedIndex(const std::string& named);
+			int getSubpatternsCount() const;
+			int getNamedIndex(const std::string& named) const;
 #ifdef _PCRE_H
-			pcre* getCompiled() {
+			pcre* getCompiled() const {
 				return _compiled;
 			}
-			pcre_extra* getExtra() {
+			pcre_extra* getExtra() const {
 				return _extra;
 			}
-			int getExecFlags() {
+			int getExecFlags() const {
 				return _flags & (PCRE_NOTBOL | PCRE_NOTEOL | PCRE_NOTEMPTY | PCRE_ANCHORED);
 			}
-			int getCompileFlags() {
+			int getCompileFlags() const {
 				return _flags & ~(PCRE_NOTBOL | PCRE_NOTEOL | PCRE_NOTEMPTY | PCRE_ANCHORED);
 			}
 #endif
 
-			int getFlags() {
+			int getFlags() const {
 				return _flags;
 			}
 
