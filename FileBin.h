@@ -81,7 +81,45 @@ namespace Stamina { namespace DT {
 		void open (const std::string& fn , enFileMode mode) throw (...);
 		void close ();
 
-		virtual void readRows() throw (...); // wczytuje wiersze
+		virtual void readRows(bool skipFailed) throw (...); // wczytuje wiersze
+
+		enFileFlags getFileFlags() {
+			return _fileFlag;
+		}
+		/**Sets file flags.
+		@warning You are responsible to set them wisely. Flags are always stored in the file when closing (together with row count). Extreme caution should be taken when appending data to the file.
+		*/
+		void setFileFlag(enFileFlags flag, bool setting) {
+			if (setting)
+				_fileFlag = (enFileFlags) (_fileFlag | flag);
+			else
+				_fileFlag = (enFileFlags) (_fileFlag & (~flag));
+		}
+		bool hasFileFlag(enFileFlags flag) {
+			return (_fileFlag & flag) != 0;
+		}
+
+		std::string getOpenedFileName() {
+			if (! _temp_filename.empty())
+				return _temp_filename;
+			else
+				return _fileName;
+		}
+
+		/**Returns true if file is in the version that supports new crypt functions*/
+		inline bool versionNewCrypt() {
+			if (_verMaj > '3') return true;
+			if (_verMak < '3') return false;
+			return _verMin >= '5';
+		}
+
+		inline bool isReadable() {
+			return !_recreating && (_opened & (fileRead | fileAppend));
+		}
+		inline bool isCreatingNewFile() {
+			return _recreating;
+		}
+
 
 	protected:
 
@@ -110,8 +148,8 @@ namespace Stamina { namespace DT {
 			this->setFilePosition(0, fromEnd);
 		}
 
-		void writeCount() throw (...);
-		void readCount() throw (...);
+		void writeState() throw (...);
+		//void readCount() throw (...);
 
 		void setErasedRow(bool overwrite=true , int testIndex=0) throw (...);
 
@@ -138,26 +176,6 @@ namespace Stamina { namespace DT {
 		*/
 		void generateXorDigest(bool newSalt);
 
-		std::string getOpenedFileName() {
-			if (! _temp_filename.empty())
-				return _temp_filename;
-			else
-				return _fileName;
-		}
-
-		/**Returns true if file is in the version that supports new crypt functions*/
-		inline bool versionNewCrypt() {
-			if (_verMaj > '3') return true;
-			if (_verMak < '3') return false;
-			return _verMin >= '5';
-		}
-
-		inline bool isReadable() {
-			return !_recreating && (_opened & (fileRead | fileAppend));
-		}
-		inline bool isCreatingNewFile() {
-			return _recreating;
-		}
 
 		inline void readData(void* buffer, int size, int* decrement = 0) throw(...) {
 			if (fread(buffer, size, 1, _file) < 1) {
@@ -190,9 +208,15 @@ namespace Stamina { namespace DT {
 			writeData(s.c_str(), s.length(), increment);
 		}
 
+		void readCryptedData(const Column& col, void* buffer, int size, int* decrement = 0) throw(...);
+
+		void writeCryptedData(const Column& col, void* buffer, int size, int* increment = 0) throw(...);
+
+
 		inline void updateFileSize() {
 			_fileSize = _filelength(_file->_file);
 		}
+
 
 	public:
 
@@ -206,7 +230,7 @@ namespace Stamina { namespace DT {
 		int _pos_rows;
 		int _pos_cols;
 		int _pos_dataLastId;
-		int _pos_count;
+		int _pos_state;
 		int _storedRowsCount;
 		//int mode;
 		char _verMaj , _verMin;
