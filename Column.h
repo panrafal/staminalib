@@ -14,46 +14,71 @@
 
 namespace Stamina { namespace DT {
 
-	struct Column {
-		enColumnFlag type;
-		tColId id;
-		DataEntry def; // default
-		std::string name;  // tekstowy identyfikator
+	class Column {
+	public:
 
 		Column();
 
-		inline enColumnType getType() {
-			return (enColumnType) (type & ctypeMask);
+		inline enColumnType getType() const {
+			return (enColumnType) (_type & ctypeMask);
 		}
-		inline enColumnFlag getFlags() {
-			return type;
-		}
-
-		inline tColId getId() {
-			return id;
+		inline enColumnFlag getFlags() const {
+			return (enColumnFlag) _type;
 		}
 
-		inline bool isIdUnique() {
-			return (id & colIdUniqueFlag) != 0;
+		inline tColId getId() const {
+			return _id;
 		}
 
-		inline bool empty() {
-			return this->type == ctypeUnknown;
+		inline void setId(tColId id) {
+			_id = id;
 		}
 
-		inline const std::string& getName() {
-			return name;
+		inline bool isIdUnique() const {
+			return (_id & colIdUniqueFlag) != 0;
+		}
+
+		inline bool empty() const {
+			return this->_type == ctypeUnknown;
+		}
+
+		inline const std::string& getName() const {
+			return _name;
+		}
+		inline void setName(const std::string& name) {
+			_name = name;
+		}
+
+		void setType(enColumnType type, bool resetFlags) {
+			if (resetFlags)
+				_type = type;
+			else
+				_type = (enColumnType)((_type & ~ctypeMask) | type);
 		}
 
 		void setFlag(enColumnFlag flag, bool setting) {
 			if (setting)
-				type = (enColumnFlag) (type | flag);
+				_type = _type | flag;
 			else
-				type = (enColumnFlag) (type & (~flag));
+				_type = (enColumnType) (_type & (~flag));
 		}
-		bool hasFlag(enColumnFlag flag) {
-			return (type & flag) != 0;
+		bool hasFlag(enColumnFlag flag) const {
+			return (_type & flag) != 0;
 		}
+
+		inline DataEntry getDefValue() const {
+			return _def;
+		}
+		inline void setDefValue(DataEntry val) {
+			_def = val;
+		}
+
+	private:
+		enColumnType _type;
+		tColId _id;
+		DataEntry _def; // default
+		std::string _name;  // tekstowy identyfikator
+
 
 	};
 
@@ -67,17 +92,17 @@ namespace Stamina { namespace DT {
 		operator = (const ColumnsDesc & x);
 
 		int setColCount (int count, bool expand = false); // ustawia ilosc kolumn
-		tColId setColumn (tColId id , enColumnFlag type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
-		tColId setUniqueCol (const char * name , enColumnFlag type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
+		tColId setColumn (tColId id , enColumnType type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
+		tColId setUniqueCol (const char * name , enColumnType type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
 
-		inline int getColCount () const {
+		inline unsigned int getColCount () const {
 			return _cols.size();
 		}
-		inline int size() const {
+		inline unsigned int size() const {
 			return _cols.size();
 		}
 
-		const Column& getColumnByIndex(int index) const;
+		const Column& getColumnByIndex(unsigned int index) const;
 		const Column& getColumn(tColId id) const {
 			return getColumnByIndex(colIndex(id));
 		}
@@ -91,8 +116,8 @@ namespace Stamina { namespace DT {
 		void optimize();
 		int join(const ColumnsDesc& other , bool overwrite); // ³¹czy dwa deskryptory, zwraca liczbê do³¹czonych
 
-		int getNewUniqueId(void);
-		int getNameId(const char * name) const;
+		tColId getNewUniqueId(void);
+		tColId getNameId(const char * name) const;
 
 		bool isLoader() {
 			return _loader;
