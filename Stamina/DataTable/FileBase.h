@@ -143,6 +143,7 @@ namespace Stamina { namespace DT {
 	};
 
 	class DTFileException: public DTException {
+	public:
 		DTFileException():DTException((enError)(errFileError | errno)) {
 		
 		}

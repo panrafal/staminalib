@@ -261,14 +261,14 @@ namespace Stamina {
 	}
 
 
-	int RegEx::Compiled::getSubpatternsCount() {
+	int RegEx::Compiled::getSubpatternsCount() const {
 		S_ASSERT(_compiled);
 		if (!_compiled) return 0;
 		int c = 0;
 		pcre_fullinfo(_compiled, _extra, PCRE_INFO_CAPTURECOUNT, &c);
 		return c;
 	}
-	int RegEx::Compiled::getNamedIndex(const std::string& named) {
+	int RegEx::Compiled::getNamedIndex(const std::string& named) const {
 		S_ASSERT(_compiled);
 		if (!_compiled) return PCRE_ERROR_NOSUBSTRING;
 		return pcre_get_stringnumber(_compiled, named.c_str());

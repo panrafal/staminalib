@@ -17,10 +17,10 @@ namespace Stamina { namespace DT {
 	const Column emptyColumn;
 
 	Column::Column() {
-		type = ctypeUnknown;
-		id = colNotFound;
-		def = 0;
-		name = "";
+		_type = ctypeUnknown;
+		_id = colNotFound;
+		_def = 0;
+		_name = "";
 	}
 
 	ColumnsDesc::ColumnsDesc () {
@@ -38,31 +38,22 @@ namespace Stamina { namespace DT {
     int ColumnsDesc::setColCount (int count, bool expand) {
         if (!expand) {_cols.clear();}
         int resize = _cols.size();
-        _cols.resize(count + resize , bl);
-		for (tColumns::iterator = _cols.begin() + resize; cols_it != _cols.end() ; cols_it++ ) {
-            cols_it->id=-1;
-            cols_it->type=deftype;
-            cols_it->def=0;
-        }
-/*        if (fill) {
-			for (int i = 0;i<count;i++)
-				setcol(i , deftype);
-        }*/
+        _cols.resize(count + resize);
         return _cols.size();
     } // ustawia ilosc kolumn
 
     void ColumnsDesc::optimize(void) {
 		tColumns::iterator it = _cols.begin();
         while (it!=_cols.end()) {
-          if (it->id == -1) 
-			  it = cols.erase(it);
-          else 
-			  cols_it++;
+			if (it->getId() == colNotFound) 
+				it = _cols.erase(it);
+			else 
+				it ++;
         }
         return;
     }
 
-	tColId ColumnsDesc::setColumn (tColId id , enColumnFlag type , DataEntry def , const char * name) {
+	tColId ColumnsDesc::setColumn (tColId id , enColumnType type , DataEntry def , const char * name) {
         if (!name) name = "";
         if (id != colNotFound && ((id & 0xFF000000) == 0xFF000000)) 
 			id = colNotFound;
@@ -77,32 +68,30 @@ namespace Stamina { namespace DT {
                 }
             }
             Column& v = _cols[index];
+			v.setType(type, true);
 			if (this->isLoader())
-				v.type = cflagIsLoaded;
-			else
-				v.type = 0;
-			v.type |= type;
-			v.id=id;
-			v.def=def;
-			v.name=name;
+				v.setFlag(cflagIsLoaded, true);
+			v.setId(id);
+			v.setDefValue(def);
+			v.setName(name);
         } catch (...) {
 			//if (table) ((DataTable *)table)->error=DT_ERR_NOCOL;
 		}
         return id;
     }
 
-	tColId ColumnsDesc::setUniqueCol (const char * name , enColumnFlag type , DataEntry def) {
+	tColId ColumnsDesc::setUniqueCol (const char * name , enColumnType type , DataEntry def) {
         if (!name) name = "";
         //if (table) ((DataTable *)table)->error=0;
         tColId id = getNameId(name);
         if (id == colNotFound) {
 			id = getNewUniqueId();
 		}
-        setCol(id , type , def , name);
+		setColumn(id , type , def , name);
         return id;
     }
 
-	const Column& ColumnsDesc::getColumnByIndex(int index) const {
+	const Column& ColumnsDesc::getColumnByIndex(unsigned int index) const {
 		if (index > _cols.size()) {
 			return emptyColumn;
 		}
@@ -111,8 +100,8 @@ namespace Stamina { namespace DT {
 
     int ColumnsDesc::colIndex (tColId id) const {
         int i = 0;
-		for (tColumns::iterator it = _cols.begin(); it != _cols.end(); it++) {
-			if (it->id == id) 
+		for (tColumns::const_iterator it = _cols.begin(); it != _cols.end(); it++) {
+			if (it->getId() == id) 
 				return i; 
 			i++;
 		}
@@ -130,8 +119,8 @@ namespace Stamina { namespace DT {
 
     tColId ColumnsDesc::getNameId(const char * name) const {
         if (_cols.size()==0) return colNotFound;
-		for (tColumn::iterator it = _cols.begin(); it != _cols.end(); it++) {
-			if (it->name == name) return it->id; 
+		for (tColumns::const_iterator it = _cols.begin(); it != _cols.end(); it++) {
+			if (it->getName() == name) return it->getId(); 
 		}
 		return colNotFound;
     }
@@ -140,17 +129,17 @@ namespace Stamina { namespace DT {
 	*/
 	int ColumnsDesc::join(const ColumnsDesc& other, bool overwrite) {
 		int c = 0;
-		for (tColumns::const_iterator i = other->_cols.begin(); i != other->_cols.end(); i++) {
+		for (tColumns::const_iterator it = other._cols.begin(); it != other._cols.end(); it ++) {
 			// Sprawdzamy czy taka ju¿ nie istnieje...
 			if (!overwrite) {
-				int id = i->id;
-				if (id & colIdUniqueFlag)
-					id = this->getNameId(i->name.c_str());
+				tColId id = it->getId();
+				if (it->isIdUnique())
+					id = this->getNameId(it->getName().c_str());
 				if (id != -1 && this->colIndex(id) != -1)
 					continue;
 			}
 			// ustawiamy kolumnê
-			this->setCol((i->id & colIdUniqueFlag)? -1 : i->id , i->type , i->def , i->name.c_str());
+			this->setColumn((it->isIdUnique())? colByName : it->getId() , (enColumnType) it->getFlags() , it->getDefValue() , it->getName().c_str());
 		}
 		return c;
 	}

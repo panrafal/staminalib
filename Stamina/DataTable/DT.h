@@ -127,7 +127,7 @@ namespace Stamina { namespace DT {
 //	const tRowId rowIdFlag = DT_ROWID_MASK;
 
 	struct TypeBin {
-		int size;
+		unsigned int size;
 		void * buff;
 	};
 
@@ -149,6 +149,9 @@ namespace Stamina { namespace DT {
 		};
 		Value(tColType type=ctypeUnknown):type(type) {vInt64 = 0;buffSize=0;}
 
+		enColumnType getType() const {
+			return (enColumnType) this->type;
+		}
 	};
 	#pragma pack(pop)
 

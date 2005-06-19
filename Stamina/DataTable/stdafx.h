@@ -20,4 +20,7 @@
 #include <io.h>
 #include <stdarg.h>
 #include <time.h>
+
+#include <Stamina\Helpers.h>
+#include <Stamina\WinHelper.h>
 using namespace std;

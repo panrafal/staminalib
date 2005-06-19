@@ -55,7 +55,8 @@ namespace Stamina { namespace DT {
 			if (loadColumns) {
 				this->_table->mergeColumns(_fcols);
 			}
-			this->readRows();
+			/*TODO: przywracanie backupów*/
+			this->readRows(false);
 		} catch (DTException e) {
 			close();
 			return e.errorCode;

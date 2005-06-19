@@ -43,6 +43,7 @@ namespace Stamina {
 
 		inline MD5Digest& operator = (const MD5Digest& b) {
 			this->setDigest(b);
+			return *this;
 		}
 
 		inline bool operator == (const MD5Digest& b) {

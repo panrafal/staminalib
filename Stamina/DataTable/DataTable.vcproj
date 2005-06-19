@@ -103,6 +103,9 @@
 				RelativePath=".\ColumnsDesc.cpp">
 			</File>
 			<File
+				RelativePath=".\Crypt.cpp">
+			</File>
+			<File
 				RelativePath=".\DataRow.cpp">
 			</File>
 			<File
@@ -136,6 +139,9 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath=".\Column.h">
+			</File>
+			<File
+				RelativePath=".\Crypt.h">
 			</File>
 			<File
 				RelativePath=".\DataRow.h">

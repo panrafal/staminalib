@@ -110,15 +110,15 @@ namespace Stamina { namespace DT {
 		np. Znajduje pierwszy kontakt sieci NET_GG aktywny w ci¹gu ostatniej minuty.
 		dt->findRow(0, -1, &Find::EqInt(CNT_NET, NET_GG), &Find(Find::gt, CNT_ACTIVITY, ValueInt64(_time64(0) - 60000)), 0);
 		*/
-        tRowId findRow(unsigned int startPos, int argCount, ...) const;
+        tRowId findRow(unsigned int startPos, int argCount, ...);
 
-		inline tRowId findRow(unsigned int startPos, Find& f1) const {
+		inline tRowId findRow(unsigned int startPos, Find& f1) {
 			return this->findRow(startPos, 1, &f1);
 		}
-		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2) const {
+		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2) {
 			return this->findRow(startPos, 2, &f1, &f2);
 		}
-		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2, Find& f3) const {
+		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2, Find& f3) {
 			return this->findRow(startPos, 3, &f1, &f2, &f3);
 		}
 
@@ -129,12 +129,12 @@ namespace Stamina { namespace DT {
 			return *this->_rows[row];
 		}
 
-		DataEntry get(tRowId row , tColId id) const; // zwraca wartosc w wierszu/kolumnie
-		bool set(tRowId row , int tColId , DataEntry val);
+		DataEntry get(tRowId row , tColId id); // zwraca wartosc w wierszu/kolumnie
+		bool set(tRowId row , tColId col, DataEntry val);
 
 
 		// inne
-		inline int getInt(tRowId row , tColId id) const {
+		inline int getInt(tRowId row , tColId id)  {
 			Value v = Value(ctypeInt);
 			this->getValue(row, id, v);
 			return v.vInt;
@@ -142,7 +142,7 @@ namespace Stamina { namespace DT {
 		inline int setInt(tRowId row , tColId id , int val) {
 			return this->setValue(row, id, ValueInt(val));
 		}
-		inline const char * getCh(tRowId row , tColId id) const {
+		inline const char * getCh(tRowId row , tColId id) {
 			Value v = Value(ctypeString);
 			this->getValue(row, id, v);
 			return v.vChar;
@@ -151,7 +151,7 @@ namespace Stamina { namespace DT {
 			return this->setValue(row, id, ValueStr(val));
 		}
 
-		inline TypeBin getbin(tRowId row , tColId id) const {
+		inline TypeBin getbin(tRowId row , tColId id) {
 			Value v = Value(ctypeBin);
 			this->getValue(row, id, v);
 			return v.vBin;
@@ -163,7 +163,7 @@ namespace Stamina { namespace DT {
 			return this->setValue(row, id, ValueBin(val));
 		}
 
-		inline __int64 get64(tRowId row , tColId id) const {
+		inline __int64 get64(tRowId row , tColId id) {
 			Value v = Value(ctypeInt64);
 			this->getValue(row, id, v);
 			return v.vInt64;
@@ -172,7 +172,7 @@ namespace Stamina { namespace DT {
 			return this->setValue(row, id, ValueInt64(val));
 		}
 
-		inline std::string getStr(tRowId row , tColId id) const {
+		inline std::string getStr(tRowId row , tColId id) {
 			Value v = ValueStr(0, -1); // this way we will get string duplicate
 			this->getValue(row, id, v);
 			std::string s = v.vChar;
@@ -192,8 +192,8 @@ namespace Stamina { namespace DT {
 		}
 
 
-		int checkColType(tColId id , int type) {
-			return this->_cols.getColumn(id).type == type;
+		int checkColType(tColId id , enColumnType type) {
+			return this->_cols.getColumn(id).getType() == type;
 		}
 
 		bool idExists(int id) {
@@ -214,7 +214,7 @@ namespace Stamina { namespace DT {
 	vChar = * buffSize = 0   - zwracana jest aktualna wartoœæ, a w przypadku liczb u¿ywany jest podany wskaŸnik
 	vChar = * buffSize = #   - wartoœæ jest kopiowana do *
 */
-		bool getValue(tRowId row , tColId col , Value& value) const;
+		bool getValue(tRowId row , tColId col , Value& value);
 		
 		/** Sets the value using conversion.
 		*/
@@ -229,11 +229,11 @@ namespace Stamina { namespace DT {
 		inline int getError() {
 		}
 
-		inline void setOldXorKey(char* key) {
-			_cxor_key = key;
+		inline void setXor1Key(unsigned char* key) {
+			_xor1_key = key;
 		}
-		inline const char* getOldXorKey() {
-			return _cxor_key;
+		inline const unsigned char* getXor1Key() {
+			return _xor1_key;
 		}
 
 		static MD5Digest createPasswordDigest(const std::string& pass) {
@@ -283,7 +283,7 @@ namespace Stamina { namespace DT {
 		enError _error;
 		//int mode;
 		//int notypecheck;
-		char * _cxor_key;
+		unsigned char * _xor1_key;
 		MD5Digest _passwordDigest;
 		//unsigned int dbID; // Identyfikator bazy
 		CriticalSection _cs; // mechanizm blokuj¹cy
