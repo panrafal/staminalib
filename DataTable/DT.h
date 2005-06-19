@@ -48,6 +48,7 @@ namespace Stamina { namespace DT {
 		errNotOpened = 0x1003,
 		errBadFormat = 0x1004,
 		errBadVersion = 0x1005,
+		errRowNotFound = 0x1006,
 		errFileError = 0x10000000,
 
 		resSkipped = 1,

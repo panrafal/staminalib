@@ -77,6 +77,7 @@ namespace Stamina { namespace DT {
 		try {
 			this->open(_fileName.c_str() , fileWrite);
 			LockerDT lock(_table, allRows);
+			this->writeHeader();
 		    this->writeDescriptor();
 			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
 				if (_table->getRow(i).hasFlag(rflagDontSave) == false) {
@@ -108,6 +109,7 @@ namespace Stamina { namespace DT {
 		    if (first) {
 				_fcols = _table->getColumns();
 				//_table->lastId = DT_ROWID_MIN;
+				this->writeHeader();
 				this->writeDescriptor();
 			} else {
 				this->readDescriptor();

@@ -76,7 +76,7 @@ namespace Stamina { namespace DT {
 		//virtual freeRow(int row)=0; // zwalnia wiersz
 
 		/**Reads all rows from file*/
-		virtual void readRows() throw (...) =0; // wczytuje wiersze
+		virtual void readRows(bool skipFailed) throw (...) =0; // wczytuje wiersze
 
 		//virtual int next() {return 0;} // przesuwa sie na nastepny
 		//virtual int prev() {return 0;} // przesuwa sie na poprzedni
