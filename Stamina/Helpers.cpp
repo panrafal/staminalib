@@ -27,14 +27,14 @@ namespace Stamina {
 	} _initializer;
 
 
-	int random(int min, int max) {
+	unsigned int random(unsigned int min, unsigned int max) {
 		static bool seeded = false;
 		if (!seeded) {
 			randomSeed();
 			seeded = true;
 		}
-		int r = rand();
-		int width = RAND_MAX;
+		unsigned int r = rand();
+		unsigned int width = RAND_MAX;
 		if (max - min > width) {
 			width = 0x3FFFFFFF;
 			r = r | (rand() << 15);
@@ -43,7 +43,7 @@ namespace Stamina {
 				r = r | (rand() << 30);
 			}
 		}
-		r = round(r * ((double)(max - min) / width));
+		r = round(r * (double(max - min) / double(width)));
 		return r + min;
 	}
 

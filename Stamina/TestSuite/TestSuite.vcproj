@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="DataTable"
-	ProjectGUID="{963F7D67-4856-4169-BAAA-0DBAD9695D20}"
+	Name="TestSuite"
+	ProjectGUID="{A5F59E21-1BA9-4660-A9B7-0C1349C6D494}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -12,15 +12,15 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\Lib"
+			OutputDirectory="."
 			IntermediateDirectory="..\..\_$(ConfigurationName)\$(ProjectName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;\c++\__source\md5c&quot;;&quot;\c++\__source\cppunit\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -31,9 +31,15 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/DataTable_d.lib"
-				IgnoreAllDefaultLibraries="TRUE"/>
+				Name="VCLinkerTool"
+				AdditionalDependencies="cppunitd.lib stamina_d.lib datatable_d.lib listwnd_d.lib"
+				OutputFile="$(OutDir)/TestSuite_d.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="..\Lib;&quot;\c++\__source\cppunit\lib&quot;"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/TestSuite.pdb"
+				SubSystem="1"
+				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -49,20 +55,22 @@
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
 			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\Lib"
+			OutputDirectory="."
 			IntermediateDirectory="..\..\_$(ConfigurationName)\$(ProjectName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;\c++\__source\md5c&quot;;&quot;\c++\__source\cppunit\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="3"
 				WarningLevel="3"
@@ -71,9 +79,16 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/DataTable.lib"
-				IgnoreAllDefaultLibraries="TRUE"/>
+				Name="VCLinkerTool"
+				AdditionalDependencies="cppunit.lib stamina.lib datatable.lib listwnd.lib"
+				OutputFile="$(OutDir)/TestSuite.exe"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\Lib;&quot;\c++\__source\cppunit\lib&quot;"
+				GenerateDebugInformation="TRUE"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -88,6 +103,8 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
 			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
@@ -101,24 +118,6 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
-			<File
-				RelativePath=".\ColumnsDesc.cpp">
-			</File>
-			<File
-				RelativePath=".\Crypt.cpp">
-			</File>
-			<File
-				RelativePath=".\DataRow.cpp">
-			</File>
-			<File
-				RelativePath=".\DataTable.cpp">
-			</File>
-			<File
-				RelativePath=".\FileBase.cpp">
-			</File>
-			<File
-				RelativePath=".\FileBin.cpp">
-			</File>
 			<File
 				RelativePath=".\stdafx.cpp">
 				<FileConfiguration
@@ -134,32 +133,14 @@
 						UsePrecompiledHeader="1"/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\TestSuite.cpp">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-			<File
-				RelativePath=".\Column.h">
-			</File>
-			<File
-				RelativePath=".\Crypt.h">
-			</File>
-			<File
-				RelativePath=".\DataRow.h">
-			</File>
-			<File
-				RelativePath=".\DataTable.h">
-			</File>
-			<File
-				RelativePath=".\DT.h">
-			</File>
-			<File
-				RelativePath=".\FileBase.h">
-			</File>
-			<File
-				RelativePath=".\FileBin.h">
-			</File>
 			<File
 				RelativePath=".\stdafx.h">
 			</File>
@@ -170,12 +151,14 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
 		</Filter>
 		<Filter
-			Name="Test Files"
+			Name="Tests"
 			Filter="">
+			<File
+				RelativePath="..\DataTable\Test\TestCrypt.cpp">
+			</File>
 		</Filter>
 		<File
-			RelativePath=".\dtable.htm"
-			DeploymentContent="TRUE">
+			RelativePath=".\ReadMe.txt">
 		</File>
 	</Files>
 	<Globals>

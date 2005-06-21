@@ -1,7 +1,7 @@
 <HTML>
 	<HEAD>
 		<TITLE></TITLE>
-                <meta http-equiv="content-type" content="text/html; charset=windows-1250" />
+                <meta http-equiv="content-type" content="text/html; charset=windows-1250" >
 		<META NAME="GENERATOR" Content="Microsoft Visual Studio .NET 7.1">
 	</HEAD>
 	<BODY>
@@ -10,45 +10,59 @@
 		<H2>Nazewnictwo</H2>
 		<UL>
 			<LI>
-				nazwy wieloczłonowe zapisujemy małymi literami z każdym członem zaczynającym 
-				się z dużej (np. doSomethingClever)</LI>
+				nazwy wieloczłonowe zapisujemy małymi literami z 
+  każdym członem zaczynającym się z dużej (np. doSomethingClever) 
+  
 			<LI>
 				dla podkreślenia istnienia pewnej równorzędnej grupy możemy użyć znaku '_' (np. 
 				doSomething_clever, doSomething_stupid)</LI></UL>
 		<H2>Klasy/Struktury</H2>
 		<UL>
 			<LI>
-				Nazwy klas piszemy zawsze&nbsp;Wielką literą (np. Object) nie licząc 
-				ewentualnych przedrostków</LI>
+				Nazwy klas piszemy zawsze&nbsp;Wielką literą (np. 
+  Object) nie licząc ewentualnych przedrostków 
+  
 			<LI>
-				Zmienne publiczne, oraz stałe piszemy z małej litery</LI>
+				Zmienne publiczne, oraz stałe piszemy z małej litery 
+  
 			<LI>
-				Zmienne prywatne i chronione piszemy z małej i poprzedzamy je znakiem '_' (np. <EM>this-&gt;<STRONG>_</STRONG>items</EM>)</LI>
+				Zmienne prywatne i chronione piszemy z małej i poprzedzamy je znakiem '_' (np. <EM>this-&gt;<STRONG>_</STRONG>items</EM>) 
+  
 			<LI>
 				Różne implementacje klas ogólnych możemy wyróżnić dodając znak '_'&nbsp;przed 
-				nazwą implementacji. (np. klasa ogólna <EM>MenuItem</EM>, oraz implementacja <EM>MenuItem<STRONG>_W32</STRONG></EM></LI>
+				nazwą implementacji. (np. klasa ogólna <EM>MenuItem</EM>, oraz implementacja <EM>MenuItem<STRONG>_W32</STRONG></EM>
 			<LI>
-				Nazwy interfejsów poprzedzamy literą 'i' (np. <EM><STRONG>i</STRONG>Object</EM>)</LI>
+				Nazwy interfejsów poprzedzamy literą 'i' (np. <EM><STRONG>i</STRONG>Object</EM>) 
+  
 			<LI>
-				Nazwy "inteligentnych" wskaźników do obiektów poprzedzamy literą 'o' (np. <EM><STRONG>o</STRONG>Object</EM>)</LI>
+				Nazwy "inteligentnych" wskaźników do obiektów poprzedzamy literą 'o' (np. <EM><STRONG>o</STRONG>Object</EM>) 
+  
 			<LI>
-				Powtarzamy słowo kluczowe public:/private:/protected: dla każdej grupy funkcji, 
-				lub zmiennych</LI>
+				Powtarzamy słowo kluczowe public:/private:/protected: 
+  dla każdej grupy funkcji, lub zmiennych 
+  
 			<LI>
-				Definicję klasy konstruujemy w kolejności:</LI>
+				Definicję klasy konstruujemy w kolejności: 
+  
 			<UL>
 				<LI>
-					Publiczne definicje typów</LI>
+					Publiczne definicje typów 
+    
 				<LI>
-					Publiczne stałe</LI>
+					Publiczne stałe 
+    
 				<LI>
-					Publiczne funkcje</LI>
+					Publiczne funkcje 
+    
 				<LI>
-					Publiczne zmienne</LI>
+					Publiczne zmienne 
+    
 				<LI>
-					Prywatne definicje</LI>
+					Prywatne definicje 
+    
 				<LI>
-					Prywatne funkcje</LI>
+					Prywatne funkcje 
+    
 				<LI>
 					Prywatne zmienne</LI></UL>
 			<LI>
@@ -57,30 +71,45 @@
 		<H2>Przestrzenie nazw</H2>
 		<UL>
 			<LI>
-				Nazwy przestrzeni&nbsp;zawsze z dużej litery</LI>
+				Nazwy przestrzeni&nbsp;zawsze z dużej litery 
+  
 			<LI>
 				Wszystko powinno być przynajmniej w przestrzeni nazw Stamina</LI></UL>
 		<H2>Enumeracje</H2>
 		<UL>
 			<LI>
-				Nazwa z dużej litery. Dla czytelności&nbsp;dodajemy&nbsp;przedrostek 'en' (np. 
-				enResultType)</LI>
+				Nazwa z dużej litery. Dla 
+  czytelności&nbsp;dodajemy&nbsp;przedrostek 'en' (np. enResultType) 
+  
 			<LI>
 				Elementy enumeracji z małej litery. Wszystkie powinny&nbsp;mieć ten sam 
 				przedrostek kojarzony z daną enumeracją (np. resultSuccess, resultError)</LI></UL>
 		<H2>Pozostałe typy</H2>
 		<UL>
 			<LI>
-				Wszystkie deklaracje typów jak zwykle z dużej litery</LI>
+				Wszystkie deklaracje typów jak zwykle z dużej litery 
+  
 			<LI>
 				Dla wyróżnienia prostych definicji typów (lub aliasów w postaci typedef) możemy 
 				dodać przedrostek 't' (np. tRowId, tColumns)</LI></UL>
 		<H2>Dokumentacja</H2>
 		<UL>
 			<LI>
-				Używamy&nbsp;doxygen</LI>
+				Używamy&nbsp;doxygen 
+  
 			<LI>
 				Wszystkie funkcje powinny mieć pełne dokumentacje</LI></UL>
-		<P>&nbsp;</P>
+<H2>Testy</H2>
+<UL>
+  <LI>Do testów używamy CPPUnit. Każda klasa w miarę możliwości powinna 
+  mieć&nbsp;zautomatyzowany&nbsp;zestaw testowy</LI>
+  <LI>Każdy zestaw testowy powinien być w osobnym pliku Test*.cpp umieszczonym w 
+  katalogu Test\ odpowiedniej biblioteki</LI></UL>
+<H2>Język</H2>
+<UL>
+  <LI>Dokumentację staramy się pisać po angielsku. Myślę że to bardziej 
+  przyszłościowe rozwiązanie</LI>
+  <LI>Komentarze w kodzie można (ale nie trzeba ;) )&nbsp;pisać po 
+polsku</LI></UL>
 	</BODY>
-</HTML>
+</HTML>

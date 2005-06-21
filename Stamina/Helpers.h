@@ -11,6 +11,8 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <math.h>
 #include <time.h>
 
@@ -28,7 +30,7 @@ namespace Stamina {
 #endif
 	}
 
-	int random(int min = 0, int max = RAND_MAX);
+	unsigned int random(unsigned int min = 0, unsigned int max = RAND_MAX);
 
 	const char * inttoch(int v , char * s , int radix=10 , int max=-1 , bool upper=true);
 
