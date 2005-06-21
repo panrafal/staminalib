@@ -11,7 +11,6 @@
 #ifndef __DT_COLUMN__
 #define __DT_COLUMN__
 
-
 namespace Stamina { namespace DT {
 
 	class Column {
@@ -91,7 +90,7 @@ namespace Stamina { namespace DT {
 		ColumnsDesc ();
 		operator = (const ColumnsDesc & x);
 
-		int setColCount (int count, bool expand = false); // ustawia ilosc kolumn
+		int setColumnCount (int count, bool expand = false); // ustawia ilosc kolumn
 		tColId setColumn (tColId id , enColumnType type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
 		tColId setUniqueCol (const char * name , enColumnType type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
 
@@ -106,8 +105,11 @@ namespace Stamina { namespace DT {
 		const Column& getColumn(tColId id) const {
 			return getColumnByIndex(colIndex(id));
 		}
+		const Column& getColumn(const char* name) const {
+			return getColumn(getNameId(name));
+		}
 
-		int colIndex (tColId id) const; // zwraca index kolumny
+		unsigned int colIndex (tColId id) const; // zwraca index kolumny
 
 		void clear() {
 			_cols.clear();
