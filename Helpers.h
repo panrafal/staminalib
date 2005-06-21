@@ -52,6 +52,7 @@ namespace Stamina {
 	}
 #endif
 	int chtoint(const char * str , unsigned char base=0xFF);
+	__int64 chtoint64(const char * str , unsigned char base = 0xFF);
 
 
 

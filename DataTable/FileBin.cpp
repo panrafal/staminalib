@@ -439,7 +439,7 @@ namespace Stamina { namespace DT {
 
 		int count;
 		readData(&count, 4);
-		_fcols.setColCount(count);
+		_fcols.setColumnCount(count);
 		for (int i = 0; i < count; i++) { // columns definitions
 			tColId id;
 			enColumnType type;
@@ -610,6 +610,7 @@ namespace Stamina { namespace DT {
 		if (rowDataFlag & rdflagRowId) {
 			tRowId id;
 			readData(&id, 4, &rowDataLeft);
+			id = DataTable::flagId(id);
 			if (id != rowObj.getId()) {
 				if (_table->rowIdExists(id)) {
 					id = _table->getNewRowId();
@@ -749,6 +750,7 @@ namespace Stamina { namespace DT {
 			enRowDataFlags flags = rdflagRowId;
 			writeData(&flags, 4, &rowSize);
 			tRowId rowId = rowObj.getId();
+			rowId = DataTable::unflagId(rowId);
 			writeData(&rowId, 4, &rowSize);
 		}
 		for (unsigned int colIndex =0; colIndex < _fcols.getColCount(); colIndex++) {

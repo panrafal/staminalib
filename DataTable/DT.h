@@ -126,9 +126,27 @@ namespace Stamina { namespace DT {
 	const tColId colByName = -1;
 //	const tRowId rowIdFlag = DT_ROWID_MASK;
 
-	struct TypeBin {
-		unsigned int size;
+	struct _TypeBin {
 		void * buff;
+		unsigned int size;
+	};
+
+	class TypeBin: public _TypeBin {
+	public:
+		TypeBin(void* buff = 0, unsigned int size = 0) {
+			this->buff = buff;
+			this->size = size;
+		}
+
+		TypeBin(const _TypeBin& b) {
+			this->buff = b.buff;
+			this->size = b.size;
+		}
+
+		bool operator == (const TypeBin& b) {
+			if (size != b.size) return false;
+			return memcmp(buff, b.buff, size) == 0;
+		}
 	};
 
 	#pragma pack(push, 1)
@@ -144,7 +162,7 @@ namespace Stamina { namespace DT {
 			};
 			int vInt;
 			__int64 vInt64;
-			TypeBin vBin;
+			_TypeBin vBin;
 
 		};
 		Value(tColType type=ctypeUnknown):type(type) {vInt64 = 0;buffSize=0;}
@@ -161,6 +179,20 @@ namespace Stamina { namespace DT {
 		v.buffSize = buffSize;
 		return v;
 	}
+	inline Value ValueStrDuplicate() {
+		Value v(ctypeString);
+		v.vChar = 0;
+		v.buffSize = -1;
+		return v;
+	}
+	inline Value ValueStrGetSize() {
+		Value v(ctypeString);
+		v.vChar = 0;
+		v.buffSize = 0;
+		return v;
+	}
+
+
 	inline Value ValueInt(int value) {
 		Value v(ctypeInt);
 		v.vInt = value;

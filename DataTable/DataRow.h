@@ -69,12 +69,21 @@ namespace Stamina { namespace DT {
 		}
 
 		inline void setId(tRowId id) {
-			_id = id;
+			_id = flagId(id);
 		}
 
 		inline tRowId getId() const {
 			return _id;
 		}
+
+		inline static tRowId flagId(tRowId row) {
+			return (tRowId)((row) | DT::rowIdFlag);
+		}
+		/** Removes flag from the row Id */
+		inline static tRowId unflagId(tRowId row) {
+			return (tRowId)( row&(~DT::rowIdFlag) );
+		}
+
 
 	private:
 		class DataTable * _table; ///< Parent table

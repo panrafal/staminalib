@@ -88,7 +88,7 @@ namespace Stamina { namespace DT {
 		// dokañczamy 8bit
 		while (size) {
 			i--;
-			*data = (*data ^ ((key[i % xor2KeySize] * (i)) & 0xFF));
+			*data = (*data ^ unsigned char((key[i % xor2KeySize] * (i)) & 0xFF));
 			data++;
 			size --;
 		}

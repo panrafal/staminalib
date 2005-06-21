@@ -154,7 +154,13 @@
 			Name="Tests"
 			Filter="">
 			<File
+				RelativePath="..\DataTable\Test\TestColumns.cpp">
+			</File>
+			<File
 				RelativePath="..\DataTable\Test\TestCrypt.cpp">
+			</File>
+			<File
+				RelativePath="..\DataTable\Test\TestTable.cpp">
 			</File>
 		</Filter>
 		<File

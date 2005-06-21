@@ -82,7 +82,7 @@ namespace Stamina {
 		return s;
 	}
 
-	int chtoint(const char * str , unsigned char base) {
+	template <typename NUMBER> NUMBER strToNumber(const char * str , unsigned char base) {
 		if (!str) return 0;
 		bool sign=false; // ujemna
 		// sprawdzamy znak ujemnoœci, który zawsze jest PRZED ew. definicj¹ bazy...
@@ -99,15 +99,23 @@ namespace Stamina {
 		while ((*last>='0' && *last<='9') || (*last>='a' && *last<='f') || (*last>='A' && *last<='F')) last++;
 		if (last == str) return 0;
 		last--; // Cofamy do pierwszego znaku...
-		unsigned int l=0; // liczba wyjsciowa
-		int b=1;  // base do potegi 0
+		NUMBER l = 0; // liczba wyjsciowa
+		NUMBER b = 1;  // base do potegi 0
 		while (last >= str) { // wczytuje znaki od konca
-			l+=chval(*last)*b; // dodaje do l wartosc znaku * podstawa podniesiona do potegi
-			b*=base; // "podnosi" base o potege
+			l += chval(*last)*b; // dodaje do l wartosc znaku * podstawa podniesiona do potegi
+			b *= base; // "podnosi" base o potege
 			last --;
 		}
-		return sign? -(signed)l : (signed)l;
+		return sign? -l : l;
 	}
+
+	int chtoint(const char * str , unsigned char base) {
+		return strToNumber<unsigned int>(str, base);
+	}
+	__int64 chtoint64(const char * str , unsigned char base) {
+		return strToNumber<unsigned __int64>(str, base);
+	}
+
 
 	char * str_tr(char * str , const char * chIn , const char * chOut) {
 		if (!str || !chIn || !chOut || !*chIn || !*chOut || strlen(chIn)!=strlen(chOut)) return str;
