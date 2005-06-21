@@ -40,18 +40,26 @@ namespace Stamina { namespace DT {
 		return this->insertRow(-1, id);
     }
 
-    unsigned int DataTable::insertRow(unsigned int rowPos , tRowId id) {
+    tRowId DataTable::insertRow(unsigned int rowPos , tRowId id) {
         LockerCS lock(_cs);
-        _changed = true;
+
+		if (id != rowNotFound) {
+			id = flagId(id);
+			if (getRowPos(id) != rowNotFound) {
+				return rowNotFound;
+			}
+		}
+
+		_changed = true;
 		DataRow* row = new DataRow(this,1);
-		if (rowPos < 0) {
+		if (rowPos == -1) {
 			rowPos = _rows.size();
 			_rows.push_back(row);
 		} else {
 			rowPos = getRowPos(rowPos);
 			_rows.insert(_rows.begin() + rowPos , row);
 		}
-		row->setId(id > 0 ? unflagId(id) : getNewRowId());
+		row->setId(id != rowNotFound ? unflagId(id) : getNewRowId());
         return row->getId();
     }
 
@@ -213,7 +221,7 @@ namespace Stamina { namespace DT {
         
 		this->lock(allRows);
 
-		int found = -1;
+		unsigned int found = -1;
 
 		for (unsigned int i = this->getRowPos((tRowId) startPos); i < this->getRowCount(); i++) {
 			found = i;
@@ -291,8 +299,6 @@ namespace Stamina { namespace DT {
 	bool DataTable::getValue(tRowId row , tColId col , Value& value) {
 		LockerCS lock(_cs);
 		row = getRowPos(row);
-		if (value.getType() == ctypeString && value.vChar)
-			value.vChar[0] = 0;
 		if (row >= this->_rows.size()) row = rowNotFound;
 		if (row == rowNotFound) return false;
 		LockerCS rowLock(_rows[row]->getCS());
@@ -300,10 +306,7 @@ namespace Stamina { namespace DT {
 		const Column& column = this->_cols.getColumn(col);
 		if (column.getType() == ctypeUnknown) return false;
 
-		// W type znajduje siê typ czytanej kolumny
 		if (value.getType() == ctypeUnknown) value.type = column.getType();
-		// nie mamy gdzie zapisaæ konwersji...
-		if (value.getType() == ctypeString && column.getType() != ctypeString && !value.vChar && value.buffSize==0) return false;
 
 		DataEntry val = this->get(row, col);
 		switch (value.getType()) {
@@ -326,16 +329,26 @@ namespace Stamina { namespace DT {
 				const char* ch = val ? (char*)val : "";
 				if (value.vChar && value.buffSize != -1 && value.buffSize != 0) {
 					strncpy(value.vChar , ch , value.buffSize);
+					value.vChar[value.buffSize - 1] = 0;
 				} else if (value.buffSize == -1) {
 					value.vChar = strdup(ch);
 				} else {
-					value.vCChar = ch;
+					if (value.vChar && value.buffSize == 0) {
+						value.vCChar = ch;
+					} else {
+						value.vChar = 0;
+						value.buffSize = strlen(ch);
+					}
 				}
 				return true;
 			} else {
 				if (!value.vChar && value.buffSize == -1) {
-					value.vChar = (char*)malloc(32);
-					value.buffSize = 31;
+					value.vChar = (char*)malloc(31);
+					//value.buffSize = 32;
+				}
+				if (value.vChar == 0) {
+					value.buffSize = 32;
+					return false;
 				}
 				// pozosta³e mo¿liwoœci to dostarczony dzia³aj¹cy bufor i nic wiêcej... 
 				switch (column.getType()) {
@@ -344,6 +357,27 @@ namespace Stamina { namespace DT {
 				default:
 					value.vChar[0] = 0;
 				};
+				return true;
+			}
+			return false; // string
+		case ctypeBin:
+			if (column.getType() == ctypeBin) {
+				TypeBin* bin = (TypeBin*) val;
+				if (value.vBin.buff == 0 && value.vBin.size == -1) {
+					value.vBin.size = bin->size;
+					value.vBin.buff = malloc(bin->size);
+					memcpy(value.vBin.buff, bin->buff, bin->size);
+				} else if (value.vBin.buff != 0 && value.vBin.size == 0) {
+					value.vBin = *bin;
+				} else if (value.vBin.buff == 0 && value.vBin.size == 0) {
+					value.vBin.size = bin->size;
+				} else if (value.vBin.buff != 0 && value.vBin.size != 0) {
+					memcpy(value.vBin.buff, bin->buff, min(value.vBin.size, bin->size));
+					value.vBin.size = bin->size;
+				} else {
+					return false;
+				}
+				return true;
 			}
 			return false;
 		}
@@ -372,7 +406,7 @@ namespace Stamina { namespace DT {
 		case ctypeInt: 
 			switch (value.getType()) {
 			case ctypeInt: val = (DataEntry) value.vInt; break;
-			case ctypeString: val = (DataEntry) atoi(value.vCChar); break;
+			case ctypeString: val = (DataEntry) chtoint(value.vCChar); break;
 			case ctype64: val = (DataEntry) value.vInt64; break;
 			default: return false;
 			};
@@ -380,7 +414,7 @@ namespace Stamina { namespace DT {
 		case ctypeInt64: {
 			switch (value.getType()) {
 			case ctypeInt: val64 = value.vInt; break;
-			case ctypeString: val64 = _atoi64(value.vCChar); break;
+			case ctypeString: val64 = chtoint64(value.vCChar); break;
 			case ctype64: val64 = value.vInt64; break;
 			default: return false;
 			}; 
@@ -393,6 +427,11 @@ namespace Stamina { namespace DT {
 			case ctype64: _i64toa(value.vInt64 , buff , 10); val = buff; break;
 			default: return false;
 			};
+			break;}
+		case ctypeBin: {
+			if (value.getType() == ctypeBin) {
+				val = &value.vBin;
+			} else return false;
 			break;}
 		default: return false;
 		}

@@ -35,7 +35,7 @@ namespace Stamina { namespace DT {
     }
 
 
-    int ColumnsDesc::setColCount (int count, bool expand) {
+    int ColumnsDesc::setColumnCount (int count, bool expand) {
         if (!expand) {_cols.clear();}
         int resize = _cols.size();
         _cols.resize(count + resize);
@@ -61,10 +61,10 @@ namespace Stamina { namespace DT {
         //if (table) ((DataTable *)table)->error=0;
         int index = colIndex(id);
         try {
-			if (index<0) { //jezeli nie moze znalezc istniejacej kolumny szuka wolnej
+			if (index == colNotFound) { //jezeli nie moze znalezc istniejacej kolumny szuka wolnej
 				index = colIndex(colNotFound);
-				if (index < 0) { // jezeli nie moze znalezc wolnej
-					index = setColCount(1 , true) - 1; // dodaje nowa
+				if (index == colNotFound) { // jezeli nie moze znalezc wolnej
+					index = setColumnCount(1 , true) - 1; // dodaje nowa
                 }
             }
             Column& v = _cols[index];
@@ -98,14 +98,14 @@ namespace Stamina { namespace DT {
 		return _cols.at(index);
 	}
 
-    int ColumnsDesc::colIndex (tColId id) const {
+    unsigned int ColumnsDesc::colIndex (tColId id) const {
         int i = 0;
 		for (tColumns::const_iterator it = _cols.begin(); it != _cols.end(); it++) {
 			if (it->getId() == id) 
 				return i; 
 			i++;
 		}
-        return -1;
+		return colNotFound;
     }
 
     tColId ColumnsDesc::getNewUniqueId(void) {
@@ -113,7 +113,7 @@ namespace Stamina { namespace DT {
         do {
             unique++;
             unique &=0xFFFF;
-		} while (this->colIndex((tColId)(unique | colIdUniqueFlag))!=-1);
+		} while (this->colIndex((tColId)(unique | colIdUniqueFlag)) != colNotFound);
         return (tColId)(unique | colIdUniqueFlag);
     }
 
@@ -135,7 +135,7 @@ namespace Stamina { namespace DT {
 				tColId id = it->getId();
 				if (it->isIdUnique())
 					id = this->getNameId(it->getName().c_str());
-				if (id != -1 && this->colIndex(id) != -1)
+				if (id != colNotFound && this->colIndex(id) != colNotFound)
 					continue;
 			}
 			// ustawiamy kolumnê

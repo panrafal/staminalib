@@ -104,7 +104,7 @@ namespace Stamina {
 			memset(_digest, 0, 16);
 		}
 
-		bool empty() {
+		bool empty() const {
 			for (int i = 0; i < 4; i++) {
 				if (((int*)_digest)[i] != 0) return false;
 			}

@@ -59,7 +59,6 @@ namespace Stamina { namespace DT {
 		}
 		tRowId DataTable::getRowPos(tRowId row) const {
 			if (!isRowId(row)) return row;
-			row = unflagId(row);
 			for (unsigned int i=0; i < _rows.size(); i++)
 				if (_rows[i]->getId() == row) return i;
 			return -1;
@@ -71,16 +70,16 @@ namespace Stamina { namespace DT {
 
 		/** Adds flag to the row Id */
 		inline static tRowId flagId(tRowId row) {
-			return (tRowId)((row) | DT::rowIdFlag);
+			return DataRow::flagId(row);
 		}
 		/** Removes flag from the row Id */
 		inline static tRowId unflagId(tRowId row) {
-			return (tRowId)( row&(~DT::rowIdFlag) );
+			return DataRow::unflagId(row);
 		}
 
 		tRowId addRow(tRowId id = rowNotFound); // Dodaje wiersz , mozna podac ID
 
-		tRowId insertRow(unsigned int row , tRowId id = -1); // wstawia wiersz , mozna podac ID
+		tRowId insertRow(unsigned int row , tRowId id = rowNotFound); // wstawia wiersz , mozna podac ID
 
 		bool deleteRow(tRowId row);
 
@@ -94,12 +93,12 @@ namespace Stamina { namespace DT {
 	        _lastId++;
 			if (_lastId > rowIdMax) _lastId = rowIdMin;
 			// Je¿eli wiersz z tym id ju¿ istnieje - szukamy nowego...
-			if (this->rowIdExists(_lastId)) return getNewRowId();
-			return _lastId;
+			if (this->rowIdExists(flagId(_lastId))) return getNewRowId();
+			return flagId(_lastId);
 		}
 
 		inline bool rowIdExists(tRowId id) {
-			return this->getRowPos(id) != -1;
+			return this->getRowPos(id) != rowNotFound;
 		}
 
 		/** Znajduje wiersz spe³niaj¹cy podane kryteria.
@@ -139,27 +138,34 @@ namespace Stamina { namespace DT {
 			this->getValue(row, id, v);
 			return v.vInt;
 		}
-		inline int setInt(tRowId row , tColId id , int val) {
+		inline bool setInt(tRowId row , tColId id , int val) {
 			return this->setValue(row, id, ValueInt(val));
 		}
-		inline const char * getCh(tRowId row , tColId id) {
-			Value v = Value(ctypeString);
-			this->getValue(row, id, v);
-			return v.vChar;
+		inline const char * getCh(tRowId row , tColId id, char* buffer, unsigned int buffSize = 0) {
+			Value v = ValueStr(buffer, buffSize);
+			if (this->getValue(row, id, v))
+				return v.vChar;
+			else
+				return 0;
 		}
-		inline int setCh(tRowId row , tColId id , const char * val) {
+		inline bool setCh(tRowId row , tColId id , const char * val) {
 			return this->setValue(row, id, ValueStr(val));
 		}
 
-		inline TypeBin getbin(tRowId row , tColId id) {
-			Value v = Value(ctypeBin);
-			this->getValue(row, id, v);
-			return v.vBin;
+		inline TypeBin getBin(tRowId row , tColId id, const TypeBin& val ) {
+			Value v = ValueBin(val);
+			if (!this->getValue(row, id, v)) {
+				TypeBin b;
+				b.buff = 0;
+				return b;
+			} else {
+				return v.vBin;
+			}
 		}
-		inline int setBin(tRowId row , tColId id , void * val , size_t size) {
+		inline bool setBin(tRowId row , tColId id , void * val , size_t size) {
 			return this->setValue(row, id, ValueBin(val, size));
 		}
-		inline int setBin(tRowId row , tColId id , const TypeBin& val) {
+		inline bool setBin(tRowId row , tColId id , const TypeBin& val) {
 			return this->setValue(row, id, ValueBin(val));
 		}
 
@@ -168,7 +174,7 @@ namespace Stamina { namespace DT {
 			this->getValue(row, id, v);
 			return v.vInt64;
 		}
-		inline int set64(tRowId row , tColId id , __int64 val) {
+		inline bool set64(tRowId row , tColId id , __int64 val) {
 			return this->setValue(row, id, ValueInt64(val));
 		}
 
@@ -179,7 +185,7 @@ namespace Stamina { namespace DT {
 			free(v.vChar);
 			return s;
 		}
-		inline int setStr(tRowId row , tColId id , const std::string& val) {
+		inline bool setStr(tRowId row , tColId id , const std::string& val) {
 			return setCh(row, id, val.c_str());
 		}
 
@@ -198,25 +204,30 @@ namespace Stamina { namespace DT {
 
 		bool idExists(int id) {
 			if (isRowId(id)) 
-				return getRowPos(id) != -1;
+				return getRowPos(id) != rowNotFound;
 			else 
-				return getRowId(id) != -1;
+				return getRowId(id) != rowNotFound;
 		}
 
 		void lock(tRowId row);
 		void unlock(tRowId row);
 		bool canAccess(tRowId row);
 
-/*
-  Gdy pobierana jest wartoœæ char to...
-    vChar = 0 buffSize = -1  - zwracany jest duplikat
-	vChar = 0 buffSize = 0   - b³¹d
-	vChar = * buffSize = 0   - zwracana jest aktualna wartoœæ, a w przypadku liczb u¿ywany jest podany wskaŸnik
-	vChar = * buffSize = #   - wartoœæ jest kopiowana do *
+		/* Gets the value of a field using type conversion.
+		- When retrieving ctypeString there are several possible ways of setting input buffer in Value:
+			vChar = 0 buffSize = -1  - a duplicate is returned in vChar
+			vChar = 0 buffSize = 0   - size of the string is returned in buffSize
+			vChar = * buffSize = 0   - if the column is of the type string, the @a vChar is replaced with the internal value pointer (it's READ ONLY and it's not thread-safe! you MUST lock the row first!). Otherwise, the small buffer * (at least 32 bytes) that is provided in @a vChar is used for conversion
+			vChar = * buffSize = #   - the value is copied into the @a vChar
+		- When retrieving ctypeBin there won't be any conversion! There are several ways of settin input buffer in Value::vBin :
+			buffer = 0 size = -1     - a duplicate is returned in @a buffer
+			buffer = 0 size = 0		 - size of the data is returned in @a size
+			buffer = -1 size = 0		 - the @a buffer is replaced with the internal data pointer (it's READ ONLY and it's not thread-safe! you MUST lock the row first!). size is also being returned.
+			buffer = * size = #		 - the data is copied into the @a buffer
 */
 		bool getValue(tRowId row , tColId col , Value& value);
 		
-		/** Sets the value using conversion.
+		/** Sets the value using type conversion.
 		*/
 		bool setValue(tRowId row , tColId col , const Value& value);
 
@@ -265,6 +276,10 @@ namespace Stamina { namespace DT {
 
 		inline const void setParam(const std::string& name, const std::string& value) {
 			_params[name] = value;
+		}
+
+		inline void resetParam(const std::string& name) {
+			_params.erase(name);
 		}
 
 		inline void resetParams() {

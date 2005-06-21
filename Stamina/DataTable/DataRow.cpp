@@ -146,7 +146,7 @@ namespace Stamina { namespace DT {
 				break;
 			case ctypeString: {
 				size_t valLen = strlen((char *)val);
-				size_t curLen = strlen((char *)_data[colIndex]);
+				size_t curLen = _data[colIndex] ? strlen((char *)_data[colIndex]): 0;
 				if (_data[colIndex] && (valLen > curLen || valLen < curLen/2)) {
 					delete [] _data[colIndex];
 					_data[colIndex]=0;
@@ -163,16 +163,21 @@ namespace Stamina { namespace DT {
 			case ctypeBin: {
 				TypeBin * bin = (TypeBin *)val;
 				TypeBin * cur = (TypeBin *)_data[colIndex];
-				if (_data[colIndex] && (bin->size > cur->size || bin->size < cur->size/2)) {
+				if (cur && (bin->size > cur->size || bin->size < cur->size/2)) {
 					delete [] _data[colIndex];
-					_data[colIndex]=0;
+					_data[colIndex] = 0;
 				}
 				if (_data[colIndex] == 0) {
-					_data[colIndex] = new char [4 + bin->size];
+					_data[colIndex] = new char [4 + 4 + bin->size];
 				}
-				memcpy(_data[colIndex] , &bin->size , 4);
+				// zapisujemy bufor rozmiarem i wskaŸnikiem do pierwszego bajtu danych w buforze
+				// w ten sposób mo¿emy póŸniej bez problemu rzutowaæ na typ TypeBin*
+				TypeBin newBin;
+				newBin.size = bin->size;
+				newBin.buff = (((char*)_data[colIndex]) + sizeof(TypeBin));
+				memcpy(_data[colIndex] , &newBin , sizeof(TypeBin));
 				if (bin->size && bin->buff) {
-					memcpy((char *)_data[colIndex] + 4 , bin->buff , bin->size);
+					memcpy((char *)newBin.buff , bin->buff , bin->size);
 				}
 				break;}
 			default:
