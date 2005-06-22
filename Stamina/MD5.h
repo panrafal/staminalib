@@ -86,6 +86,10 @@ namespace Stamina {
 			return _digest;
 		}
 
+		void getDigest(unsigned char* digest) const {
+			memcpy(digest, _digest, 16);
+		}
+
 #ifdef _STRING_
 		std::string getHex() const {
 			char b [33];
@@ -164,10 +168,9 @@ namespace Stamina {
     }
 
 	inline unsigned char * MD5Salted(const char * string , unsigned char * digest, int salt) {
-		MD5Context ctx;
-		ctx.update(string);
-		ctx.update(&salt, 4);
-		ctx.getDigest(digest);
+		MD5Digest md5(string);
+		md5.addSalt(salt);
+		md5.getDigest(digest);
 		return digest;
 	}
 
