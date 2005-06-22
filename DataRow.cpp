@@ -43,8 +43,17 @@ namespace Stamina { namespace DT {
 	    for (unsigned int i = 0 ; i < _size ; i++) {
         #ifdef DT_SETBLANKSBYTYPE
 			const Column& col = _table->getColumns().getColumnByIndex(i);
+			if (col.isStaticType()) {
+				_data[i] = col.getDefValue();
+			} else {
+				_data[i] = 0;
+			}
+/*
 			switch (col.getType()) {
+				// teraz ustawiamy tylko dane "statyczne"
 				case ctypeInt: _data[i] = col.getDefValue(); break;
+				default: _data[i] = 0; break;
+					/*
 				case ctypeInt64: 
 					_data[i]=(void*)new __int64;
 					if (col.getDefValue()) {
@@ -59,12 +68,6 @@ namespace Stamina { namespace DT {
 		                _data[i] = (void*)strcpy((char *)_data[i] , (char *)col.getDefValue());
 					} else _data[i]=0;
 					break;
-/*				case DT_CT_STRING:
-               if (tb->cols.cols[i].def)
-                 {data[i]=(void*)new string((char *)tb->cols.cols[i].def);
-                 }
-                 else data[i]=0;
-               break;*/
 				case ctypeBin:
 					if (col.getDefValue()) {
 						TypeBin * bin = (TypeBin*) col.getDefValue();
@@ -74,7 +77,9 @@ namespace Stamina { namespace DT {
 							memcpy((char *)_data[i]+4 , bin->buff , bin->size);
 					} else _data[i]=0;
 					break;
+					
 			}
+			*/
         #else
 			_data[i]=0;
         #endif
@@ -109,75 +114,88 @@ namespace Stamina { namespace DT {
 
     const DataEntry DataRow::get(tColId id) {
 		LockerCS lock(_cs);
-	    _table->resetError();
 		return getByIndex(_table->getColumns().colIndex(id));
 	}
 	const DataEntry DataRow::getByIndex (unsigned int colIndex) { // Pobiera wartosc kolumny
 		if (! this->hasColumnData(colIndex)) {
-			_table->setError(errNoColumn);
+			throw DTException(errNoColumn);
 			return 0;
 		}
 		const Column& col = this->_table->getColumns().getColumnByIndex(colIndex);
 		DataEntry r = _data[colIndex];
-		if (col.getType() == ctypeString && r == 0) {
-			r = (DataEntry)"";
+		if (r == 0 && col.isStaticType() == false) {
+			r = col.getDefValue();
 		}
+/*		if (col.getType() == ctypeString && r == 0) {
+			r = (DataEntry)"";
+		}*/
 		return r;
     }
 
 
-    bool DataRow::set (tColId id , DataEntry val) {
+    bool DataRow::set (tColId id , DataEntry val, bool dropDefault) {
 		LockerCS lock(_cs);
-	    _table->resetError();
-		return this->setByIndex(_table->getColumns().colIndex(id), val);
+		return this->setByIndex(_table->getColumns().colIndex(id), val, dropDefault);
 	}
 
-	bool DataRow::setByIndex (unsigned int colIndex, DataEntry val) { // ustawia wartosc kolumny
+	bool DataRow::setByIndex (unsigned int colIndex, DataEntry val, bool dropDefault) { // ustawia wartosc kolumny
 		if (! this->hasColumnData(colIndex)) {
-			_table->setError(errNoColumn);
+			throw DTException(errNoColumn);
 			return false;
 		}
 		const Column& col = this->_table->getColumns().getColumnByIndex(colIndex);
 
 		switch (col.getType()) {
 			case ctypeInt64:
-				if (!_data[colIndex]) _data[colIndex]=(void*)new __int64;
-				if (val) *((__int64*)_data[colIndex]) = *((__int64*)val);
+				if (val == 0 || (dropDefault && col.getDefValue() && (*(__int64*)col.getDefValue()) == *(__int64*)val)) {
+					if (_data[colIndex] != 0) delete _data[colIndex];
+					_data[colIndex] = 0;
+				} else {
+					if (!_data[colIndex]) _data[colIndex] = (void*)new __int64;
+					*((__int64*)_data[colIndex]) = *((__int64*)val);
+				}
 				break;
 			case ctypeString: {
-				size_t valLen = strlen((char *)val);
-				size_t curLen = _data[colIndex] ? strlen((char *)_data[colIndex]): 0;
-				if (_data[colIndex] && (valLen > curLen || valLen < curLen/2)) {
-					delete [] _data[colIndex];
-					_data[colIndex]=0;
+				if (val == 0 || (dropDefault && col.getDefValue() && (strcmp((char*)col.getDefValue(), (char*)val) == 0))) {
+					if (_data[colIndex] != 0) delete [] (char*)_data[colIndex];
+					_data[colIndex] = 0;
+				} else {
+					size_t valLen = strlen((char *)val);
+					size_t curLen = _data[colIndex] ? strlen((char *)_data[colIndex]): 0;
+					if (_data[colIndex] && (valLen > curLen || valLen < curLen/2)) {
+						delete [] (char*)_data[colIndex];
+						_data[colIndex]=0;
+					}
+					if (!_data[colIndex]) {
+						_data[colIndex] = new char [valLen + 1];
+					}
+					_data[colIndex] = (void*)strcpy((char *)_data[colIndex] , (char *)val);
 				}
-				if (!_data[colIndex]) {
-					_data[colIndex] = new char [valLen + 1];
-				}
-				_data[colIndex] = (void*)strcpy((char *)_data[colIndex] , (char *)val);
 				break;}
 			/*case DT_CT_STRING:
 				if (!data[i]) data[i]=(void*)new string(*((string *)val));
 				else *(string *)data[i]=*((string *)val);
 				break;*/
 			case ctypeBin: {
-				TypeBin * bin = (TypeBin *)val;
-				TypeBin * cur = (TypeBin *)_data[colIndex];
-				if (cur && (bin->size > cur->size || bin->size < cur->size/2)) {
-					delete [] _data[colIndex];
+				if (val == 0 || (dropDefault && col.getDefValue() && (*(TypeBin*)col.getDefValue()) == *(TypeBin*)val)) {
+					if (_data[colIndex] != 0) delete [] (char*)_data[colIndex];
 					_data[colIndex] = 0;
-				}
-				if (_data[colIndex] == 0) {
-					_data[colIndex] = new char [4 + 4 + bin->size];
-				}
-				// zapisujemy bufor rozmiarem i wskaŸnikiem do pierwszego bajtu danych w buforze
-				// w ten sposób mo¿emy póŸniej bez problemu rzutowaæ na typ TypeBin*
-				TypeBin newBin;
-				newBin.size = bin->size;
-				newBin.buff = (((char*)_data[colIndex]) + sizeof(TypeBin));
-				memcpy(_data[colIndex] , &newBin , sizeof(TypeBin));
-				if (bin->size && bin->buff) {
-					memcpy((char *)newBin.buff , bin->buff , bin->size);
+				} else {
+					TypeBin * bin = (TypeBin *)val;
+					TypeBin * cur = (TypeBin *)_data[colIndex];
+					if (cur && (bin->size > cur->size || bin->size < cur->size/2)) {
+						delete [] _data[colIndex];
+						_data[colIndex] = 0;
+					}
+					if (_data[colIndex] == 0) {
+						_data[colIndex] = new char [4 + 4 + bin->size];
+						cur = (TypeBin*)_data[colIndex];
+						cur->buff = cur + 1; // dane s¹ w pamiêci zaraz za struktur¹
+					}
+					cur->size = bin->size;
+					if (bin->size && bin->buff) {
+						memcpy(cur->buff, bin->buff, bin->size);
+					}
 				}
 				break;}
 			default:

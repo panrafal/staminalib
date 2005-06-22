@@ -22,7 +22,7 @@ namespace Stamina { namespace DT {
 		init(); 
 	}
 	
-	FileBin::FileBin(DataTable * t) {
+	FileBin::FileBin(DataTable& t) {
 		init();
 		assign(t);
 	}
@@ -361,6 +361,7 @@ namespace Stamina { namespace DT {
 			_dataSize = 0x7FFFFFFF;
 			// placeholder do zapisania trochê póŸniej. Specjalnie zapisujemy du¿¹ wartoœæ, ¿eby w razie pozostawienia tego w takim stanie w pliku spowodowaæ "bezpieczny" b³¹d podczas wczytywania
 			writeData(&_dataSize, 4);
+			_dataSize = 0;
 
 			_pos_data = ftell(_file);
 
@@ -422,6 +423,8 @@ namespace Stamina { namespace DT {
 			// Ustawiamy siê z powrotem za danymi
 			this->setFilePosition(_dataSize, fromCurrent);
 
+			fflush(_file);
+
 			this->updateFileSize();
 
 		} catch (DTException e) {
@@ -448,7 +451,7 @@ namespace Stamina { namespace DT {
 			std::string name;
 			/*Wczytujemy nazwê kolumny i dane dodatkowe (od v3.0)*/
 			if (_verMaj>'2') {
-				char length;
+				unsigned char length;
 				readData(&length, 1);
 				if (length) {
 					readData(stringBuffer(name, length), length);
@@ -641,8 +644,13 @@ namespace Stamina { namespace DT {
 
 			bool skip = (colId == colNotFound); // Czy OMIN¥Æ dane kolumny?
 
+			const Column& tableCol = _table->getColumns().getColumn(colId);
+			if (!skip && (tableCol.hasFlag(cflagDontSave) || tableCol.getType() != col.getType())) {
+				skip = true;
+			}
+
 			// szukamy, czy ID aktualnej, jest na liœcie, jak nie to omijamy...
-			if (columns) { 
+			if (!skip && columns) { 
 				skip = true;
 				int i = 0;
 				do {
@@ -672,7 +680,7 @@ namespace Stamina { namespace DT {
 					} else {
 						__int64 val;
 						readCryptedData(col, &val, 8);
-						rowObj.setByIndex(colIndex, (DataEntry)&val);
+						rowObj.setByIndex(colIndex, (DataEntry)&val, true);
 					}
 					break;
 				case ctypeString: {
@@ -686,10 +694,10 @@ namespace Stamina { namespace DT {
 						char * buffer = new char [length + 1];
 						buffer[length] = 0;
 						readCryptedData(col, buffer, length);
-						rowObj.setByIndex(colIndex, (DataEntry)buffer);
+						rowObj.setByIndex(colIndex, (DataEntry)buffer, true);
 						delete [] buffer;
 					} else {
-						rowObj.setByIndex(colIndex, (DataEntry)"");
+						rowObj.setByIndex(colIndex, (DataEntry)"", true);
 					}
 					break;}
 				case ctypeBin: {
@@ -703,10 +711,10 @@ namespace Stamina { namespace DT {
 					} else if (bin.size > 0) {
 						bin.buff = new char [bin.size];
 						readCryptedData(col, bin.buff, bin.size);
-						rowObj.setByIndex(colIndex, (DataEntry)&bin);
+						rowObj.setByIndex(colIndex, (DataEntry)&bin, true);
 						delete [] bin.buff;
 					} else {
-						rowObj.setByIndex(colIndex, (DataEntry)&bin);
+						rowObj.setByIndex(colIndex, (DataEntry)&bin, true);
 					}
 					break; }
 
@@ -730,85 +738,97 @@ namespace Stamina { namespace DT {
 
 	void FileBin::writeRow(tRowId row) {
 		if (!isOpened()) throw DTException(errNotOpened);
+		try {
 
-		row = _table->getRowPos(row);
+			row = _table->getRowPos(row);
 
-		if (fputc('\n' , _file) == EOF)
-			throw DTFileException();
-
-		DataRow& rowObj = _table->getRow(row);
-
-		unsigned int rowSize = 0;
-
-		// rozmiar, flagi - od v2.0
-		if (_verMaj > '1') {
-			writeData(&rowSize, 4);  //rowSize - placeholder
-			enRowFlag rowFlags = rowObj.getFlags();
-			writeData(&rowFlags, 4, &rowSize); // flag
-			unsigned int dataSize = 8; // flag + lastId, na razie nie ma wiêcej
-			writeData(&dataSize, 4, &rowSize);
-			enRowDataFlags flags = rdflagRowId;
-			writeData(&flags, 4, &rowSize);
-			tRowId rowId = rowObj.getId();
-			rowId = DataTable::unflagId(rowId);
-			writeData(&rowId, 4, &rowSize);
-		}
-		for (unsigned int colIndex =0; colIndex < _fcols.getColCount(); colIndex++) {
-			const Column& col = _fcols.getColumnByIndex(colIndex);
-
-			if (col.hasFlag(cflagDontSave)) continue;
-
-			tColId id = col.getId();
-			if (col.isIdUnique()) { 
-				id = _table->getColumns().getNameId(col.getName().c_str()); 
-			}
-
-			switch (col.getType()) {
-				case ctypeInt: {
-					int val = (int)rowObj.getByIndex(colIndex);
-					writeCryptedData(col, &val, 4, &rowSize);
-					break;}
-				case ctype64: {
-					__int64* val = (__int64*)rowObj.getByIndex(colIndex);
-					if (!val) {
-						// zapisujemy 0
-						__int64 null = 0;
-						writeCryptedData(col, &null, 8, &rowSize);
-					} else {
-						writeCryptedData(col, val, 8, &rowSize);
-					}
-					break;}
-				case ctypeString: {
-					char * val = (char *)rowObj.getByIndex(colIndex);
-					unsigned int length = (val == 0 ? 0 : strlen(val));
-					writeData(&length, 4, &rowSize);
-					if (val && length > 0) {
-						writeCryptedData(col, val, length, &rowSize);
-					}
-					break;}
-				case ctypeBin: {
-					TypeBin* val = (TypeBin*)rowObj.getByIndex(colIndex);
-					writeData(&val->size, 4, &rowSize);
-					if (val->buff && val->size > 0) {
-						writeCryptedData(col, val->buff, val->size, &rowSize);
-					}
-					break;}
-			}
-
-			if (fputc('\t' , _file) == EOF)
+			if (fputc('\n' , _file) == EOF)
 				throw DTFileException();
-			rowSize++;
+
+			DataRow& rowObj = _table->getRow(row);
+
+			unsigned int rowSize = 0;
+
+			// rozmiar, flagi - od v2.0
+			if (_verMaj > '1') {
+				rowSize = 0x7FFFFFFF;
+				writeData(&rowSize, 4);  //rowSize - placeholder
+				rowSize = 0;
+				enRowFlag rowFlags = rowObj.getFlags();
+				writeData(&rowFlags, 4, &rowSize); // flag
+				unsigned int dataSize = 8; // flag + lastId, na razie nie ma wiêcej
+				writeData(&dataSize, 4, &rowSize);
+				enRowDataFlags flags = rdflagRowId;
+				writeData(&flags, 4, &rowSize);
+				tRowId rowId = rowObj.getId();
+				rowId = DataTable::unflagId(rowId);
+				writeData(&rowId, 4, &rowSize);
+			}
+			for (unsigned int colIndex =0; colIndex < _fcols.getColCount(); colIndex++) {
+				const Column& col = _fcols.getColumnByIndex(colIndex);
+
+				if (col.hasFlag(cflagDontSave)) continue;
+
+				tColId id = col.getId();
+				if (col.isIdUnique()) { 
+					id = _table->getColumns().getNameId(col.getName().c_str()); 
+				}
+
+				switch (col.getType()) {
+					case ctypeInt: {
+						int val = (int)rowObj.getByIndex(colIndex);
+						writeCryptedData(col, &val, 4, &rowSize);
+						break;}
+					case ctype64: {
+						__int64* val = (__int64*)rowObj.getByIndex(colIndex);
+						if (!val) {
+							// zapisujemy 0
+							__int64 null = 0;
+							writeCryptedData(col, &null, 8, &rowSize);
+						} else {
+							writeCryptedData(col, val, 8, &rowSize);
+						}
+						break;}
+					case ctypeString: {
+						char * val = (char *)rowObj.getByIndex(colIndex);
+						unsigned int length = (val == 0 ? 0 : strlen(val));
+						writeData(&length, 4, &rowSize);
+						if (val && length > 0) {
+							writeCryptedData(col, val, length, &rowSize);
+						}
+						break;}
+					case ctypeBin: {
+						TypeBin* val = (TypeBin*)rowObj.getByIndex(colIndex);
+						if (val) {
+							writeData(&val->size, 4, &rowSize);
+							if (val->buff && val->size > 0) {
+								writeCryptedData(col, val->buff, val->size, &rowSize);
+							}
+						} else {
+							int size = 0;
+							writeData(&size, 4, &rowSize);
+						}
+						break;}
+				}
+
+				if (fputc('\t' , _file) == EOF)
+					throw DTFileException();
+				rowSize++;
+			}
+			// zapisujemy wynik od v2.0
+			if (_verMaj > '1') {
+				writeData(&rowSize, 4); // size
+				// cofamy siê o ca³y wiersz i oba zapisane size'y
+				setFilePosition(- (signed int)rowSize - 8, fromCurrent);
+				writeData(&rowSize, 4);
+				// idziemy do przodu o ca³y wiersz i ostatni size...
+				setFilePosition(rowSize + 4, fromCurrent);
+			}
+			_storedRowsCount++;
+		} catch (DTException e) {
+			this->setWriteFailed(true);
+			throw e;
 		}
-		// zapisujemy wynik od v2.0
-		if (_verMaj > '1') {
-			writeData(&rowSize, 4); // size
-			// cofamy siê o ca³y wiersz i oba zapisane size'y
-			setFilePosition(- (signed int)rowSize - 8, fromCurrent);
-			writeData(&rowSize, 4);
-			// idziemy do przodu o ca³y wiersz i ostatni size...
-			setFilePosition(rowSize + 4, fromCurrent);
-		}
-		_storedRowsCount++;
 	}
 
 
@@ -822,62 +842,67 @@ namespace Stamina { namespace DT {
         if (_verMaj && _verMaj < '3') 
 			throw DTException(errBadVersion);
         if (feof(_file)) throw DTException(errRowNotFound);
-        if (fgetc(_file) != '\n') 
-			throw DTException(errBadFormat);
-        if (feof(_file)) 
-			throw DTException(errBadFormat);
+		try {
+			if (fgetc(_file) != '\n') 
+				throw DTException(errBadFormat);
+			if (feof(_file)) 
+				throw DTException(errBadFormat);
 
-        int rowSize, rowSize2;
-        long pos;
-        // Najpierw sprawdza czy zgadza siê rozmiar...
-		readData(&rowSize, 4);
-		pos = ftell(_file);
-		setFilePosition(rowSize, fromCurrent);
-		readData(&rowSize2, 4);
-		if (rowSize != rowSize2) throw DTException(errBadFormat); // Oba rozmiary nie s¹ zgodne!!!
-        // Sprawdzamy index jeœli jest taka potrzeba
-        if (testIndex) {
-			setFilePosition(pos + 4, fromBeginning); // Wracamy do pocz¹tku i pomijamy flagi
-            int rowDataSize = 0;
-			readData(&rowDataSize, 4);
-			if (rowDataSize >= 8) { // Potrzebujemy równie¿ flagê...
-                int rowDataFlag = 0;
-				readData(&rowDataFlag, 4);
-				if (rowDataFlag & rdflagRowId) {
-                    int id = 0;
-					readData(&id, 4);
-					if (id != DataTable::unflagId(testIndex)) throw DTException(errRowNotFound); // Z³y index!
-                }
-            }
-        }
-        if (this->_storedRowsCount != -1 && this->_storedRowsCount) { 
-			// A mo¿e ju¿ jest ustawione?
+			int rowSize, rowSize2;
+			long pos;
+			// Najpierw sprawdza czy zgadza siê rozmiar...
+			readData(&rowSize, 4);
+			pos = ftell(_file);
+			setFilePosition(rowSize, fromCurrent);
+			readData(&rowSize2, 4);
+			if (rowSize != rowSize2) throw DTException(errBadFormat); // Oba rozmiary nie s¹ zgodne!!!
+			// Sprawdzamy index jeœli jest taka potrzeba
+			if (testIndex) {
+				setFilePosition(pos + 4, fromBeginning); // Wracamy do pocz¹tku i pomijamy flagi
+				int rowDataSize = 0;
+				readData(&rowDataSize, 4);
+				if (rowDataSize >= 8) { // Potrzebujemy równie¿ flagê...
+					int rowDataFlag = 0;
+					readData(&rowDataFlag, 4);
+					if (rowDataFlag & rdflagRowId) {
+						int id = 0;
+						readData(&id, 4);
+						if (id != DataTable::unflagId(testIndex)) throw DTException(errRowNotFound); // Z³y index!
+					}
+				}
+			}
+			if (this->_storedRowsCount != -1 && this->_storedRowsCount) { 
+				// A mo¿e ju¿ jest ustawione?
+				setFilePosition(pos, fromBeginning); // Wracamy do pozycji
+				int oldFlag = 0;
+				readData(&oldFlag, 4);
+				if (oldFlag == -1) return;
+				this->_storedRowsCount --;
+			} else this->_storedRowsCount = -1;
+
 			setFilePosition(pos, fromBeginning); // Wracamy do pozycji
-            int oldFlag = 0;
-			readData(&oldFlag, 4);
-            if (oldFlag == -1) return;
-            this->_storedRowsCount --;
-        } else this->_storedRowsCount = -1;
+			int newFlag = -1;
+			writeData(&newFlag, 4); // Zapisujemy flagê
 
-		setFilePosition(pos, fromBeginning); // Wracamy do pozycji
-        int newFlag = -1;
-		writeData(&newFlag, 4); // Zapisujemy flagê
-
-		if (overwrite) {
-            // Zerujemy zawartoœæ 
-            char buff [100];
-            memset(buff , 0 , 100);
-            size_t size = rowSize - 4;
-            size_t i = 0;
-            while (i < size) {
-                if (!fwrite(buff, min(100 , size - i), 1, _file)) break;
-                i += min(100 , size - i);
-            }
-        }
-        // Zaznaczamy flage (zostanie zapisana do pliku w close()
-		this->setFileFlag(fflagFragmented, true);
-		// Skaczemy do nastepnego wiersza
-		setFilePosition(pos + rowSize + 4, fromBeginning); 
+			if (overwrite) {
+				// Zerujemy zawartoœæ 
+				char buff [100];
+				memset(buff , 0 , 100);
+				size_t size = rowSize - 4;
+				size_t i = 0;
+				while (i < size) {
+					if (!fwrite(buff, min(100 , size - i), 1, _file)) break;
+					i += min(100 , size - i);
+				}
+			}
+			// Zaznaczamy flage (zostanie zapisana do pliku w close()
+			this->setFileFlag(fflagFragmented, true);
+			// Skaczemy do nastepnego wiersza
+			setFilePosition(pos + rowSize + 4, fromBeginning); 
+		} catch (DTException e) {
+			this->setWriteFailed(true);
+			throw e;
+		}
     }
 
 	bool FileBin::findNextRow() {
