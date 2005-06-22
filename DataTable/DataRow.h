@@ -24,12 +24,12 @@ namespace Stamina { namespace DT {
 	public:
 		bool allocData();
 		bool freeData();
-		const DataEntry get (tColId id); // Pobiera wartosc kolumny
-		const DataEntry getByIndex (unsigned int colIndex); // Pobiera wartosc kolumny
+		const DataEntry get (tColId id) throw(...); // Pobiera wartosc kolumny
+		const DataEntry getByIndex (unsigned int colIndex) throw(...); // Pobiera wartosc kolumny
 		/**Sets the column value (without conversion!)*/
-		bool set (tColId id, DataEntry val);
+		bool set (tColId id, DataEntry val, bool dropDefault = false) throw(...);
 		/**Sets the column value (without conversion and without locking and column lookup)*/
-		bool setByIndex (unsigned int colIndex, DataEntry val);
+		bool setByIndex (unsigned int colIndex, DataEntry val, bool dropDefault = false) throw(...);
 
 
 		inline bool hasColumnData(unsigned int colIndex) {

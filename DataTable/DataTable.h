@@ -128,8 +128,8 @@ namespace Stamina { namespace DT {
 			return *this->_rows[row];
 		}
 
-		DataEntry get(tRowId row , tColId id); // zwraca wartosc w wierszu/kolumnie
-		bool set(tRowId row , tColId col, DataEntry val);
+		DataEntry get(tRowId row , tColId id) throw(...); // zwraca wartosc w wierszu/kolumnie
+		bool set(tRowId row , tColId col, DataEntry val, bool dropDefault = false) throw(...);
 
 
 		// inne
@@ -138,8 +138,8 @@ namespace Stamina { namespace DT {
 			this->getValue(row, id, v);
 			return v.vInt;
 		}
-		inline bool setInt(tRowId row , tColId id , int val) {
-			return this->setValue(row, id, ValueInt(val));
+		inline bool setInt(tRowId row , tColId id , int val, bool dropDefault = false) {
+			return this->setValue(row, id, ValueInt(val), dropDefault);
 		}
 		inline const char * getCh(tRowId row , tColId id, char* buffer, unsigned int buffSize = 0) {
 			Value v = ValueStr(buffer, buffSize);
@@ -148,8 +148,8 @@ namespace Stamina { namespace DT {
 			else
 				return 0;
 		}
-		inline bool setCh(tRowId row , tColId id , const char * val) {
-			return this->setValue(row, id, ValueStr(val));
+		inline bool setCh(tRowId row , tColId id , const char * val, bool dropDefault = false) {
+			return this->setValue(row, id, ValueStr(val), dropDefault);
 		}
 
 		inline TypeBin getBin(tRowId row , tColId id, const TypeBin& val ) {
@@ -162,11 +162,11 @@ namespace Stamina { namespace DT {
 				return v.vBin;
 			}
 		}
-		inline bool setBin(tRowId row , tColId id , void * val , size_t size) {
-			return this->setValue(row, id, ValueBin(val, size));
+		inline bool setBin(tRowId row , tColId id , void * val , size_t size, bool dropDefault = false) {
+			return this->setValue(row, id, ValueBin(val, size), dropDefault);
 		}
-		inline bool setBin(tRowId row , tColId id , const TypeBin& val) {
-			return this->setValue(row, id, ValueBin(val));
+		inline bool setBin(tRowId row , tColId id , const TypeBin& val, bool dropDefault = false) {
+			return this->setValue(row, id, ValueBin(val), dropDefault);
 		}
 
 		inline __int64 get64(tRowId row , tColId id) {
@@ -174,8 +174,8 @@ namespace Stamina { namespace DT {
 			this->getValue(row, id, v);
 			return v.vInt64;
 		}
-		inline bool set64(tRowId row , tColId id , __int64 val) {
-			return this->setValue(row, id, ValueInt64(val));
+		inline bool set64(tRowId row , tColId id , __int64 val, bool dropDefault = false) {
+			return this->setValue(row, id, ValueInt64(val), dropDefault);
 		}
 
 		inline std::string getStr(tRowId row , tColId id) {
@@ -185,8 +185,8 @@ namespace Stamina { namespace DT {
 			free(v.vChar);
 			return s;
 		}
-		inline bool setStr(tRowId row , tColId id , const std::string& val) {
-			return setCh(row, id, val.c_str());
+		inline bool setStr(tRowId row , tColId id , const std::string& val, bool dropDefault = false) {
+			return setCh(row, id, val.c_str(), dropDefault);
 		}
 
 		const ColumnsDesc& getColumns() {
@@ -209,9 +209,9 @@ namespace Stamina { namespace DT {
 				return getRowId(id) != rowNotFound;
 		}
 
-		void lock(tRowId row);
-		void unlock(tRowId row);
-		bool canAccess(tRowId row);
+		void lock(tRowId row) throw(...);
+		void unlock(tRowId row) throw(...);
+		bool canAccess(tRowId row) throw(...);
 
 		/* Gets the value of a field using type conversion.
 		- When retrieving ctypeString there are several possible ways of setting input buffer in Value:
@@ -229,16 +229,7 @@ namespace Stamina { namespace DT {
 		
 		/** Sets the value using type conversion.
 		*/
-		bool setValue(tRowId row , tColId col , const Value& value);
-
-		inline void setError(enError error) {
-			_error = error;
-		}
-		inline void resetError() {
-			_error = errSuccess;
-		}
-		inline int getError() {
-		}
+		bool setValue(tRowId row , tColId col , const Value& value, bool dropDefault=false);
 
 		inline void setXor1Key(unsigned char* key) {
 			_xor1_key = key;
@@ -295,7 +286,7 @@ namespace Stamina { namespace DT {
 		int _size;
 		tRowId _lastId; // ostatni identyfikator wiersza
 		ColumnsDesc _cols;
-		enError _error;
+		//enError _error;
 		//int mode;
 		//int notypecheck;
 		unsigned char * _xor1_key;
