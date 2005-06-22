@@ -180,10 +180,13 @@ namespace Stamina { namespace DT {
 
 		inline std::string getStr(tRowId row , tColId id) {
 			Value v = ValueStr(0, -1); // this way we will get string duplicate
-			this->getValue(row, id, v);
-			std::string s = v.vChar;
-			free(v.vChar);
-			return s;
+			if (this->getValue(row, id, v)) {
+				std::string s = v.vChar;
+				free(v.vChar);
+				return s;
+			} else {
+				return "";
+			}
 		}
 		inline bool setStr(tRowId row , tColId id , const std::string& val, bool dropDefault = false) {
 			return setCh(row, id, val.c_str(), dropDefault);
@@ -195,6 +198,13 @@ namespace Stamina { namespace DT {
 
 		void mergeColumns(const ColumnsDesc& columns) {
 			this->_cols.join(columns, false);
+		}
+
+		inline tColId setColumn (tColId id , enColumnType type , DataEntry def=0 , const char * name="") {
+			return _cols.setColumn(id, type, def, name);
+		}
+		inline tColId setUniqueCol (const char * name , enColumnType type , DataEntry def=0) {
+			return _cols.setUniqueCol(name, type, def);
 		}
 
 

@@ -44,6 +44,10 @@ namespace Stamina {
 
 
 	void MD5Digest::addSalt(int salt) {
+		MD5Context ctx;
+		ctx.update(_digest, 16);
+		ctx.update(inttostr(salt, 16, 8));
+		setDigest(ctx.getDigest());
 	}
 
 	void MD5Digest::calculateForFile(const char* filename) {

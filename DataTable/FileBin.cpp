@@ -558,7 +558,10 @@ namespace Stamina { namespace DT {
 		rowObj._filePos = ftell(_file);
 
 		// Znacznik rozpoczêcia nowego wiersza
-		if (fgetc(_file) != '\n') throw DTException(errBadFormat);
+		if (fgetc(_file) != '\n') {
+			if ( feof(_file) ) return resNothingToRead;
+			throw DTException(errBadFormat);
+		}
 
 		unsigned int rowSize;
 		unsigned int rowDataSize;
@@ -671,7 +674,7 @@ namespace Stamina { namespace DT {
 					else {
 						int val;
 						readCryptedData(col, &val, 4);
-						rowObj.setByIndex(colIndex, (DataEntry)val);
+						rowObj.set(colId, (DataEntry)val);
 					}
 					break;
 				case ctypeInt64:
@@ -680,7 +683,7 @@ namespace Stamina { namespace DT {
 					} else {
 						__int64 val;
 						readCryptedData(col, &val, 8);
-						rowObj.setByIndex(colIndex, (DataEntry)&val, true);
+						rowObj.set(colId, (DataEntry)&val, true);
 					}
 					break;
 				case ctypeString: {
@@ -694,10 +697,10 @@ namespace Stamina { namespace DT {
 						char * buffer = new char [length + 1];
 						buffer[length] = 0;
 						readCryptedData(col, buffer, length);
-						rowObj.setByIndex(colIndex, (DataEntry)buffer, true);
+						rowObj.set(colId, (DataEntry)buffer, true);
 						delete [] buffer;
 					} else {
-						rowObj.setByIndex(colIndex, (DataEntry)"", true);
+						rowObj.set(colId, (DataEntry)"", true);
 					}
 					break;}
 				case ctypeBin: {
@@ -711,10 +714,10 @@ namespace Stamina { namespace DT {
 					} else if (bin.size > 0) {
 						bin.buff = new char [bin.size];
 						readCryptedData(col, bin.buff, bin.size);
-						rowObj.setByIndex(colIndex, (DataEntry)&bin, true);
+						rowObj.set(colId, (DataEntry)&bin, true);
 						delete [] bin.buff;
 					} else {
-						rowObj.setByIndex(colIndex, (DataEntry)&bin, true);
+						rowObj.set(colId, (DataEntry)&bin, true);
 					}
 					break; }
 
@@ -769,18 +772,21 @@ namespace Stamina { namespace DT {
 
 				if (col.hasFlag(cflagDontSave)) continue;
 
-				tColId id = col.getId();
+				tColId colId = col.getId();
 				if (col.isIdUnique()) { 
-					id = _table->getColumns().getNameId(col.getName().c_str()); 
+					colId = _table->getColumns().getNameId(col.getName().c_str()); 
 				}
+				const Column& tableCol = _table->getColumns().getColumn(colId);
+				// nie konwertujemy danych przy zapisywaniu, po prostu wstawiamy puste wartoœci...
+				bool skip = (tableCol.getType() != col.getType());
 
 				switch (col.getType()) {
 					case ctypeInt: {
-						int val = (int)rowObj.getByIndex(colIndex);
+						int val = skip ? 0 : (int)rowObj.get(colId);
 						writeCryptedData(col, &val, 4, &rowSize);
 						break;}
 					case ctype64: {
-						__int64* val = (__int64*)rowObj.getByIndex(colIndex);
+						__int64* val = skip ? 0 : (__int64*)rowObj.get(colId);
 						if (!val) {
 							// zapisujemy 0
 							__int64 null = 0;
@@ -790,7 +796,7 @@ namespace Stamina { namespace DT {
 						}
 						break;}
 					case ctypeString: {
-						char * val = (char *)rowObj.getByIndex(colIndex);
+						char * val = skip ? 0 : (char *)rowObj.get(colId);
 						unsigned int length = (val == 0 ? 0 : strlen(val));
 						writeData(&length, 4, &rowSize);
 						if (val && length > 0) {
@@ -798,7 +804,7 @@ namespace Stamina { namespace DT {
 						}
 						break;}
 					case ctypeBin: {
-						TypeBin* val = (TypeBin*)rowObj.getByIndex(colIndex);
+						TypeBin* val = skip ? 0 : (TypeBin*)rowObj.get(colId);
 						if (val) {
 							writeData(&val->size, 4, &rowSize);
 							if (val->buff && val->size > 0) {
@@ -947,14 +953,18 @@ namespace Stamina { namespace DT {
 	}
 
 	void FileBin::readCryptedData(const Column& col, void* buffer, int size, unsigned int* decrement) {
-		this->readData(buffer, size, decrement);
 		if (col.hasFlag(cflagXor) || this->hasFileFlag(fflagCryptAll)) {
 			if (this->versionNewCrypt()) {
-				xor2_decrypt(_xorDigest.getDigest(), (unsigned char*)buffer, size, ftell(_file));
+				size_t salt = ftell(_file);
+				this->readData(buffer, size, decrement);
+				xor2_decrypt(_xorDigest.getDigest(), (unsigned char*)buffer, size, salt);
 			} else {
-				xor1_decrypt(_table->getXor1Key(), (unsigned char*)buffer, size);				
-			}
+				this->readData(buffer, size, decrement);
+				xor1_decrypt(_table->getXor1Key(), (unsigned char*)buffer, size);			}
+		} else {
+			this->readData(buffer, size, decrement);
 		}
+
 	}
 
 	void FileBin::writeCryptedData(const Column& col, void* buffer, int size, unsigned int* increment) {
