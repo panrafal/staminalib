@@ -16,6 +16,7 @@ class TestFileBin : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE( TestFileBin );
   
 	CPPUNIT_TEST( testSave );
+	CPPUNIT_TEST( testLoad );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -66,20 +67,27 @@ public:
 
 		_cols.setColumn(colInt, ctypeInt , 0, "Int");
 		_cols.setColumn(colIntDef, ctypeInt | cflagXor, (DataEntry) testIntDef, "IntDef");
+		_cols.setColumn(100, ctypeInt | cflagDontSave);
 		_cols.setColumn(colString, ctypeString, 0, "String");
 		_cols.setColumn(colStringDef, ctypeString | cflagXor, (void*)testStringDef.c_str(), "StringDef");
+		_cols.setColumn(101, ctypeString | cflagDontSave);
 		_cols.setColumn(col64, ctype64, 0, "64");
 		_cols.setColumn(col64Def, ctype64 | cflagXor, &test64Def, "64Def");
+		_cols.setColumn(102, ctype64 | cflagDontSave);
 		_cols.setColumn(colBin, ctypeBin, 0, "Bin");
 		_cols.setColumn(colBinDef, ctypeBin | cflagXor, &testBinDef, "BinDef");
+		_cols.setColumn(103, ctypeBin | cflagDontSave);
 	}
 	void tearDown() {
 	}
 
 protected:
 
+	std::string getFileName(const std::string& name) {
+		return "TestFileBin__" + name + "_p-" + password + ".dtb";
+	}
 
-	void createFile(const std::string& filename) {
+	void createFile(const std::string& name) {
 		DataTable dt;
 		dt.mergeColumns(_cols);
 
@@ -99,7 +107,7 @@ protected:
 
 		FileBin fb;
 		fb.assign(dt);
-		fb.save("TestFileBin__" + filename + "_p-" + password + ".dtb");
+		fb.save(getFileName(name));
 	}
 
 
@@ -118,7 +126,7 @@ protected:
 		fb.setColumns( dt.getColumns() );
 		CPPUNIT_ASSERT( fb.getColumns().getColCount() > 0 );
 
-		fb.open("TestFileBin__testSave_p-" + password + ".dtb" , fileWrite);
+		fb.open(getFileName("testSave") , fileWrite);
 		CPPUNIT_ASSERT( fb.isOpened() );
 		CPPUNIT_ASSERT( fb.isCreatingNewFile() );
 		CPPUNIT_ASSERT( fb.isReadable() == false );
@@ -138,6 +146,48 @@ protected:
 
 		fb.close();
 		CPPUNIT_ASSERT( fb.isWriteFailed() == false );
+	}
+
+
+	void testLoad() {
+		createFile("testLoad");
+
+		DataTable dt;
+		tColId colString2 = 100;
+		dt.setColumn(colString2, ctypeString | cflagXor, (DataEntry) testStringDef.c_str());
+
+		dt.mergeColumns(_cols);
+
+		dt.setPassword(password);
+
+		FileBin fbl;
+		fbl.assign(dt);
+		CPPUNIT_ASSERT( fbl.load(getFileName("testLoad")) == success );
+
+		CPPUNIT_ASSERT_EQUAL( testString1, dt.getStr(row1, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt.getStr(row1, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getStr(row2, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getStr(row2, colString2) );
+
+		dt.setStr(row1, colString, testString2);
+		dt.setStr(row2, colString2, testString2);
+
+		FileBin fbs;
+		fbs.assign(dt);
+		CPPUNIT_ASSERT( fbs.save(getFileName("testLoad")) == success );
+
+		DataTable dt2;
+		dt2.setPassword(password);
+
+		FileBin fbl2;
+		fbl2.assign(dt2);
+		CPPUNIT_ASSERT( fbl2.loadAll(getFileName("testLoad")) == success );
+
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row1, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row1, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testStringDef, dt2.getStr(row2, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row2, colString2) );
+
 	}
 
 
