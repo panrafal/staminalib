@@ -12,6 +12,7 @@
  *  $Id$
  */
 
+#include <io.h>
 #include "FileBase.h"
 #include <Stamina\Helpers.h>
 
@@ -28,6 +29,8 @@ namespace Stamina { namespace DT {
 	class FileBin : public FileBase {
 
 	public:
+
+		friend class TestFileBin;
 
 		enum enFileFlags {
 			fflagFragmented = 0x10000,
@@ -72,7 +75,7 @@ namespace Stamina { namespace DT {
 	public:
 
 		FileBin();
-		FileBin(DataTable * table);
+		FileBin(DataTable& table);
 		~FileBin();
 
 		void init();

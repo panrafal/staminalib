@@ -160,6 +160,9 @@
 				RelativePath="..\DataTable\Test\TestCrypt.cpp">
 			</File>
 			<File
+				RelativePath="..\DataTable\Test\TestFileBin.cpp">
+			</File>
+			<File
 				RelativePath="..\DataTable\Test\TestTable.cpp">
 			</File>
 		</Filter>

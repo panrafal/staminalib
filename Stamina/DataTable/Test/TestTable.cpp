@@ -20,7 +20,9 @@ class TestTable : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testSetPassword );
 	CPPUNIT_TEST( testParams );
 	CPPUNIT_TEST( testGetSetValue );
+	CPPUNIT_TEST( testGetSetEmptyValue );
 	CPPUNIT_TEST( testFindRow );
+	CPPUNIT_TEST( testDropDefault );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -32,16 +34,36 @@ protected:
 	static const tColId colIntDef = 3;
 	static const tColId colStringDef = 4;
 	static const tColId col64 = 5;
-	static const tColId colBin = 6;
+	static const tColId col64Def = 6;
+	static const tColId colBin = 7;
+	static const tColId colBinDef = 8;
+
+	std::string testString, testStringDef;
+	int testInt, testIntDef;
+	__int64 test64, test64Def;
+	TypeBin testBin, testBinDef;
 
 public:
 	void setUp() {
-		_cols.setColumn(colInt, ctypeInt, 0, "Int");
-		_cols.setColumn(colIntDef, ctypeInt, (DataEntry) colIntDef, "IntDef");
+		testString = "100sdfksdfkjsdhfsjfhsfjkhsdf jks hfjk hfdsjkfh s";
+		testInt = 100;
+		testIntDef = 1000;
+		test64 = 0xFF00000000;
+		test64Def = 0xAA00000001;
+		testBin.size = 10;
+		testBin.buff = "1234567890";
+		testBinDef.size = 5;
+		testBinDef.buff = "12345";
+		testStringDef = "DEFAULT";
+
+		_cols.setColumn(colInt, ctypeInt , 0, "Int");
+		_cols.setColumn(colIntDef, ctypeInt | cflagXor, (DataEntry) testIntDef, "IntDef");
 		_cols.setColumn(colString, ctypeString, 0, "String");
-		_cols.setColumn(colStringDef, ctypeString, "StringDef", "StringDef");
+		_cols.setColumn(colStringDef, ctypeString | cflagXor, (void*)testStringDef.c_str(), "StringDef");
 		_cols.setColumn(col64, ctype64, 0, "64");
+		_cols.setColumn(col64Def, ctype64 | cflagXor, &test64Def, "64Def");
 		_cols.setColumn(colBin, ctypeBin, 0, "Bin");
+		_cols.setColumn(colBinDef, ctypeBin | cflagXor, &testBinDef, "BinDef");
 	}
 	void tearDown() {
 	}
@@ -110,12 +132,21 @@ protected:
 	}
 
 	void testGetSetValue() {
-		std::string testString = "100sdfksdfkjsdhfsjfhsfjkhsdf jks hfjk hfdsjkfh s";
-		int testInt = 100;
-		__int64 test64 = 0xFF00000000;
+		testDoGetSetValue(true);
+	}
+	void testGetSetEmptyValue() {
+		testDoGetSetValue(false);
+	}
+
+	void testDoGetSetValue(bool values) {
+		std::string testString = values ? "100sdfksdfkjsdhfsjfhsfjkhsdf jks hfjk hfdsjkfh s" : "";
+		int testInt = values ? 100 : 0;
+		__int64 test64 = values ? 0xFF00000000 : 0;
 		TypeBin testBin;
-		testBin.size = 10;
-		testBin.buff = "1234567890";
+		if (values) {
+			testBin.size = 10;
+			testBin.buff = "1234567890";
+		}
 		char buffer [50];
 
 
@@ -125,16 +156,22 @@ protected:
 
 		// getting default values...
 		CPPUNIT_ASSERT( dt.getInt(row, colInt) == 0 );
-		CPPUNIT_ASSERT( dt.getInt(row, colIntDef) == colIntDef );
+		CPPUNIT_ASSERT( dt.getInt(row, colIntDef) == testIntDef );
 		CPPUNIT_ASSERT( dt.getStr(row, colString) == "" );
-		CPPUNIT_ASSERT( dt.getStr(row, colStringDef) == "StringDef" );
+		CPPUNIT_ASSERT( dt.getStr(row, colStringDef) == testStringDef );
+		CPPUNIT_ASSERT( dt.get64(row, col64) == 0 );
+		CPPUNIT_ASSERT( dt.get64(row, col64Def) == test64Def );
+		CPPUNIT_ASSERT( dt.getBin(row, colBin, TypeBin(buffer, 10)) == TypeBin(0, 0) );
+		CPPUNIT_ASSERT( dt.getBin(row, colBinDef, TypeBin(buffer, 10)) == testBinDef );
 
 		// setting values...
 
-		CPPUNIT_ASSERT( dt.setStr(row, colString, testString.c_str()) );
-		CPPUNIT_ASSERT( dt.setInt(row, colInt, testInt) );
-		CPPUNIT_ASSERT( dt.set64(row, col64, test64) );
-		CPPUNIT_ASSERT( dt.setBin(row, colBin, testBin) );
+		if (values) {
+			CPPUNIT_ASSERT( dt.setStr(row, colString, testString.c_str()) );
+			CPPUNIT_ASSERT( dt.setInt(row, colInt, testInt) );
+			CPPUNIT_ASSERT( dt.set64(row, col64, test64) );
+			CPPUNIT_ASSERT( dt.setBin(row, colBin, testBin) );
+		}
 
 		// getting values
 		CPPUNIT_ASSERT_EQUAL( testInt, dt.getInt(row, colInt) );
@@ -147,7 +184,7 @@ protected:
 		{
 			Value v = ValueStrGetSize();
 			CPPUNIT_ASSERT( dt.getValue(row, colString, v) );
-			CPPUNIT_ASSERT( v.buffSize > 0 );
+			CPPUNIT_ASSERT( values ? v.buffSize > 0 : v.buffSize == 0 );
 		}
 		// copy
 		CPPUNIT_ASSERT_EQUAL( testString.substr(0, 9), std::string(dt.getCh(row, colString, buffer, 10)) );
@@ -160,7 +197,11 @@ protected:
 		// direct
 		CPPUNIT_ASSERT( dt.getBin (row, colBin, TypeBin((void*)-1, 0)) == testBin );
 		// size
-		CPPUNIT_ASSERT( dt.getBin (row, colBin, TypeBin(0, 0)).size > 0 );
+		if (values) {
+			CPPUNIT_ASSERT( dt.getBin (row, colBin, TypeBin(0, 0)).size > 0);
+		} else {
+			CPPUNIT_ASSERT( dt.getBin (row, colBin, TypeBin(0, 0)).size == 0);
+		}
 		// copy
 		CPPUNIT_ASSERT( dt.getBin (row, colBin, TypeBin(buffer, 10)) == testBin );
 
@@ -220,7 +261,7 @@ protected:
 
 		dt.setStr(r2, colStringDef, "Inny");
 
-		CPPUNIT_ASSERT( dt.findRow(0, Find(Find::neq, colStringDef, ValueStr("StringDef"))) == r2 );
+		CPPUNIT_ASSERT( dt.findRow(0, Find(Find::neq, colStringDef, ValueStr(testStringDef.c_str()))) == r2 );
 
 		CPPUNIT_ASSERT( dt.findRow(0, Find::EqStr(colString, "b")) == r2 );
 		CPPUNIT_ASSERT( dt.findRow(r2, Find(Find::neq, colString, ValueStr("b"))) == r3);
@@ -232,7 +273,51 @@ protected:
 	}
 
 
+	void testDropDefault() {
+		char buffer [50];
+
+		DataTable dt;
+		dt.mergeColumns(_cols);
+		tRowId row = dt.addRow();
+
+		// setting values
+		CPPUNIT_ASSERT( dt.setStr(row, colStringDef, testString.c_str()) );
+		CPPUNIT_ASSERT( dt.setInt(row, colIntDef, testInt) );
+		CPPUNIT_ASSERT( dt.set64(row, col64Def, test64) );
+		CPPUNIT_ASSERT( dt.setBin(row, colBinDef, testBin) );
+
+		// setting defaults
+		CPPUNIT_ASSERT( dt.setStr(row, colStringDef, testStringDef.c_str(), true) );
+		CPPUNIT_ASSERT( dt.setInt(row, colIntDef, testIntDef, true) );
+		CPPUNIT_ASSERT( dt.set64(row, col64Def, test64Def, true) );
+		CPPUNIT_ASSERT( dt.setBin(row, colBinDef, testBinDef, true) );
+
+		// getting default values...
+		CPPUNIT_ASSERT( dt.getInt(row, colIntDef) == testIntDef );
+		CPPUNIT_ASSERT( dt.getStr(row, colStringDef) == testStringDef );
+		CPPUNIT_ASSERT( dt.get64(row, col64Def) == test64Def );
+		CPPUNIT_ASSERT( dt.getBin(row, colBinDef, TypeBin(buffer, 10)) == testBinDef );
+
+		// setting values
+		CPPUNIT_ASSERT( dt.setStr(row, colStringDef, testString.c_str()) );
+		CPPUNIT_ASSERT( dt.setInt(row, colIntDef, testInt) );
+		CPPUNIT_ASSERT( dt.set64(row, col64Def, test64) );
+		CPPUNIT_ASSERT( dt.setBin(row, colBinDef, testBin) );
+
+		// checking values
+		CPPUNIT_ASSERT( dt.getInt(row, colIntDef) == testInt );
+		CPPUNIT_ASSERT( dt.getStr(row, colStringDef) == testString );
+		CPPUNIT_ASSERT( dt.get64(row, col64Def) == test64 );
+		CPPUNIT_ASSERT( dt.getBin(row, colBinDef, TypeBin(buffer, 10)) == testBin );
+
+	}
+
+
 };
+
+
+
+
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestTable );
 

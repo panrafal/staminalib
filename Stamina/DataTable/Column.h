@@ -37,6 +37,12 @@ namespace Stamina { namespace DT {
 			return (_id & colIdUniqueFlag) != 0;
 		}
 
+		/** Returns true if type occupies only 4 bytes and can be stored directly (without creating objects)
+		*/
+		inline bool isStaticType() const {
+			return this->getType() == ctypeInt;
+		}
+
 		inline bool empty() const {
 			return this->_type == ctypeUnknown;
 		}

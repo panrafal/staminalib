@@ -30,11 +30,11 @@ namespace Stamina { namespace DT {
 		//   virtual
 
 		FileBase();
-		FileBase(DataTable * table);
+		FileBase(DataTable& table);
 		~FileBase();
 
 		/**Assigns a table to this file handler*/
-		virtual void assign(DataTable * table);
+		virtual void assign(DataTable& table);
 
 		/**Resets internal data.
 		Should be always before save when using the same File object for loading & saving.
@@ -80,6 +80,14 @@ namespace Stamina { namespace DT {
 
 		//virtual int next() {return 0;} // przesuwa sie na nastepny
 		//virtual int prev() {return 0;} // przesuwa sie na poprzedni
+
+
+		virtual void setColumns(const ColumnsDesc& cols) {
+			_fcols = cols;
+		}
+		const ColumnsDesc& getColumns() {
+			return _fcols;
+		}
 
 	protected:
 

@@ -20,7 +20,7 @@ namespace Stamina { namespace DT {
 		//index_eq_id=1;
 		_lastId = rowIdMin;
 		_changed = false;
-		_error = success;
+		//_error = success;
 		_xor1_key = (unsigned char*)"";
     }
     DataTable::~DataTable() {
@@ -80,7 +80,7 @@ namespace Stamina { namespace DT {
         Locker lock(_cs);
         row = (tRowId) getRowPos(row);
         if (row == rowNotFound || row >= _rows.size()) {
-			this->setError(errNoRow);
+			throw DTException(errNoRow);
             return 0;
 		}
         try {
@@ -89,23 +89,23 @@ namespace Stamina { namespace DT {
             return ret;*/
 			return _rows[row]->get(id);
         } catch (...) {
-			this->setError(errNoRow);
+			throw DTException(errNoRow);
 		}
         return 0;
     }
 
-    bool DataTable::set(tRowId row , tColId id , DataEntry val) {
+    bool DataTable::set(tRowId row , tColId id , DataEntry val,bool dropDefault) {
         LockerCS lock(_cs);
         _changed = true;
         row = (tRowId) getRowPos(row);
 		if (row == rowNotFound || row >= _rows.size()) {
-			setError(errNoRow);
+			throw DTException(errNoRow);
             return false;
 		}
         try {
-            _rows[row]->set(id, val);
+            _rows[row]->set(id, val, dropDefault);
         } catch (...) {
-			setError(errNoRow);
+			throw DTException(errNoRow);
 		}
         return 0;
     }
@@ -120,8 +120,8 @@ namespace Stamina { namespace DT {
             _cs.lock();
             row = getRowPos(row);
 			if (row == rowNotFound || row >= _rows.size()) {
-				setError(errNoRow);
                 _cs.unlock();
+				throw DTException(errNoRow);
                 return;
 			}
 			_rows[row]->lock();
@@ -140,8 +140,8 @@ namespace Stamina { namespace DT {
             _cs.lock();
 			row = getRowPos(row);
 			if (row == rowNotFound || row >= _rows.size()) {
-				setError(errNoRow);
                 _cs.unlock();
+				throw DTException(errNoRow);
                 return;
 			}
 			_rows[row]->unlock();
@@ -162,7 +162,7 @@ namespace Stamina { namespace DT {
             LockerCS lock(_cs);
 			row = getRowPos(row);
 			if (row == rowNotFound || row >= _rows.size()) {
-				setError(errNoRow);
+				throw DTException(errNoRow);
                 return false;
 			}
 			if (_rows[row]->canAccess() == false)
@@ -362,7 +362,8 @@ namespace Stamina { namespace DT {
 			return false; // string
 		case ctypeBin:
 			if (column.getType() == ctypeBin) {
-				TypeBin* bin = (TypeBin*) val;
+				static TypeBin emptyBin;
+				TypeBin* bin = val ? (TypeBin*) val : &emptyBin;
 				if (value.vBin.buff == 0 && value.vBin.size == -1) {
 					value.vBin.size = bin->size;
 					value.vBin.buff = malloc(bin->size);
@@ -387,7 +388,7 @@ namespace Stamina { namespace DT {
 
 
 
-	bool DataTable::setValue(tRowId row , tColId col , const Value& _value) {
+	bool DataTable::setValue(tRowId row , tColId col , const Value& _value, bool dropDefault) {
 		Locker lock(_cs);
 		row = getRowPos(row);
 		if (row == rowNotFound) return false;
@@ -436,7 +437,7 @@ namespace Stamina { namespace DT {
 		default: return false;
 		}
 
-		this->set(row,col,val); 
+		this->set(row,col,val,dropDefault); 
 		return true;
 	}
 

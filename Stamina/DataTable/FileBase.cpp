@@ -20,7 +20,7 @@ namespace Stamina { namespace DT {
 		_headerLoaded = false;
 	}
 
-	FileBase::FileBase(DataTable * table) {
+	FileBase::FileBase(DataTable& table) {
 		_fcols.setLoader(true); 
 		_opened = fileClosed;
 		assign(table);
@@ -29,8 +29,8 @@ namespace Stamina { namespace DT {
 	FileBase::~FileBase() {
 	}
 
-	void FileBase::assign(DataTable * table) {
-		this->_table = table;
+	void FileBase::assign(DataTable& table) {
+		this->_table = &table;
 		_headerLoaded = false;
 		//_fcols.table=t;
 		this->reset();
