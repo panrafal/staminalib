@@ -44,9 +44,16 @@ namespace Stamina { namespace DT {
         LockerCS lock(_cs);
 
 		if (id != rowNotFound) {
+			if (unflagId(id) > rowIdMax || unflagId(id) < rowIdMin) {
+				return rowNotFound;
+			}
 			id = flagId(id);
 			if (getRowPos(id) != rowNotFound) {
+				//throw DTException(errNoRow);
 				return rowNotFound;
+			}
+			if (_lastId < unflagId(id)) {
+				_lastId = unflagId(id);
 			}
 		}
 

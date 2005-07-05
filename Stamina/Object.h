@@ -82,12 +82,12 @@ namespace Stamina {
 		const unsigned int _libInstance;
 	};
 #define STAMINA_OBJECT_CLASS_DEFINE(TYPE, NAME, BASE) \
-	static Stamina::ObjectClassInfo& classInfo() {\
-		static Stamina::ObjectClassInfo oci = Stamina::ObjectClassInfo(NAME, sizeof(TYPE), &BASE::classInfo());\
+	static ::Stamina::ObjectClassInfo& staticClassInfo() {\
+	static ::Stamina::ObjectClassInfo oci = ::Stamina::ObjectClassInfo(NAME, sizeof(TYPE), &BASE::staticClassInfo());\
 		return oci;\
 	}\
-	Stamina::ObjectClassInfo& getClass() const {\
-		return classInfo();\
+	::Stamina::ObjectClassInfo& getClass() const {\
+		return staticClassInfo();\
 	}
 
 #define STAMINA_OBJECT_CLASS(TYPE, BASE) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE)
@@ -121,10 +121,10 @@ namespace Stamina {
 
 		/** Returns object's class information */
 		virtual ObjectClassInfo& getClass() const {
-			return classInfo();
+			return staticClassInfo();
 		}
 		/** Static class information */
-		static ObjectClassInfo& classInfo() {
+		static ObjectClassInfo& staticClassInfo() {
 			static ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), 0);
 			return oci;
 		}
@@ -137,7 +137,7 @@ namespace Stamina {
 		}
 
 		template <class TO> TO* castObject() {
-			if (this->getClass() >= TO::classInfo()) {
+			if (this->getClass() >= TO::staticClassInfo()) {
 				return reinterpret_cast<TO*>(this);
 			} else {
 				return 0;

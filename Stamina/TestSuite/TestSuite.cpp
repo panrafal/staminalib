@@ -15,11 +15,8 @@ public:
 	void endTest( CppUnit::Test *test )
 	{
 		int elapsed = GetTickCount() - _ticks;
-
 		std::cout << " -- elapsed: " << elapsed << " ms" << std::endl;
 	}
-
-
 private:
 	int _ticks;
 };

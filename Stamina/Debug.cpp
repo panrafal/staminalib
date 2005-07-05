@@ -30,7 +30,7 @@ namespace Stamina {
 			ObjectClassInfo& info = obj->getClass();
 			ObjectClassInfo* base = info.getBaseInfo();
 			int useCount = -1;
-			if (info >= iSharedObject::classInfo()) {
+			if (info >= iSharedObject::staticClassInfo()) {
 				useCount = obj->castObject<iSharedObject>()->getUseCount();
 			}
 			logger->log(level, "Stamina", "debugDumpObjects"
