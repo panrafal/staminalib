@@ -30,6 +30,8 @@ namespace Stamina { namespace DT {
 
 	public:
 
+		STAMINA_OBJECT_CLASS(DT::FileBin, DT::FileBase);
+
 		friend class TestFileBin;
 
 		enum enFileFlags {
@@ -59,6 +61,8 @@ namespace Stamina { namespace DT {
 			deprecatedDataFlags = dflagDBId,
 
 			requiredDataFlags = dflagLastId | dflagPasswordDigest | dflagPassSalt | dflagXorSalt,
+
+			newDataFlags = dflagParams | dflagCreated | dflagModified | dflagLastBackup | dflagPassSalt | dflagXorSalt,
 		};
 
 		enum enRowDataFlags {
@@ -118,18 +122,17 @@ namespace Stamina { namespace DT {
 			return _verMin >= '5';
 		}
 
-		inline bool isReadable() {
-			return !_recreating && (_opened & (fileRead | fileAppend));
-		}
-		inline bool isCreatingNewFile() {
-			return _recreating;
+		inline void setOldCryptVersion() {
+			_verMaj = '3';
+			_verMin = '4';
 		}
 
 
-	protected:
+		public:
 
-		enResult readRow(tRowId row) throw (...) {
-			return readPartialRow(row, 0);
+
+		enResult readRow(tRowId row, bool readId = true) throw (...) {
+			return readPartialRow(row, 0, readId);
 		}
 
 		void writeRow(tRowId row) throw (...);
@@ -142,7 +145,7 @@ namespace Stamina { namespace DT {
 
 		void readDescriptor() throw (...);
 
-		enResult readPartialRow(tRowId row , tColId* columns) throw (...);
+		enResult readPartialRow(tRowId row , tColId* columns, bool readId = true) throw (...);
 
 		bool findNextRow();
 
@@ -167,6 +170,11 @@ namespace Stamina { namespace DT {
 		/**Checks table's password digest with file's one*/
 		virtual bool isAuthenticated();
 
+		unsigned int getStoredRowsCount() {
+			return _storedRowsCount;
+		}
+
+	protected:
 
 		/**Generates new password digest.
 		Should be used only when creating new file.
@@ -244,7 +252,6 @@ namespace Stamina { namespace DT {
 		unsigned int _dataSize;
 		enDataFlags _dataFlag;
 
-		bool _recreating;
 
 		/**File's password digest used for authentication.*/
 		MD5Digest _passwordDigest;

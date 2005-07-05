@@ -13,6 +13,7 @@
 #include "FileBin.h"
 #include "Crypt.h"
 
+#include <Stamina\Assert.h>
 
 using namespace std;
 
@@ -88,24 +89,32 @@ namespace Stamina { namespace DT {
 
 	void FileBin::open (const std::string& fileToOpen , enFileMode mode) {
 		this->close();
-		std::string fn = fileToOpen;
+
+		if (!fileToOpen.empty())
+			_fileName = fileToOpen;
+		if (!_table) throw DTException( errNotInitialized );
+		if (_fileName.empty())
+			throw DTException( errFileNotFound );
+
 		this->setWriteFailed( false );
 		_storedRowsCount=0;
-		
+
 		this->_opened = fileClosed;
 		if (mode & fileRead) {
 			_table->_lastId = rowIdMin;
 	        //_table->_db = -1;
 		}
 
-		fn = getFullPathName(fn.c_str());
-		this->_fileName = fn;
+		_pos_state = _pos_cols = _pos_data = _pos_dataLastId = _pos_rows = 0;
+		this->_headerLoaded = false;
+
+		_fileName = getFullPathName(_fileName.c_str());
 	    
 		if (useTempFile && (mode & fileWrite) && !(mode & fileRead)) {
-			_temp_fileName = fn;
+			_temp_fileName = _fileName;
 			int i = 0;
 			do {
-				_temp_fileName = fn + stringf(".[%d].tmp", ++i);
+				_temp_fileName = _fileName + stringf(".[%d].tmp", ++i);
 			} while ( ! _access(_temp_fileName , 0));
 		} else {
 			_temp_fileName = "";
@@ -116,7 +125,7 @@ namespace Stamina { namespace DT {
 		const char* openmode;
 		// Dla Append, oraz Read+Write otwieramy w trybie read+write i jeœli jest taka potrzeba, tworzymy plik na nowo
 		if (((mode & fileAppend) || (mode & fileWrite && mode & fileRead))) {
-			openmode = fileExists ? "w+b" : "r+b";
+			openmode = fileExists ? "r+b" : "w+b";
 			_recreating = (fileExists == false);
 			_table->_timeModified.now();
 		} else if (mode & fileWrite) {
@@ -152,6 +161,8 @@ namespace Stamina { namespace DT {
 		} else {
 			// W przeciwnym razie uznajemy ¿e to co posiadamy jest "za³adowanym" nag³ówkiem
 			this->_headerLoaded = true;
+			this->_verMaj = DT::binVersionMaj;
+			this->_verMin = DT::binVersionMin;
 		}
 
     }
@@ -234,7 +245,7 @@ namespace Stamina { namespace DT {
 		_table->_size = _storedRowsCount;
       
 		_dataFlag = dflagNone;
-        unsigned int dataLeft;
+        unsigned int dataLeft = 0;
 		// Pole DATA (od v2.0)
 		if (_verMaj > '1') {
 			readData(&_dataSize , 4);
@@ -343,9 +354,6 @@ namespace Stamina { namespace DT {
 			this->generatePasswordDigest(true);
 			this->generateXorDigest(true);
 
-			_verMaj = DT::binVersionMaj;
-			_verMin = DT::binVersionMin;
-
 			writeData("DTBIN", 5); 
 
 			writeData(&_verMaj, 1);
@@ -353,6 +361,7 @@ namespace Stamina { namespace DT {
 
 			_pos_state = ftell(_file);
 
+			//_fileFlag = (enFileFlags)(_fileFlag & ~fflagCryptAll);
 			writeData(&_fileFlag, 4); // flag
 
 			unsigned int rowCount = _table->getRowCount();
@@ -370,6 +379,10 @@ namespace Stamina { namespace DT {
 			// dodajemy wymagane obs³ugiwane flagi
 			_dataFlag = (enDataFlags)(_dataFlag | requiredDataFlags);
 
+			if (!this->versionNewCrypt()) {
+				_dataFlag = (enDataFlags)(_dataFlag & ~(newDataFlags));
+			}
+
 			if (! _table->getParamsMap().empty()) {
 				_dataFlag = (enDataFlags)(_dataFlag | dflagParams);
 			}
@@ -386,7 +399,11 @@ namespace Stamina { namespace DT {
 			}
 
 			if (_dataFlag & dflagPasswordDigest) {
-				writeData(_passwordDigest.getDigest(), 16, &_dataSize);
+				if (versionNewCrypt()) {
+					writeData(_passwordDigest.getDigest(), 16, &_dataSize);
+				} else {
+					writeData(_table->getPasswordDigest().getDigest(), 16, &_dataSize);
+				}
 			}
 
 			if (_dataFlag & dflagParams) {
@@ -437,6 +454,8 @@ namespace Stamina { namespace DT {
 
 	void FileBin::readDescriptor() {
 		if (!isOpened()) throw DTException(errNotOpened);
+
+		_fcols.clear();
 
 		this->setFilePosition(_pos_cols, fromBeginning);
 
@@ -518,6 +537,7 @@ namespace Stamina { namespace DT {
 		if (!isOpened()) throw DTException(errNotOpened);
 		try {
 			if ((getFileMode() & (fileWrite | fileAppend))) {
+				S_ASSERT(_pos_state);
                 setFilePosition(_pos_state , fromBeginning);
 				if (_verMaj > '1') {
 					writeData(&_fileFlag, 4);
@@ -541,7 +561,7 @@ namespace Stamina { namespace DT {
 
 // ROW ** READ --------------------------------------------------------------
 
-	enResult FileBin::readPartialRow(tRowId row , tColId* columns) {
+	enResult FileBin::readPartialRow(tRowId row , tColId* columns, bool readId) {
 		if (!isOpened()) throw DTException(errNotOpened);
 
 		// Pokojowe wyjœcie - nie ma co czytaæ wiêc koñczymy
@@ -563,8 +583,8 @@ namespace Stamina { namespace DT {
 			throw DTException(errBadFormat);
 		}
 
-		unsigned int rowSize;
-		unsigned int rowDataSize;
+		unsigned int rowSize = 0;
+		unsigned int rowDataSize = 0;
 		enRowDataFlags rowDataFlag;
 		unsigned int rowDataLeft;
 
@@ -617,7 +637,7 @@ namespace Stamina { namespace DT {
 			tRowId id;
 			readData(&id, 4, &rowDataLeft);
 			id = DataTable::flagId(id);
-			if (id != rowObj.getId()) {
+			if (readId && id != rowObj.getId()) {
 				if (_table->rowIdExists(id)) {
 					id = _table->getNewRowId();
 				}
@@ -721,6 +741,9 @@ namespace Stamina { namespace DT {
 					}
 					break; }
 
+			}
+			if (skipBytes > 0) {
+				setFilePosition(skipBytes, fromCurrent);
 			}
 			if (fgetc(_file) != '\t')
 				throw DTException(errBadFormat);
@@ -932,11 +955,13 @@ namespace Stamina { namespace DT {
         { 
 			row = _table->addRow();
 			if (skipFailed == false) {
-				this->readRow(row);
+				if (this->readRow(row) != success)
+					_table->deleteRow(row);
 			} else {
 				while (1) {
 					try {
-						this->readRow(row);
+						if (this->readRow(row) != success)
+							_table->deleteRow(row);
 					} catch (DTException e) {
 						if (findNextRow() == true) {
 							continue; // jeszcze raz readRow

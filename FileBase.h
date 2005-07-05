@@ -14,6 +14,7 @@
 
 #include "DataTable.h"
 
+#include <Stamina/ObjectImpl.h>
 
 namespace Stamina { namespace DT {
 
@@ -21,13 +22,27 @@ namespace Stamina { namespace DT {
 		fileClosed = 0,
 		fileRead = 1,
 		fileWrite = 2,
+		fileReadWrite = 3,
 		fileAppend = 4,
 	};
 
+	enum enFileOperation {
+		noOperation = 0,
+		loadColumns = 1,
+		saveOldCryptVersion = 2,
+	};
 
-	class FileBase {
+	inline enFileOperation operator | (const enFileOperation & a, const enFileOperation & b) {
+		return (enFileOperation) ((int)a | (int)b); 
+	}
+
+
+
+	class FileBase: public Object<iObject> {
 	public:
 		//   virtual
+
+		STAMINA_OBJECT_CLASS(DT::FileBase, ::Stamina::iObject);
 
 		FileBase();
 		FileBase(DataTable& table);
@@ -51,19 +66,19 @@ namespace Stamina { namespace DT {
 		/**Loads data from specified file.
 		Uses only column descriptor from assigned table.
 		*/
-		virtual enResult load (const std::string& fn = "", bool loadColumns = false); // wgrywa caly plik
+		virtual enResult load (const std::string& fn = "", enFileOperation operation = loadColumns); // wgrywa caly plik
 		/**Loads all data from specified file.
 		Uses merged column descriptors from assigned table and specified file.
 		*/
 		virtual enResult loadAll (const std::string& fn = "") {
-			return this->load(fn, true);
+			return this->load(fn, loadColumns);
 		}
 
 		/**Stores all information from assigned table. The file is recreated.*/
-		virtual enResult save (const std::string& fn = ""); // zapisuje caly plik
+		virtual enResult save (const std::string& fn = "", enFileOperation operation = noOperation); // zapisuje caly plik
 
 		/**Appends table data to specified file using only file's column descriptor.*/
-		virtual enResult append (const std::string& fn = ""); // dopisuje elementy
+		virtual enResult append (const std::string& fn = "", enFileOperation operation = noOperation); // dopisuje elementy
 
 		// placeHolders
 
@@ -89,12 +104,23 @@ namespace Stamina { namespace DT {
 			return _fcols;
 		}
 
+		void mergeLoadedColumns() {
+       		this->_table->mergeColumns(_fcols);
+		}
+
+		inline bool isReadable() {
+			return !_recreating && (_opened & (fileRead | fileAppend));
+		}
+		inline bool isCreatingNewFile() {
+			return _recreating;
+		}
+
 	protected:
 
 		/**Reads row from current position in file and stores it under @a row
 		If there's nothing to read returns false instead of throwing an exception.
 		*/
-		virtual enResult readRow(tRowId row) throw (...) =0;
+		virtual enResult readRow(tRowId row, bool readId = true) throw (...) =0;
 
 		/**Stores data under @a row into current position in file*/
 		virtual void writeRow(tRowId row) throw (...) =0;
@@ -112,7 +138,7 @@ namespace Stamina { namespace DT {
 		/**Reads only specified rows from current position in file and stores them under @a row.
 		@param columns - null terminated list of columns
 		*/
-		virtual enResult readPartialRow(tRowId row , tColId* columns) throw (...) =0;
+		virtual enResult readPartialRow(tRowId row , tColId* columns, bool readId = true) throw (...) =0;
 
 		/**Goes to next row in file*/
 		virtual bool findNextRow()=0; // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
@@ -143,6 +169,7 @@ namespace Stamina { namespace DT {
 	protected:
 		DataTable * _table;
 		enFileMode _opened;
+		bool _recreating;
 		bool _headerLoaded;
 		ColumnsDesc _fcols;
 		std::string _fileName;
