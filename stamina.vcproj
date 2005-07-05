@@ -456,6 +456,9 @@
 				RelativePath=".\ButtonX.h">
 			</File>
 			<File
+				RelativePath=".\Console.h">
+			</File>
+			<File
 				RelativePath=".\Control.h">
 			</File>
 			<File
