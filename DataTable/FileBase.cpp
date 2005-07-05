@@ -10,6 +10,7 @@
 
 #include "stdafx.h"
 #include "FileBase.h"
+#include "FileBin.h"
 
 namespace Stamina { namespace DT {
 
@@ -18,6 +19,7 @@ namespace Stamina { namespace DT {
 		_opened = fileClosed;
 		_writeFailed = false;
 		_headerLoaded = false;
+		_recreating = true;
 	}
 
 	FileBase::FileBase(DataTable& table) {
@@ -40,20 +42,16 @@ namespace Stamina { namespace DT {
 		_headerLoaded = false;
 	}
 
-    enResult FileBase::load (const std::string& fn, bool loadColumns) {
-		if (!fn.empty())
-			_fileName = fn;
+    enResult FileBase::load (const std::string& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
-		if (_fileName.empty() || _access(_fileName.c_str(), 0))
-			return errFileNotFound;
+
 		_table->clearRows();
-		_fcols.clear();
 
 		try {
-			this->open(_fileName , fileRead);
+			this->open(fn , fileRead);
 			this->readDescriptor();
-			if (loadColumns) {
-				this->_table->mergeColumns(_fcols);
+			if (operation & loadColumns) {
+				this->mergeLoadedColumns();
 			}
 			/*TODO: przywracanie backupów*/
 			this->readRows(false);
@@ -66,18 +64,18 @@ namespace Stamina { namespace DT {
     }
 
 
-    enResult FileBase::save (const std::string& fn)
+    enResult FileBase::save (const std::string& fn, enFileOperation operation)
     {
-		if (!fn.empty())
-			_fileName = fn;
 		if (!_table) return errNotInitialized;
-		if (_fileName.empty())
-			return errFileNotFound;
 
-		_fcols = _table->getColumns();
+		this->setColumns(_table->getColumns());
+
 		try {
-			this->open(_fileName.c_str() , fileWrite);
+			this->open(fn , fileWrite);
 			LockerDT lock(_table, allRows);
+			if (operation & saveOldCryptVersion && this->getClass() >= FileBin::staticClassInfo()) {
+				this->castObject<FileBin>()->setOldCryptVersion();
+			}
 			this->writeHeader();
 		    this->writeDescriptor();
 			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
@@ -94,22 +92,17 @@ namespace Stamina { namespace DT {
     }
 
 
-    enResult FileBase::append (const std::string& fn) {
-		if (!fn.empty())
-			_fileName = fn;
+    enResult FileBase::append (const std::string& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
-		if (_fileName.empty() || _access(_fileName.c_str(), 0))
-			return errFileNotFound;
 		
 		_fcols.clear();
 	    
-		bool first = (_access(_fileName.c_str() , 0) !=0); // tworzymy plik
 		try {
-			this->open(_fileName , fileAppend);
-			this->seekToBeginning();
-		    if (first) {
+			this->open(fn , fileAppend);
+			if (this->isCreatingNewFile()) {
 				_fcols = _table->getColumns();
 				//_table->lastId = DT_ROWID_MIN;
+				this->seekToBeginning();
 				this->writeHeader();
 				this->writeDescriptor();
 			} else {
