@@ -8,6 +8,8 @@
 using namespace Stamina;
 using namespace Stamina::DT;
 
+using std::string;
+
 namespace Stamina { namespace DT {
 
 class ConsoleProgress {
@@ -52,6 +54,9 @@ class TestFileBin : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testSetErased );
 	CPPUNIT_TEST( testBadPassword );
 	CPPUNIT_TEST( testStress );
+	CPPUNIT_TEST( testOldLoad );
+	CPPUNIT_TEST( testOldAppend );
+	CPPUNIT_TEST( testChangeType );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -362,6 +367,7 @@ protected:
 			dt1.setPassword(password);
 			dt1.mergeColumns(_cols);
 			fb1.assign(dt1);
+			fb1.setFileFlag(FileBin::fflagCryptAll, cryptAll);
 			ConsoleProgress cp(0, stressCount);
 			std::cout << std::endl << "Zape³niam tablicê save" << std::endl;
 			cp.drawBar();
@@ -440,9 +446,91 @@ protected:
 	}
 
 	void testOldLoad() {
+		{
+			DataTable dt;
+			dt.setXor1Key("\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84");
+			FileBin fb(dt);
+			CPPUNIT_ASSERT( fb.loadAll("TestFileBinOld.dtb") == success );
+			CPPUNIT_ASSERT_EQUAL( (unsigned int) 3, dt.getRowCount() );
+
+			CPPUNIT_ASSERT_EQUAL( string("Kontakt 0"), dt.getStr(0, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( string("Imiê 0"), dt.getStr(0, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( string("Kontakt 2"), dt.getStr(2, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( string("Imiê 2"), dt.getStr(2, dt.getColumnId("Name")) );
+
+			FileBin fb2(dt);
+			fb2.setFileFlag(FileBin::fflagCryptAll, cryptAll);
+			if (!password.empty()) {
+				dt.setPassword(password);
+			}
+			// powinno siê zapisaæ tak samo...
+			fb2.save(getFileName("testOldSave"), saveOldCryptVersion);
+
+		}
+
+		DataTable dt3;
+		if (!password.empty()) {
+			dt3.setPassword(password);
+		}
+		dt3.setXor1Key("\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84");
+		FileBin fb3(dt3);
+		fb3.load(getFileName("testOldSave"));
+		
+		CPPUNIT_ASSERT_EQUAL( (unsigned int) 3, dt3.getRowCount() );
+
+		CPPUNIT_ASSERT_EQUAL( string("Kontakt 0"), dt3.getStr(0, dt3.getColumnId("Display")) );
+		CPPUNIT_ASSERT_EQUAL( string("Imiê 0"), dt3.getStr(0, dt3.getColumnId("Name")) );
+		CPPUNIT_ASSERT_EQUAL( string("Kontakt 2"), dt3.getStr(2, dt3.getColumnId("Display")) );
+		CPPUNIT_ASSERT_EQUAL( string("Imiê 2"), dt3.getStr(2, dt3.getColumnId("Name")) );
+
 	}
 
 	void testOldAppend() {
+		unlink(getFileName("testOldAppend").c_str());
+        CopyFile("TestFileBinOld.dtb", getFileName("testOldAppend").c_str() , false);	
+		DataTable dt;
+		dt.setXor1Key("\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84");
+		{
+			FileBin fb(dt);
+			// wgrywa wszystkie bebechy
+			fb.loadAll(getFileName("testOldAppend"));
+		}
+		// zmieniamy minimalnie...
+		dt.setStr(1, dt.getColumnId("Display"), "Kontakt zmieniony");
+		dt.setStr(1, dt.getColumnId("Name"), "Imiê zmienione");
+		tRowId row = dt.insertRow(0);
+		dt.setStr(row, dt.getColumnId("Display"), "Kontakt dodany");
+		dt.setStr(row, dt.getColumnId("Name"), "Imiê dodane");
+		{
+			FileBin fb(dt);
+			fb.append(getFileName("testOldAppend"));
+		}
+		{
+			DataTable dt;
+			dt.setXor1Key("\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84");
+			FileBin fb(dt);
+			fb.load(getFileName("testOldAppend"));
+			CPPUNIT_ASSERT_EQUAL( (unsigned int) 7, dt.getRowCount() );
+
+			CPPUNIT_ASSERT_EQUAL( string("Kontakt 0"), dt.getStr(0, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( string("Imiê 0"), dt.getStr(4, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( string("Kontakt 2"), dt.getStr(2, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( string("Imiê 2"), dt.getStr(6, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( string("Kontakt dodany"), dt.getStr(3, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( string("Imiê zmienione"), dt.getStr(5, dt.getColumnId("Name")) );
+		}
+	}
+
+	void testChangeType() {
+		createFile("testChangeType");
+
+		DataTable dt;
+		dt.setPassword(password);
+		FileBin fb(dt);
+		dt.setColumn(colString, ctypeInt, (DataEntry)testIntDef);
+		fb.load(getFileName("testChangeType"));
+		// powinien zignorowaæ zawartoœæ pliku i u¿yæ wartoœci domyœlnej...
+		CPPUNIT_ASSERT_EQUAL( testIntDef, dt.getInt(0, colString) );
 	}
 
 	void testTemporary() {
@@ -467,6 +555,8 @@ class TestFileBinPass : public TestFileBin
 	CPPUNIT_TEST( testSetErased );
 	CPPUNIT_TEST( testBadPassword );
 	CPPUNIT_TEST( testStress );
+	CPPUNIT_TEST( testOldLoad );
+	CPPUNIT_TEST( testChangeType );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -487,6 +577,8 @@ class TestFileBinCryptAll : public TestFileBin
 	CPPUNIT_TEST( testSetErased );
 	CPPUNIT_TEST( testBadPassword );
 	CPPUNIT_TEST( testStress );
+	CPPUNIT_TEST( testOldLoad );
+	CPPUNIT_TEST( testChangeType );
 
 
     CPPUNIT_TEST_SUITE_END();

@@ -361,7 +361,9 @@ namespace Stamina { namespace DT {
 
 			_pos_state = ftell(_file);
 
-			//_fileFlag = (enFileFlags)(_fileFlag & ~fflagCryptAll);
+			if (this->versionNewCrypt() == false) {
+				_fileFlag = (enFileFlags)(_fileFlag & ~fflagCryptAll);
+			}
 			writeData(&_fileFlag, 4); // flag
 
 			unsigned int rowCount = _table->getRowCount();

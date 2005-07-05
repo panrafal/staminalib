@@ -207,6 +207,10 @@ namespace Stamina { namespace DT {
 			return _cols.setUniqueCol(name, type, def);
 		}
 
+		inline tColId getColumnId(const char* name) {
+			return this->_cols.getNameId(name);
+		}
+
 
 		int checkColType(tColId id , enColumnType type) {
 			return this->_cols.getColumn(id).getType() == type;
@@ -241,8 +245,8 @@ namespace Stamina { namespace DT {
 		*/
 		bool setValue(tRowId row , tColId col , const Value& value, bool dropDefault=false);
 
-		inline void setXor1Key(unsigned char* key) {
-			_xor1_key = key;
+		inline void setXor1Key(char* key) {
+			_xor1_key = (unsigned char*) key;
 		}
 		inline const unsigned char* getXor1Key() {
 			return _xor1_key;
