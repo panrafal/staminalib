@@ -93,6 +93,38 @@ namespace Stamina {
 		}
 #endif
 
+		//operator Date64() const;
+
+		// Compare
+
+		inline bool operator == (const Time64& b) const {
+			return this->sec == b.sec;
+		}
+		inline bool operator != (const Time64& b) const {
+			return this->sec != b.sec;
+		}
+		inline bool operator < (const Time64& b) const {
+			return this->sec < b.sec;
+		}
+		inline bool operator > (const Time64& b) const {
+			return this->sec > b.sec;
+		}
+		inline bool operator <= (const Time64& b) const {
+			return this->sec <= b.sec;
+		}
+		inline bool operator >= (const Time64& b) const {
+			return this->sec >= b.sec;
+		}
+
+		// arithmetic
+
+		inline Time64 operator - (const Time64& b) const {
+			return Time64( this->sec - b.sec );
+		}
+		inline Time64 operator + (const Time64& b) const {
+			return Time64( this->sec + b.sec );
+		}
+
 		// Functions
 		void strftime(char *strDest,size_t maxsize,const char *format) const;
 
@@ -196,6 +228,11 @@ namespace Stamina {
 			return *this;
 		}
 #endif
+		Date64& operator=(const Time64& timer) {
+			from_time64_t(timer.sec);
+			return *this;
+		}
+
 		// Cast operators
 		operator tm() const {
 			return to_tm();
@@ -210,14 +247,41 @@ namespace Stamina {
 		}
 #endif
 
-		operator __int64() const {
-			return *(__int64*) this;
-		}
+/*		inline operator Time64() const {
+			return Time64(*this);
+		}*/
+
+		//operator __int64() const {
+		//	return *(__int64*) this;
+		//}
 
 		__time64_t getTime64() const {
 			Time64 t(*this);
 			return t;
 		}
+
+
+		// Compare
+
+		inline bool operator == (const Date64& b) const {
+			return this->getInt64() == b.getInt64();
+		}
+		inline bool operator != (const Date64& b) const {
+			return this->getInt64() != b.getInt64();
+		}
+		inline bool operator < (const Date64& b) const {
+			return this->getInt64() < b.getInt64();
+		}
+		inline bool operator > (const Date64& b) const {
+			return this->getInt64() > b.getInt64();
+		}
+		inline bool operator <= (const Date64& b) const {
+			return this->getInt64() <= b.getInt64();
+		}
+		inline bool operator >= (const Date64& b) const {
+			return this->getInt64() >= b.getInt64();
+		}
+
 
 		// Functions
 		void strftime(char *strDest,size_t maxsize,const char *format) const;
@@ -236,6 +300,10 @@ namespace Stamina {
 		}
 		void now() {
 			from_time_t(time(0));
+		}
+
+		inline __int64 getInt64() const {
+			return *(__int64*) this;
 		}
 
 	private:
@@ -262,6 +330,12 @@ namespace Stamina {
 		friend class Time64;
 	};
 
+
+
+/*	inline Time64::operator Date64() const {
+		return Date64(*this);
+	}
+*/
 
 };
 /*

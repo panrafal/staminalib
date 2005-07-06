@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <math.h>
 #include <time.h>
+#include <io.h>
 
 namespace Stamina {
 
@@ -90,6 +91,7 @@ namespace Stamina {
 	std::string urlEncode(const std::string& str , char special = '%' , char * noChange = 0);
 	std::string urlDecode(const std::string& str , char special = '%');
 
+	std::string addSlashes(const std::string& str , char* escape = "\"'\\", char escapeChar = '\\');
 
 #ifdef _DEQUE_
 
@@ -125,7 +127,25 @@ namespace Stamina {
 	@return number of created directories
 	*/
 	int createDirectories(const std::string& path);
+
+	/** Returns the name of last path part */
+	std::string getFileName(const std::string& path) {
+		return path.substr(path.find_last_of("\\/") + 1);
+	}
+	/** Returns the name of directory containing the file */
+	std::string getFileDirectory(const std::string& path) {
+		size_t pos = path.find_last_of("\\/");
+		if (pos == std::string::npos) {
+			return "";
+		} else {
+			return path.substr(0, pos);
+		}
+	}
 #endif
 
+
+	bool fileExists(const char* file);
+
+	bool isDirectory(const char* path);
 
 };

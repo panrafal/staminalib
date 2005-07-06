@@ -261,6 +261,20 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 		return result;
 	}
 
+	std::string addSlashes(const std::string& str , char* escape, char escapeChar) {
+		string res;
+		string::const_iterator str_it;
+		res.reserve(str.size()+30);
+		for (str_it = str.begin(); str_it != str.end(); ++str_it) {
+			if (strchr(escape, *str_it) != 0) {
+				res.append(1 , escapeChar);
+			}
+			res.append(1, *str_it);
+		}
+		return res;
+	}
+
+
 	void * memrev(void * buff , int count) {
 		char t;
 		char * buf = (char*)buff;
@@ -329,6 +343,13 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 		return c;
 	}
 
+	bool fileExists(const char* file) {
+		return _access(file, 0) == 0;
+	}
+
+	bool isDirectory(const char* path) {
+		return (GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY) != 0;
+	}
 
 
 };
