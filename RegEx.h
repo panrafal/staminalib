@@ -14,6 +14,7 @@
 
 #include <string>
 #include <boost\smart_ptr.hpp>
+#include <Stamina\Helpers.h>
 
 namespace Stamina {
 
@@ -108,15 +109,15 @@ namespace Stamina {
 		~RegEx();
 
 
-		std::string operator [] (int i);
-		std::string operator [] (const std::string& named);
-		inline std::string operator () (int i) {return (*this)[i];}
-		inline std::string getSub(int i) {return (*this)[i];}
-		inline bool hasSub(int i) {
+		std::string operator [] (int i) const;
+		std::string operator [] (const std::string& named) const;
+		//inline std::string operator () (int i) const {return (*this)[i];}
+		inline std::string getSub(int i) const {return (*this)[i];}
+		inline bool hasSub(int i) const {
 			if (_result <= i || _vector[i*2]<0 || _vector[i*2] == _vector[i*2+1]) return false;
 			return true;
 		}
-		inline int getNamedIndex(const std::string& named) {
+		inline int getNamedIndex(const std::string& named) const {
 			if (!_compiled) return -1;
             return _compiled->getNamedIndex(named);
 		}
@@ -337,6 +338,10 @@ namespace Stamina {
 			} else {
 				return def ? def : "";
 			}
+		}
+
+		inline static std::string addSlashes(const std::string& str) {
+			return ::Stamina::addSlashes(str, "\"'\\/^$!?()[]+.{}", '\\');
 		}
 
 		// ----------------------------------------------------

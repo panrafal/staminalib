@@ -25,6 +25,7 @@ namespace Stamina { namespace DT {
 	const char binVersionMaj = '3';
 	const char binVersionMin = '5';
 
+	const __int64 minimumBackupPeriod = 60 * 60; // an hour
 
 	class FileBin : public FileBase {
 
@@ -231,11 +232,35 @@ namespace Stamina { namespace DT {
 			_fileSize = _filelength(_file->_file);
 		}
 
+		/**Creates a backup of specified file*/
+		void backupFile(const std::string& filename, bool move);
+		/**Creates a backup of the file we are currently operating on...
+		This function automatically determines if backup is really needed, and sets lastBackupTime property.
+		*/
+		void backupFile(bool move = true);
+
+		static std::string getBackupFilename(const std::string& filename, const Time64& time = Time64(true)) {
+			return filename + time.strftime(".%m-%d-%Y %H-%M-%S.bak");
+		}
+
+		/** Removes old backups leaving only few of them.
+		@param filename - If it points to .dtb file, only backups of these file are cleaned. Otherwise it cleans up whole directory.
+		*/
+		static void cleanupBackups(const std::string& filename);
+
+		/** Restores specified backup file to it's original filename */
+		static void restoreBackup(const std::string& filename);
+
+		/** Restores latest backup of specified filename */
+		bool restoreLastBackup(const std::string& filename = "");
+
+		Date64 findLastBackupDate(const std::string& filename = "");
 
 	public:
 
 		bool useTempFile;
 		bool warn;
+		bool makeBackups;
 
 	protected:
 
@@ -265,6 +290,8 @@ namespace Stamina { namespace DT {
 		CStdString _temp_fileName; // Podczas uzywania tempa plik z ... tempem :)
 
 		unsigned int _fileSize;
+
+
 	};
 
 } }

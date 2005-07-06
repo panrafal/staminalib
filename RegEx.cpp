@@ -98,11 +98,11 @@ namespace Stamina {
 	}
 
 
-	std::string RegEx::operator [] (int i) {
+	std::string RegEx::operator [] (int i) const {
 		if (_result <= i || _vector[i*2]<0) return "";
 		return _subject.substr(_vector[i*2] , _vector[i*2+1] - _vector[i*2]);
 	}
-	std::string RegEx::operator [] (const std::string& named) {
+	std::string RegEx::operator [] (const std::string& named) const {
 		int index = this->getNamedIndex(named);
 		if (index == PCRE_ERROR_NOSUBSTRING) 
 			return "";

@@ -38,6 +38,7 @@ namespace Stamina {
 		class Found {
 		public:
 			Found() {
+				_data.cFileName[0] = 0;
 			}
 			inline Found(const Found& b) {
 				*this = b;
@@ -45,6 +46,7 @@ namespace Stamina {
 
 			inline Found& operator = (const Found& b) {
 				memcpy(&_data, &b._data, sizeof(_data));
+				return *this;
 			}
 
 			inline WIN32_FIND_DATA* getDataRef() {
@@ -53,6 +55,10 @@ namespace Stamina {
 
 			inline const WIN32_FIND_DATA& operator -> () {
 				return _data;
+			}
+
+			inline bool empty() const {
+				return _data.cFileName[0] == 0;
 			}
 
 			inline bool hasAttribute(enAttribute attr) const {
