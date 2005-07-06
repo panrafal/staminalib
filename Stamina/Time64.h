@@ -15,58 +15,119 @@
 
 
 #include <time.h>
+#include <math.h>
 
 // Wrapper dla __time64_t
 namespace Stamina {
+
+	class Date64;
 
 	class Time64 {
 
 	public:                 
 		__time64_t sec;
 
+	public:
+
 		// Constructors
-		Time64(struct tm * timer);
-		Time64(time_t timer);
-		Time64(bool current=false);
-		Time64(__int64 timer);
-		Time64(SYSTEMTIME &timer);
-		Time64(class Date64 &timer);
+		Time64(bool current = false) {
+			if (current)
+				sec = _time64(0);
+			else
+				sec = 0;
+		}
+		inline Time64::Time64(const struct tm& timer) {
+			from_tm(timer);
+		}
+		inline Time64::Time64(time_t timer) {
+			from_time_t(timer);
+		}
+		inline Time64::Time64(__int64 timer) {
+			from_int64(timer);
+		}
+#ifdef _WINDOWS_
+		inline Time64::Time64(const SYSTEMTIME &timer) {
+			from_systemtime(timer);
+		}
+		inline Time64::Time64(const FILETIME &timer) {
+			from_filetime(timer);
+		}
+#endif
+		inline Time64::Time64(const Date64& timer) {
+			from_date64(timer);
+		}
+
 		// Copy Contructors
-		Time64 & operator=(__int64 & timer);
-		Time64 & operator=(Date64 & timer);
-		//  Time64 & operator=(__time64_t timer);
+		inline Time64 & Time64::operator=( const __int64 & timer) {
+			from_int64(timer);
+			return *this;
+		}
 #ifdef _WINDOWS_
-		Time64 & operator=( SYSTEMTIME & timer);
+		inline Time64 & Time64::operator=( const SYSTEMTIME & timer) {
+			from_systemtime(timer);
+			return *this;
+		}
+		inline Time64 & Time64::operator=( const FILETIME & timer) {
+			from_filetime(timer);
+			return *this;
+		}
 #endif
+		inline Time64 & Time64::operator=(const Date64 & timer) {
+			from_date64(timer); 
+			return *this;
+		}
+
 		// Cast operators
-		operator __int64();
-		operator tm();
+		inline operator __int64() const {
+			return (__int64)sec;
+		}
+		inline operator tm() const {
+			return to_tm();
+		}
 #ifdef _WINDOWS_
-		operator SYSTEMTIME();
+		inline operator SYSTEMTIME() const {
+			return to_systemtime();
+		}
+		inline operator FILETIME() const {
+			return to_filetime();
+		}
 #endif
+
 		// Functions
-		void strftime(char *strDest,size_t maxsize,const char *format);
+		void strftime(char *strDest,size_t maxsize,const char *format) const;
 
 #ifdef _STRING_
-		std::string strftime(const char *format);
+		std::string strftime(const char *format) const;
 		/** Returns time string as 01:01 */
-		std::string getTimeString(const char* hourStr = 0, const char* minStr = 0, const char* secStr = 0, bool needHour = false, bool needMin = false, bool needSec = false);
+		std::string getTimeString(const char* hourStr = 0, const char* minStr = 0, const char* secStr = 0, bool needHour = false, bool needMin = false, bool needSec = false) const;
 #endif
-		bool empty();
-		void clear();
-		void now();
+		inline void clear() {
+			sec = 0;
+		}
 
-		int toDays();
+		inline bool empty() const {
+			return sec == 0;
+		}
+
+		void Time64::now() {
+			sec = _time64(0);
+		}
+
+		int toDays() const {
+			return floor((float)this->sec / (60*60*24));
+		}
 
 	private:
 		void from_time_t(time_t timer);
-		void from_tm(struct tm * timer);
+		void from_tm(const struct tm& timer);
 		void from_int64(__int64 timer);
-		void from_date64(Date64 &timer);
-		tm to_tm();
+		void from_date64(const Date64& timer);
+		tm to_tm() const;
 #ifdef _WINDOWS_
-		void from_systemtime(SYSTEMTIME * st);
-		SYSTEMTIME to_systemtime();
+		void from_systemtime(const SYSTEMTIME& st);
+		SYSTEMTIME to_systemtime() const;
+		void from_filetime(const FILETIME& st);
+		FILETIME to_filetime() const;
 #endif
 		friend class Date64;
 	};
@@ -89,21 +150,66 @@ namespace Stamina {
 		unsigned _align: 2;
 		unsigned desc  : 1;    // Zawsze = 1
 
+	public:
 		//  int operator=(int n) {return 3;}
 		//  bool operator > (sTime64 & t) {return 1;}
-		Date64(struct tm * timer);
-		Date64(time_t timer);
-		Date64(bool current=false);
-		Date64(__int64 timer);
-		Date64(SYSTEMTIME &timer);
-		//  Date64(__time64_t timer);
-		Date64(Time64 & timer);
-		// Copy Contructors
-		Date64 & operator=( __int64 & timer);
+
+		Date64(bool current = false) {
+			if (current)
+				from_time_t(time(0));
+			else
+				from_int64(0);
+		}
+		Date64(const struct tm& timer) {
+			from_tm(timer);
+		}
+		Date64(time_t timer) {
+			from_time_t(timer);
+		}
+		Date64(__int64 timer) {
+			from_int64(timer);
+		}
 #ifdef _WINDOWS_
-		Date64 & operator=( SYSTEMTIME & timer);
+		Date64(const SYSTEMTIME& timer) {
+			from_systemtime(timer);
+		}
+		Date64(const FILETIME& timer) {
+			from_filetime(timer);
+		}
+#endif
+		Date64(const Time64& timer) {
+			from_time64_t(timer.sec);
+		}
+
+		// Copy Contructors
+		Date64 & operator=( const __int64 & timer) {
+			from_int64(timer);
+			return *this;
+		}
+#ifdef _WINDOWS_
+		Date64 & operator=( const SYSTEMTIME & timer) {
+			from_systemtime(timer);
+			return *this;
+		}
+		Date64 & operator=( const FILETIME & timer) {
+			from_filetime(timer);
+			return *this;
+		}
 #endif
 		// Cast operators
+		operator tm() {
+			return to_tm();
+		}
+
+#ifdef _WINDOWS_
+		operator SYSTEMTIME() {
+			return to_systemtime();
+		}
+		operator FILETIME() {
+			return to_filetime();
+		}
+#endif
+
 		operator __int64() {
 			return *(__int64*) this;
 		}
@@ -113,28 +219,45 @@ namespace Stamina {
 			return t;
 		}
 
-		operator tm();
-#ifdef _WINDOWS_
-		operator SYSTEMTIME();
-#endif
 		// Functions
 		void strftime(char *strDest,size_t maxsize,const char *format);
 #ifdef _STRING_
 		std::string strftime(const char *format);
 #endif
-		bool empty();
-		void clear();
-		void now();
+
+		void clear() {
+			from_int64(0);
+		}
+
+		bool empty() {
+			__int64 temp;
+			memcpy(&temp , this , 8);
+			return (temp & 0x7FFFFFFFFFFFFFFF)==0;
+		}
+		void now() {
+			from_time_t(time(0));
+		}
 
 	private:
 		void from_time_t(time_t timer);
 		void from_time64_t(__time64_t timer);
-		void from_tm(struct tm * timer);
+		void from_tm(const struct tm& timer);
 		void from_int64(__int64 timer);
-		tm to_tm();
+		tm to_tm() const;
 #ifdef _WINDOWS_
-		void from_systemtime(SYSTEMTIME * st);
-		SYSTEMTIME to_systemtime();
+		void from_systemtime(const SYSTEMTIME& st);
+		SYSTEMTIME to_systemtime() const;
+		void from_filetime(const FILETIME& ft) {
+			SYSTEMTIME st;
+			FileTimeToSystemTime(&ft, &st);
+			from_systemtime(st);
+		}
+		FILETIME to_filetime() const {
+			FILETIME ft;
+			SYSTEMTIME st = this->to_systemtime();
+			SystemTimeToFileTime(&st, &ft);
+			return ft;
+		}
 #endif
 		friend class Time64;
 	};
