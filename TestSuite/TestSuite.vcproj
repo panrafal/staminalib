@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="TestSuite"
+	Name="_TestSuite"
 	ProjectGUID="{A5F59E21-1BA9-4660-A9B7-0C1349C6D494}"
 	Keyword="Win32Proj">
 	<Platforms>
@@ -154,16 +154,7 @@
 			Name="Tests"
 			Filter="">
 			<File
-				RelativePath="..\DataTable\Test\TestColumns.cpp">
-			</File>
-			<File
-				RelativePath="..\DataTable\Test\TestCrypt.cpp">
-			</File>
-			<File
-				RelativePath="..\DataTable\Test\TestFileBin.cpp">
-			</File>
-			<File
-				RelativePath="..\DataTable\Test\TestTable.cpp">
+				RelativePath="..\Test\TestFindFile.cpp">
 			</File>
 		</Filter>
 		<File

@@ -36,43 +36,43 @@ namespace Stamina {
 			else
 				sec = 0;
 		}
-		inline Time64::Time64(const struct tm& timer) {
+		inline Time64(const struct tm& timer) {
 			from_tm(timer);
 		}
-		inline Time64::Time64(time_t timer) {
+		inline Time64(time_t timer) {
 			from_time_t(timer);
 		}
-		inline Time64::Time64(__int64 timer) {
+		inline Time64(__int64 timer) {
 			from_int64(timer);
 		}
 #ifdef _WINDOWS_
-		inline Time64::Time64(const SYSTEMTIME &timer) {
+		inline Time64(const SYSTEMTIME &timer) {
 			from_systemtime(timer);
 		}
-		inline Time64::Time64(const FILETIME &timer) {
+		inline Time64(const FILETIME &timer) {
 			from_filetime(timer);
 		}
 #endif
-		inline Time64::Time64(const Date64& timer) {
+		inline Time64(const Date64& timer) {
 			from_date64(timer);
 		}
 
 		// Copy Contructors
-		inline Time64 & Time64::operator=( const __int64 & timer) {
+		inline Time64 & operator=( const __int64 & timer) {
 			from_int64(timer);
 			return *this;
 		}
 #ifdef _WINDOWS_
-		inline Time64 & Time64::operator=( const SYSTEMTIME & timer) {
+		inline Time64 & operator=( const SYSTEMTIME & timer) {
 			from_systemtime(timer);
 			return *this;
 		}
-		inline Time64 & Time64::operator=( const FILETIME & timer) {
+		inline Time64 & operator=( const FILETIME & timer) {
 			from_filetime(timer);
 			return *this;
 		}
 #endif
-		inline Time64 & Time64::operator=(const Date64 & timer) {
+		inline Time64 & operator=(const Date64 & timer) {
 			from_date64(timer); 
 			return *this;
 		}
@@ -109,7 +109,7 @@ namespace Stamina {
 			return sec == 0;
 		}
 
-		void Time64::now() {
+		void now() {
 			sec = _time64(0);
 		}
 
@@ -197,39 +197,39 @@ namespace Stamina {
 		}
 #endif
 		// Cast operators
-		operator tm() {
+		operator tm() const {
 			return to_tm();
 		}
 
 #ifdef _WINDOWS_
-		operator SYSTEMTIME() {
+		operator SYSTEMTIME() const {
 			return to_systemtime();
 		}
-		operator FILETIME() {
+		operator FILETIME() const {
 			return to_filetime();
 		}
 #endif
 
-		operator __int64() {
+		operator __int64() const {
 			return *(__int64*) this;
 		}
 
-		__time64_t getTime64() {
+		__time64_t getTime64() const {
 			Time64 t(*this);
 			return t;
 		}
 
 		// Functions
-		void strftime(char *strDest,size_t maxsize,const char *format);
+		void strftime(char *strDest,size_t maxsize,const char *format) const;
 #ifdef _STRING_
-		std::string strftime(const char *format);
+		std::string strftime(const char *format) const;
 #endif
 
 		void clear() {
 			from_int64(0);
 		}
 
-		bool empty() {
+		bool empty() const {
 			__int64 temp;
 			memcpy(&temp , this , 8);
 			return (temp & 0x7FFFFFFFFFFFFFFF)==0;
