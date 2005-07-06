@@ -14,6 +14,9 @@
 
 namespace Stamina {
 
+	void Time64::from_date64(const Date64 &timer) {
+		sec = timer.empty()?0 : _mktime64(&timer.to_tm());
+	}
 
 	// tm --
 
@@ -204,12 +207,12 @@ namespace Stamina {
 
 
 
-	void Date64::strftime(char *strDest,size_t maxsize,const char *format){
+	void Date64::strftime(char *strDest,size_t maxsize,const char *format) const {
 		tm t = to_tm();
 		::strftime(strDest , maxsize , format , &t);
 	}
 
-	std::string Date64::strftime(const char *format) {
+	std::string Date64::strftime(const char *format) const {
 		char buff [501];
 		strftime(buff , 500 , format);
 		return buff;
