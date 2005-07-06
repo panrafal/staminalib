@@ -14,6 +14,7 @@
 #include "Crypt.h"
 
 #include <Stamina\Assert.h>
+#include <Stamina\FindFileFiltered.h>
 
 using namespace std;
 
@@ -42,6 +43,7 @@ namespace Stamina { namespace DT {
 		_dataSize = 0;
 		_dataFlag = basicDataFlags;
 		useTempFile = false;
+		makeBackups = false;
 		//warn = true;
 //		mode = 0;
     }
@@ -132,6 +134,10 @@ namespace Stamina { namespace DT {
 			openmode = "wb";
 			_recreating = true;
 			_table->_timeModified.now();
+			if (this->makeBackups && _temp_enabled == false) {
+				// je¿eli nie u¿ywamy tempa backup musi byæ ju¿ teraz!
+				this->backupFile(true);
+			}
 		} else {
 			openmode = "rb";
 			_recreating = false;
@@ -139,6 +145,7 @@ namespace Stamina { namespace DT {
 
 		if (_table->_timeCreated.empty()) 
 			_table->_timeCreated.now();
+
 
 		_file=fopen(this->getOpenedFileName().c_str(), openmode);
 
@@ -185,6 +192,13 @@ namespace Stamina { namespace DT {
         if (_temp_enabled) { // trzeba przerzuciæ tempa
             bool success = true;
 			int retries = 0;
+
+			if (this->makeBackups) {
+				// je¿eli u¿ywamy tempa backup musi byæ teraz!
+				this->backupFile(true);
+			}
+
+
             while (1) {
 				_unlink(_fileName.c_str());
 				if (rename(_temp_fileName.c_str() , _fileName.c_str()) == 0)
@@ -1008,6 +1022,146 @@ namespace Stamina { namespace DT {
 		} else {
 			this->writeData(buffer, size, increment);
 		}
+	}
+
+
+
+// BACKUP ----------------------------------------------------------
+
+	Date64 getBackupDate(const RegEx& re) {
+		Date64 d;
+		d.day = atoi(re[2].c_str());
+		d.month = atoi(re[3].c_str());
+		d.year = atoi(re[4].c_str());
+		d.hour = atoi(re[5].c_str());
+		d.min = atoi(re[6].c_str());
+		d.sec = atoi(re[7].c_str());
+		return d;
+	}
+
+	FindFile::Found findLastBackup(const std::string& filename, Date64* time = 0) {
+		FindFileFiltered ff(getFileDirectory(filename) + "\\*.bak");
+		ff.setFileOnly();
+		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + RegEx::addSlashes(getFileName(filename)) + ").(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
+		ff.addFilter(re);
+		FindFile::Found found;
+		Date64 foundDate;
+		while (ff.find()) {
+			Date64 date = getBackupDate(re.getRE());
+			if (date > foundDate) {
+				foundDate = date;
+				found = ff.found();
+			}
+		}
+		if (time) *time = foundDate;
+		return found;
+	}
+
+
+	void FileBin::backupFile(const std::string& filename, bool move) {
+		if (filename.empty()) throw DTException(errBadParameter);
+		if (move) {
+			MoveFileEx(filename.c_str(), getBackupFilename(filename).c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+		} else {
+			CopyFile(filename.c_str(), getBackupFilename(filename).c_str(), false);
+		}
+	}
+
+	void FileBin::backupFile(bool move) {
+		if (Time64(true) - this->_table->_timeLastBackup < Time64(minimumBackupPeriod))
+			return;
+		this->_table->_timeLastBackup.now();
+		this->backupFile(_fileName, move);
+	}
+
+	struct BackupFound {
+		BackupFound(const Date64& date = Date64(), const std::string& file=""):date(date), file(file) {
+		}
+		bool operator == (const std::string& file) const {
+			return this->file == file;
+		}
+		Date64 date;
+		std::string file;
+	};
+
+	struct FileBackups {
+		std::list<std::string> files; // wszystkie backupy
+		std::vector<BackupFound > found; // backupy wg. granic
+	};
+
+	void FileBin::cleanupBackups(const std::string& filename) {
+
+
+		std::map<std::string, FileBackups> files;
+		std::vector<Date64> range;
+
+		range.push_back(Time64(true) - (30 * 24 * 60 * 60)); // sprzed miesiaca
+		range.push_back(Time64(true) - (7 * 24 * 60 * 60)); // sprzed tygodnia
+		range.push_back(Time64(true) - (24 * 60 * 60)); // z wczoraj
+		range.push_back(Time64(true) - (6 * 60 * 60)); // sprzed 6 godzin
+		range.push_back(Time64(true)); // najnowsze
+
+		bool all = isDirectory(filename.c_str());
+		FindFileFiltered ff((all ? filename : getFileDirectory(filename)) + "\\*.bak");
+		ff.setFileOnly();
+		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + (all ? std::string(".+\\.dtb") : RegEx::addSlashes(getFileName(filename))) + ").(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
+		ff.addFilter(re);
+		while (ff.find()) {
+			FileBackups& file = files[re->getSub(1)];
+			if (file.found.empty()) {
+				file.found.resize(range.size());
+			}
+			file.files.push_back(ff->getFileName());
+			Date64 date = getBackupDate(re.getRE());
+
+			for (unsigned int i = 0; i < range.size(); ++i) {
+				/* przegl¹damy granice od najstarszej wiêc wiêc pasuje nam ta, która jest <= aktualnej granicy (bêdzie od razu > od poprzedniej). W samej granicy wybieramy t¹ która jest najnowsza... */
+				if (date <= range[i]) {
+					if (date > file.found[i].date) {
+						file.found[i] = BackupFound(date, ff->getFileName());
+					}
+					break;
+				}
+			}
+		}
+
+		// usuwamy wszystko co jest na liscie plików a nie ma na liœcie zaakceptowanych
+		for (std::map<std::string, FileBackups>::iterator it = files.begin(); it != files.end(); ++it) {
+			FileBackups& backups = it->second;
+			for (std::list<std::string>::iterator file = backups.files.begin(); file != backups.files.end(); ++file) {
+				if (std::find(backups.found.begin(), backups.found.end(), *file) == backups.found.end()) { // nie ma go na liœcie znalezionych wiêc usuwamy...
+					DeleteFile(file->c_str());
+				}
+			}
+		}
+	}
+
+	void FileBin::restoreBackup(const std::string& filename) {
+		if (filename.empty()) throw DTException(errBadParameter);
+		if (fileExists(filename.c_str()) == false) throw DTException(errFileNotFound);
+		std::string original = RegEx::doGet("/^(.+\\.dtb).\\d+-\\d+-\\d+ \\d+-\\d+-\\d+.bak$/i", filename.c_str(), 1);
+		// plik nie jest backupem zadnego dtb
+		if (original.empty()) throw DTException(errBadParameter);
+		std::string target = original + Date64(true).strftime(".%m-%d-%Y %H-%M-%S.restored");
+		MoveFileEx(original.c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+		MoveFileEx(filename.c_str(), original.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+
+	}
+
+
+
+	bool FileBin::restoreLastBackup(const std::string& filename) {
+		// szukamy backupów
+		FindFile::Found found = DT::findLastBackup(filename.empty() ? this->_fileName : filename);
+		if (found.empty()) return false;
+		restoreBackup(found.getFileName());
+		return true;
+	}
+
+	Date64 FileBin::findLastBackupDate(const std::string& filename) {
+		Date64 date;
+		DT::findLastBackup(filename.empty() ? this->_fileName : filename, &date);
+		return date;
 	}
 
 
