@@ -295,6 +295,19 @@ namespace Stamina { namespace DT {
 			return _params;
 		}
 
+		const Time64& getTimeCreated() const { 
+			return _timeCreated;
+		}
+		const Time64& getTimeModified() const { 
+			return _timeModified;
+		}
+		const Time64& getTimeLastBackup() const { 
+			return _timeLastBackup;
+		}
+		void setTimeLastBackup(const Time64& time) {
+			_timeLastBackup = time;
+		}
+
 	private:
 		tRows _rows;
 		int _size;

@@ -154,6 +154,9 @@
 			Name="Tests"
 			Filter="">
 			<File
+				RelativePath="..\DataTable\Test\TestFileBin.cpp">
+			</File>
+			<File
 				RelativePath="..\Test\TestFindFile.cpp">
 			</File>
 		</Filter>

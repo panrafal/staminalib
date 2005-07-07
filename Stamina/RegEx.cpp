@@ -93,7 +93,7 @@ namespace Stamina {
 		if (this->_localeOneTime)
 			_locale.reset();
 		if (pattern) 
-			this->reserveVector((pattern->getSubpatternsCount() + 4) * 2);
+			this->reserveVector((pattern->getSubpatternsCount() * 2 + 4) * 2);
 		this->_compiled = pattern;
 	}
 

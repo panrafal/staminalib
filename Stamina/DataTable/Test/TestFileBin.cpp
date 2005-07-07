@@ -11,6 +11,7 @@ using namespace Stamina::DT;
 using std::string;
 
 #include <Stamina\Console.h>
+#include <Stamina\FindFile.h>
 
 namespace Stamina { namespace DT {
 
@@ -26,10 +27,14 @@ class TestFileBin : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testAppend );
 	CPPUNIT_TEST( testSetErased );
 	CPPUNIT_TEST( testBadPassword );
-	CPPUNIT_TEST( testStress );
+//	CPPUNIT_TEST( testStress );
 	CPPUNIT_TEST( testOldLoad );
 	CPPUNIT_TEST( testOldAppend );
 	CPPUNIT_TEST( testChangeType );
+	CPPUNIT_TEST( testTemporary );
+	CPPUNIT_TEST( testBackup );
+	CPPUNIT_TEST( testBackupCleanupDirectory );
+	CPPUNIT_TEST( testBackupCleanupFile );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -67,7 +72,11 @@ protected:
 	TypeBin binBuffer;
 
 public:
-	void setUp() {
+
+	TestFileBin() {
+		FindFile ff(".\\TestFileBin__test*");
+		deleteFiles( ff.makeList() );
+
 		cryptAll = false;
 		password = "";
 
@@ -106,6 +115,8 @@ public:
 
 		_cols.join(_colsNoExtra, false);
 		_cols.setColumn(colExtra, ctypeString, (DataEntry)"!!!!!!EXTRA!!!!!!");
+	}
+	void setUp() {
 	}
 	void tearDown() {
 	}
@@ -330,8 +341,8 @@ protected:
 	}
 
 	void testStress() {
-		const int stressCount = 1000;
-		const int appendCount = 2;
+		const int stressCount = 2000;
+		const int appendCount = 5;
 		int i;
 		tRowId startRow = rowIdMax - 100;
 		{
@@ -507,9 +518,151 @@ protected:
 	}
 
 	void testTemporary() {
+		createFile("testTemporary");
+
+		DataTable dt;
+		dt.setPassword(password);
+		FileBin fb(dt);
+		fb.useTempFile = true;
+		fb.loadAll(getFileName("testTemporary"));
+		CPPUNIT_ASSERT_EQUAL(testString1, dt.getStr(row1, colString));
+		// skoro jest za³adowane próbujemy nieudanego zapisu
+		dt.setStr(row1, colString, testString2);
+		fb.open(getFileName("testTemporary"), fileWrite);
+		fb.setWriteFailed(true);
+		CPPUNIT_ASSERT(fb._temp_enabled == true);
+		CPPUNIT_ASSERT(fb._temp_fileName != "");
+		CPPUNIT_ASSERT(fb.isUsingTemp() == true);
+		CPPUNIT_ASSERT(fb.getFileName() != fb.getOpenedFileName());
+		fb.writeHeader();
+		fb.writeDescriptor();
+		fb.writeRow(row1);
+		try {
+			fb.close();
+			CPPUNIT_ASSERT(false);
+		} catch (...) {
+		}
+
+		fb.loadAll(getFileName("testTemporary"));
+		CPPUNIT_ASSERT_EQUAL(testString1, dt.getStr(row1, colString));
+		dt.setStr(row1, colString, testString2);
+		fb.useTempFile = true;
+		fb.save();
+		fb.loadAll();
+		CPPUNIT_ASSERT_EQUAL(testString2, dt.getStr(row1, colString));
 	}
 
+	/* 
+	- czy .bak jest tworzony przy zapisie bez tempa
+	- czy pomija tworzenie pliku .bak je¿ przed chwil¹ jeden zrobi³
+	- czy .bak jest tworzony przy zapisie z temp'em
+	- wyszukiwanie ostatniego .bak'a
+	- przywracanie .bak'ów
+	*/
 	void testBackup() {
+		createFile("testBackup");
+		std::string filename = this->getFileName("testBackup");
+
+		DataTable dt;
+		dt.setPassword(password);
+		FileBin fb(dt);
+		fb.loadAll(filename);
+		dt.setStr(row1, colString, testString2);
+		fb.useTempFile = false;
+		fb.makeBackups = true;
+		// backup bez tempa
+		fb.save(filename);
+		CPPUNIT_ASSERT(dt.getTimeLastBackup().empty() == false);
+		std::string backup = fb.findLastBackupFile();
+		CPPUNIT_ASSERT(fb.findLastBackupDate().empty() == false);
+		CPPUNIT_ASSERT(backup.empty() == false);
+		CPPUNIT_ASSERT(backup.find("testBackup"));
+		DeleteFile(backup.c_str());
+		// nie powinien zrobiæ backupu
+		fb.backupFile(false);
+		CPPUNIT_ASSERT(fb.findLastBackupDate().empty() == true);
+		dt.setTimeLastBackup(Time64());
+		// powinien zrobiæ backup
+		fb.backupFile(false);
+		CPPUNIT_ASSERT(fb.findLastBackupDate().empty() == false);
+		// backup z tempem
+		DeleteFile(fb.findLastBackupFile().c_str());
+		dt.setTimeLastBackup(Time64());
+		fb.useTempFile = true;
+		fb.save(filename);
+		backup = fb.findLastBackupFile();
+		CPPUNIT_ASSERT(backup.empty() == false);
+		// sprawdzamy wyszukiwanie najnowszych...
+		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - 120).strftime(".%d-%m-%Y %H-%M-%S.bak")).c_str(), false);
+		CPPUNIT_ASSERT_EQUAL(backup, fb.findLastBackupFile());
+
+		// przywracanie
+		createFile("testBackup");
+		fb.restoreLastBackup();
+		fb.loadAll();
+		CPPUNIT_ASSERT_EQUAL(testString2, dt.getStr(row1, colString));
+
+	}
+
+	/*
+	- czy usuwa prawid³owe pliki
+	- czy dzia³a prawid³owo tryb plik/katalog
+	*/
+	void testBackupCleanup(bool all) {
+		typedef std::list<Date64> tList;
+		tList keep;
+		tList remove;
+
+		keep.push_back(Time64(true) - (30 * 24 * 60 * 60) - 10); // sprzed miesiaca
+		keep.push_back(Time64(true) - (7 * 24 * 60 * 60)); // sprzed tygodnia
+		keep.push_back(Time64(true) - (24 * 60 * 60) - 550); // z wczoraj
+		keep.push_back(Time64(true) - (6 * 60 * 60) - 250); // sprzed 6 godzin
+		keep.push_back(Time64(true) - 10); // najnowsze
+
+		remove.push_back(Time64(true) - (60 * 24 * 60 * 60));
+		remove.push_back(Time64(true) - (365 * 24 * 60 * 60));
+		remove.push_back(Time64(true) - (30 * 24 * 60 * 60) - 11);
+		remove.push_back(Time64(true) - (8 * 24 * 60 * 60)); // sprzed tygodnia
+		remove.push_back(Time64(true) - (14 * 24 * 60 * 60)); // sprzed tygodnia
+		remove.push_back(Time64(true) - (29 * 24 * 60 * 60)); // sprzed tygodnia
+		remove.push_back(Time64(true) - (25 * 60 * 60)); // z wczoraj
+		remove.push_back(Time64(true) - (48 * 60 * 60)); // z wczoraj
+		remove.push_back(Time64(true) - (7 * 60 * 60)); // sprzed 6 godzin
+		remove.push_back(Time64(true) - (12 * 60 * 60)); // sprzed 6 godzin
+		remove.push_back(Time64(true) - 1000); // najnowsze
+
+		std::string format = getFileName("testCleanup") + ".%d-%m-%Y %H-%M-%S.bak";
+
+		for (tList::iterator it = keep.begin(); it != keep.end(); it++) {
+			CopyFile("TestFileBinOld.dtb", it->strftime(format.c_str()).c_str() , false);
+		}
+		for (tList::iterator it = remove.begin(); it != remove.end(); it++) {
+			CopyFile("TestFileBinOld.dtb", it->strftime(format.c_str()).c_str() , false);
+		}
+
+		std::string testAll1 = getFileName("testCleanupAll") + ".10-06-2001 12-00-00.bak";
+		std::string testAll2 = getFileName("testCleanupAll") + ".09-06-2001 12-00-00.bak";
+		CopyFile("TestFileBinOld.dtb", testAll1.c_str(), false);
+		CopyFile("TestFileBinOld.dtb", testAll2.c_str(), false);
+
+		FileBin::cleanupBackups(all ? "." : getFileName("testCleanup"));
+
+		CPPUNIT_ASSERT( fileExists(testAll1.c_str()) == true );
+		CPPUNIT_ASSERT( fileExists(testAll2.c_str()) == !all ); // tego nie powinno byæ je¿eli usuwamy wszystkie!
+
+		for (tList::iterator it = keep.begin(); it != keep.end(); it++) {
+			CPPUNIT_ASSERT( fileExists( it->strftime(format.c_str()).c_str() ) == true );
+		}
+		for (tList::iterator it = remove.begin(); it != remove.end(); it++) {
+			CPPUNIT_ASSERT( fileExists( it->strftime(format.c_str()).c_str() ) == false );
+		}
+
+	}
+	void testBackupCleanupDirectory() {
+		testBackupCleanup(true);
+	}
+	void testBackupCleanupFile() {
+		testBackupCleanup(false);
 	}
 
 	void testFileLockers() {
@@ -568,7 +721,7 @@ public:
 } }
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestFileBin );
-CPPUNIT_TEST_SUITE_REGISTRATION( TestFileBinPass );
-CPPUNIT_TEST_SUITE_REGISTRATION( TestFileBinCryptAll );
+//CPPUNIT_TEST_SUITE_REGISTRATION( TestFileBinPass );
+//CPPUNIT_TEST_SUITE_REGISTRATION( TestFileBinCryptAll );
 
 

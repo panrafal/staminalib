@@ -101,7 +101,7 @@ protected:
 		ff.setFileOnly();
 		int count = 0;
 		while (ff.find()) {
-			printFoundInfo(ff.found());
+			//printFoundInfo(ff.found());
 			CPPUNIT_ASSERT(ff.found().isParentPointer() == false);
 			CPPUNIT_ASSERT(ff.found().isDirectory() == false);
 			CPPUNIT_ASSERT(RegEx::doMatch("/^t.+\\.exe$/i", ff->getFileName().c_str()));

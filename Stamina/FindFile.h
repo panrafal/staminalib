@@ -105,6 +105,14 @@ namespace Stamina {
 				return this->hasAttribute(attDirectory);
 			}
 
+			inline operator std::string() const {
+				return this->getFileName();
+			}
+
+			inline const TCHAR* c_str() const {
+				return _data.cFileName;
+			}
+
 		private:
 			WIN32_FIND_DATA _data;
 		};
@@ -162,6 +170,7 @@ namespace Stamina {
 			while (this->find()) {
 				list.push_back(this->found());
 			}
+			return list;
 		}
 #endif
 
