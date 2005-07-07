@@ -115,6 +115,12 @@ namespace Stamina { namespace DT {
 			else
 				return _fileName;
 		}
+		std::string getFileName() {
+            return _fileName;
+		}
+		bool isUsingTemp() {
+			return _temp_fileName.empty() == false && _temp_enabled == true;
+		}
 
 		/**Returns true if file is in the version that supports new crypt functions*/
 		inline bool versionNewCrypt() {
@@ -239,7 +245,7 @@ namespace Stamina { namespace DT {
 		*/
 		void backupFile(bool move = true);
 
-		static std::string getBackupFilename(const std::string& filename, const Time64& time = Time64(true)) {
+		static std::string makeBackupFilename(const std::string& filename, const Time64& time = Time64(true)) {
 			return filename + time.strftime(".%m-%d-%Y %H-%M-%S.bak");
 		}
 
@@ -255,11 +261,12 @@ namespace Stamina { namespace DT {
 		bool restoreLastBackup(const std::string& filename = "");
 
 		Date64 findLastBackupDate(const std::string& filename = "");
+		std::string findLastBackupFile(const std::string& filename = "");
 
 	public:
 
 		bool useTempFile;
-		bool warn;
+		bool warningDialogs;
 		bool makeBackups;
 
 	protected:
