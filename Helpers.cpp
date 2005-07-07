@@ -348,7 +348,12 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 	}
 
 	bool isDirectory(const char* path) {
-		return (GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		if (path==".") return true;
+		DWORD attr = GetFileAttributes(path);
+		if (attr == INVALID_FILE_ATTRIBUTES) 
+			return false;
+		else
+			return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 
 

@@ -44,6 +44,7 @@ namespace Stamina { namespace DT {
 		_dataFlag = basicDataFlags;
 		useTempFile = false;
 		makeBackups = false;
+		warningDialogs = false;
 		//warn = true;
 //		mode = 0;
     }
@@ -182,10 +183,14 @@ namespace Stamina { namespace DT {
 		
 		if (this->isWriteFailed()) {
 		    _opened = fileClosed;
+			
 #ifdef _WINDOWS_
-			std::string msg = stringf("Wyst¹pi³ b³¹d podczas zapisywania danych!\r\nUszkodzona kopia znajduje siê w:\r\n\t%s%s" , _temp_enabled ? _temp_fileName.c_str() : _fileName.c_str(), _temp_enabled ? "\r\n\r\nOryginalny plik pozosta³ bez zmian..." : "\r\n\r\nB³¹d wyst¹pi³ podczas zapisywania oryginalnej kopii!");
-			int r = MessageBox(0 , msg.c_str() , "B³¹d zapisu .DTB" , MB_OK | MB_ICONERROR | MB_TASKMODAL);
+			if (this->warningDialogs) {
+				std::string msg = stringf("Wyst¹pi³ b³¹d podczas zapisywania danych!\r\nUszkodzona kopia znajduje siê w:\r\n\t%s%s" , _temp_enabled ? _temp_fileName.c_str() : _fileName.c_str(), _temp_enabled ? "\r\n\r\nOryginalny plik pozosta³ bez zmian..." : "\r\n\r\nB³¹d wyst¹pi³ podczas zapisywania oryginalnej kopii!");
+				int r = MessageBox(0 , msg.c_str() , "B³¹d zapisu .DTB" , MB_OK | MB_ICONERROR | MB_TASKMODAL);
+			}
 #endif
+			throw DTException(errWriteError);
 			return;
 		}
 
@@ -201,7 +206,7 @@ namespace Stamina { namespace DT {
 
             while (1) {
 				_unlink(_fileName.c_str());
-				if (rename(_temp_fileName.c_str() , _fileName.c_str()) == 0)
+				if (MoveFileEx(_temp_fileName.c_str() , _fileName.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) == TRUE)
 					break; // uda³o siê!
 
 				if (++retries < 8) { // czekamy 2 sekundy
@@ -1040,9 +1045,9 @@ namespace Stamina { namespace DT {
 	}
 
 	FindFile::Found findLastBackup(const std::string& filename, Date64* time = 0) {
-		FindFileFiltered ff(getFileDirectory(filename) + "\\*.bak");
+		FindFileFiltered ff(getFileDirectory(filename, true) + "\\*.bak");
 		ff.setFileOnly();
-		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + RegEx::addSlashes(getFileName(filename)) + ").(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
+		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + RegEx::addSlashes(getFileName(filename)) + ")\\.(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
 		ff.addFilter(re);
 		FindFile::Found found;
 		Date64 foundDate;
@@ -1061,9 +1066,9 @@ namespace Stamina { namespace DT {
 	void FileBin::backupFile(const std::string& filename, bool move) {
 		if (filename.empty()) throw DTException(errBadParameter);
 		if (move) {
-			MoveFileEx(filename.c_str(), getBackupFilename(filename).c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+			MoveFileEx(filename.c_str(), makeBackupFilename(filename).c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
 		} else {
-			CopyFile(filename.c_str(), getBackupFilename(filename).c_str(), false);
+			CopyFile(filename.c_str(), makeBackupFilename(filename).c_str(), false);
 		}
 	}
 
@@ -1102,9 +1107,9 @@ namespace Stamina { namespace DT {
 		range.push_back(Time64(true)); // najnowsze
 
 		bool all = isDirectory(filename.c_str());
-		FindFileFiltered ff((all ? filename : getFileDirectory(filename)) + "\\*.bak");
+		FindFileFiltered ff((all ? filename : getFileDirectory(filename, true)) + "\\*.bak");
 		ff.setFileOnly();
-		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + (all ? std::string(".+\\.dtb") : RegEx::addSlashes(getFileName(filename))) + ").(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
+		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + (all ? std::string(".+\\.dtb") : RegEx::addSlashes(::Stamina::getFileName(filename))) + ").(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
 		ff.addFilter(re);
 		while (ff.find()) {
 			FileBackups& file = files[re->getSub(1)];
@@ -1116,6 +1121,7 @@ namespace Stamina { namespace DT {
 
 			for (unsigned int i = 0; i < range.size(); ++i) {
 				/* przegl¹damy granice od najstarszej wiêc wiêc pasuje nam ta, która jest <= aktualnej granicy (bêdzie od razu > od poprzedniej). W samej granicy wybieramy t¹ która jest najnowsza... */
+				Date64& rangeDate = range[i];
 				if (date <= range[i]) {
 					if (date > file.found[i].date) {
 						file.found[i] = BackupFound(date, ff->getFileName());
@@ -1162,6 +1168,9 @@ namespace Stamina { namespace DT {
 		Date64 date;
 		DT::findLastBackup(filename.empty() ? this->_fileName : filename, &date);
 		return date;
+	}
+	std::string FileBin::findLastBackupFile(const std::string& filename) {
+		return DT::findLastBackup(filename.empty() ? this->_fileName : filename).getFileName();
 	}
 
 

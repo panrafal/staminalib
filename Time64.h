@@ -169,6 +169,9 @@ namespace Stamina {
 
 	class Date64 {
 	public:                 // Maska do porownan to #FFFFFFFFFFFF
+
+		const static __int64 compareMask = 0xFFFFFFFFFFFF;
+
 		unsigned msec  : 10;   // 0..999                        0x3FF
 		unsigned sec   : 6;    // 0..59                        0xFC00
 		unsigned min   : 6;    // 0..59                      0x3F0000
@@ -264,22 +267,22 @@ namespace Stamina {
 		// Compare
 
 		inline bool operator == (const Date64& b) const {
-			return this->getInt64() == b.getInt64();
+			return this->getCmpInt() == b.getCmpInt();
 		}
 		inline bool operator != (const Date64& b) const {
-			return this->getInt64() != b.getInt64();
+			return this->getCmpInt() != b.getCmpInt();
 		}
 		inline bool operator < (const Date64& b) const {
-			return this->getInt64() < b.getInt64();
+			return this->getCmpInt() < b.getCmpInt();
 		}
 		inline bool operator > (const Date64& b) const {
-			return this->getInt64() > b.getInt64();
+			return this->getCmpInt() > b.getCmpInt();
 		}
 		inline bool operator <= (const Date64& b) const {
-			return this->getInt64() <= b.getInt64();
+			return this->getCmpInt() <= b.getCmpInt();
 		}
 		inline bool operator >= (const Date64& b) const {
-			return this->getInt64() >= b.getInt64();
+			return this->getCmpInt() >= b.getCmpInt();
 		}
 
 
@@ -304,6 +307,10 @@ namespace Stamina {
 
 		inline __int64 getInt64() const {
 			return *(__int64*) this;
+		}
+		/** Returns date as an comparable integer */
+		inline unsigned __int64 getCmpInt() const {
+			return (*(__int64*) this) & compareMask;
 		}
 
 	private:

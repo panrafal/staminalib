@@ -129,18 +129,31 @@ namespace Stamina {
 	int createDirectories(const std::string& path);
 
 	/** Returns the name of last path part */
-	std::string getFileName(const std::string& path) {
+	inline std::string getFileName(const std::string& path) {
 		return path.substr(path.find_last_of("\\/") + 1);
 	}
 	/** Returns the name of directory containing the file */
-	std::string getFileDirectory(const std::string& path) {
+	inline std::string getFileDirectory(const std::string& path, bool returnDot = false) {
 		size_t pos = path.find_last_of("\\/");
 		if (pos == std::string::npos) {
-			return "";
+			return returnDot ? "." : "";
 		} else {
 			return path.substr(0, pos);
 		}
 	}
+
+#ifdef _WINDOWS_
+	template<class LIST> int deleteFiles(const LIST& files) {
+		int c = 0;
+		for (LIST::const_iterator it = files.begin(); it != files.end(); ++it) {
+			if (DeleteFile(it->c_str())) {
+				c++;
+			}
+		}
+		return c;
+	}
+#endif
+
 #endif
 
 
