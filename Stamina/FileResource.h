@@ -10,6 +10,8 @@
  *  $Id$
  */
 
+#include "Version.h"
+
 namespace Stamina {
 
 	inline void * loadResourceData(HMODULE inst, const char* name, const char* type, HGLOBAL& rsrc, int* size) {
@@ -22,78 +24,6 @@ namespace Stamina {
 			*size = SizeofResource(inst, found);
 		return LockResource(rsrc);
 	}
-
-
-	class Version {
-	public:
-
-		inline Version(int version = 0) {
-			this->major = ((version)>>28)&0xF;
-			this->minor = ((version)>>20)&0xFF;
-			this->release = ((version)>>12)&0xFF;
-			this->build = ((version))&0xFFF;
-		}
-		inline Version(int high, int low) {
-			this->major = HIWORD(high);
-			this->minor = LOWORD(high);
-			this->release = HIWORD(low);
-			this->build = LOWORD(low);
-		}
-		inline Version(short major, short minor, short release, short build) {
-			this->major = major;
-			this->minor = minor;
-			this->release = release;
-			this->build = build;
-		}
-		inline Version(const Version& b) {
-			*this = b;
-		}
-		inline Version& operator = (const Version& b) {
-			major = b.major;
-			minor = b.minor;
-			release = b.release;
-			build = b.build;
-			return *this;
-		}
-		inline bool operator == (const Version& b) const {
-			return major == b.major && minor == b.minor && release == b.release && build == b.build;
-		}
-		inline bool operator != (const Version& b) const {
-			return !(*this == b);
-		}
-		inline bool operator > (const Version& b) const {
-			return this->getInt64() > b.getInt64();
-		}
-		inline bool operator < (const Version& b) const {
-			return this->getInt64() < b.getInt64();
-		}
-		inline bool operator >= (const Version& b) const {
-			return this->getInt64() >= b.getInt64();
-		}
-		inline bool operator <= (const Version& b) const {
-			return this->getInt64() <= b.getInt64();
-		}
-
-
-		inline bool empty() const {
-			return !major && !minor && !release && !build;
-		}
-
-		inline int getInt() const {
-			return ((((major)&0xF)<<28) | (((minor)&0xFF)<<20) | (((release)&0xFF)<<12) | ((build)&0xFFF));
-		}
-		inline __int64 getInt64() const {
-			return *((__int64*)this);
-		}
-
-		/**Returns version string (x.x.x.x).
-		@param Minimum number of version parts to return
-		*/
-		std::string getString(char elements = 2) const;
-
-	public:
-		short major, minor, release, build;
-	};
 
 
 	// File version
