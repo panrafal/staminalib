@@ -72,18 +72,6 @@ namespace Stamina {
 
 // -----------------------------------
 
-	std::string Version::getString(char elements) const {
-		std::string s;
-		if (elements > 0 || major || minor || release || build)
-			s += inttostr(major);
-		if (elements > 1 || minor || release || build)
-			s += "." + inttostr(minor);
-		if (elements > 2 || release || build)
-			s += "." + inttostr(minor);
-		if (elements > 3 || build)
-			s += "." + inttostr(minor);
-		return s;
-	}
 
 
 };

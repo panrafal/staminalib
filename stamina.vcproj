@@ -591,6 +591,9 @@
 				RelativePath=".\ToolTipX.h">
 			</File>
 			<File
+				RelativePath=".\Version.h">
+			</File>
+			<File
 				RelativePath=".\Window.h">
 			</File>
 			<File
