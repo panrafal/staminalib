@@ -20,6 +20,8 @@
 
 #include "Assert.h"
 
+#include "LibInstance.h"
+
 #include "ObjectPtr.h"
 
 #ifdef STAMINA_DEBUG
@@ -35,11 +37,10 @@ namespace Stamina {
 #endif
 
 
-	extern const unsigned int libInstance;
 
 	class ObjectClassInfo {
 	public:
-		ObjectClassInfo(const char* name, short size, ObjectClassInfo* base):_name(name),_size(size),_base(base),_uid(0),_libInstance(libInstance) {
+		ObjectClassInfo(const char* name, short size, ObjectClassInfo* base):_name(name),_size(size),_base(base),_uid(0),_libInstance(LibInstance::get()) {
 		}
 		inline const char * getName() const {
 			return _name;
@@ -52,7 +53,7 @@ namespace Stamina {
 		}
 		unsigned int getUID();
 
-		inline unsigned int getLibInstance() const {
+		inline LibInstance& getLibInstance() const {
 			return _libInstance;
 		}
 
@@ -74,12 +75,27 @@ namespace Stamina {
 			return b >= *this;
 		}
 
+		/** Looks for @a b class information */
+		ObjectClassInfo* getParentInfo (ObjectClassInfo& b) {
+			if (*this == b) {
+				return this;
+			} else if (this->getBaseInfo() == 0) {
+				return 0;
+			} else {
+				return this->getBaseInfo()->getParentInfo(b);
+			}
+		}
+
+		template <class TYPE> ObjectClassInfo* getParentInfo () {
+			return getParentInfo(TYPE::staticClassInfo());
+		}
+
 	private:
 		unsigned int _uid;
 		const char * const _name;
 		const short _size;
 		ObjectClassInfo* const _base;
-		const unsigned int _libInstance;
+		LibInstance& _libInstance;
 	};
 #define STAMINA_OBJECT_CLASS_DEFINE(TYPE, NAME, BASE) \
 	static ::Stamina::ObjectClassInfo& staticClassInfo() {\
@@ -130,7 +146,7 @@ namespace Stamina {
 		}
 
 		bool isFromCurrentLibInstance() {
-			return this->getClass().getLibInstance() == libInstance;
+			return this->getClass().getLibInstance() == LibInstance::get();
 		}
 		bool isSameLibInstance(const iObject& obj) {
 			return this->getClass().getLibInstance() == obj.getClass().getLibInstance();
@@ -158,8 +174,6 @@ namespace Stamina {
 			}
 		}
 
-
-		static ObjectClassInfo blah;
 
 	private:
 
