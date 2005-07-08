@@ -142,6 +142,9 @@ namespace Stamina {
 		}
 	}
 
+	/** Unifies the path by replacing all '\' and '/' to @a delimiter and by adding/removing the ending slash */
+	std::string unifyPath(const std::string& path, bool slashSuffix = false, char delimiter = '\\');
+
 #ifdef _WINDOWS_
 	template<class LIST> int deleteFiles(const LIST& files) {
 		int c = 0;
