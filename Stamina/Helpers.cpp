@@ -356,5 +356,27 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 			return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 
+	std::string unifyPath(const std::string& path, bool slashSuffix, char delimiter) {
+		if (path.empty()) return "";
+		std::string res = path;
+
+		for (std::string::iterator it = res.begin(); it != res.end(); ++it) {
+			if (*it != delimiter && (*it == '/' || *it == '\\')) 
+				*it = delimiter;
+		}
+
+		if (res[path.length() - 1] == delimiter) {
+			if (slashSuffix == false) {
+				res.erase(path.length() - 1);
+			}
+		} else {
+			if (slashSuffix) {
+				res += delimiter;
+			}
+		}
+		return res;
+		
+	}
+
 
 };

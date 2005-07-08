@@ -19,7 +19,9 @@
 namespace Stamina {
 
 
-	const unsigned int libInstance = random(0, 0xFFFFFFF);
+	//const unsigned int libInstance = random(0, 0xFFFFFFF);
+
+	LibInstance LibInstance::_instance;
 
 	unsigned int ObjectClassInfo::getUID() {
 		if (_uid) return _uid;

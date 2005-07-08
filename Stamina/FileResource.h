@@ -11,6 +11,8 @@
  */
 
 #include "Version.h"
+#include "Helpers.h"
+#include "WinHelper.h"
 
 namespace Stamina {
 
@@ -23,6 +25,13 @@ namespace Stamina {
 		if (size)
 			*size = SizeofResource(inst, found);
 		return LockResource(rsrc);
+	}
+
+	std::string loadString(UINT id, HINSTANCE inst = 0) {
+		std::string buff;
+		unsigned int size = LoadString( inst ? inst : Stamina::getInstance(), id, stringBuffer(buff, 2047), 2048);
+		stringRelease(buff, size);
+		return buff;
 	}
 
 
