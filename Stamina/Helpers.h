@@ -88,6 +88,18 @@ namespace Stamina {
 		str.resize(size == STR::npos ? strlen(str.c_str()) : size);
 	}
 
+#ifdef _LOCALE_
+	template <typename _Elem>
+		inline size_t find_noCase(const std::basic_string<_Elem> haystack, const std::basic_string<_Elem> needle) {
+		std::basic_string<_Elem> haystackLow = std::tolower(haystack, std::locale());
+		std::basic_string<_Elem> needleLow = std::tolower(needle, std::locale());
+		std::basic_string<_Elem>::const_iterator found = haystackLow.find(needle);
+		if (found == haystackLow.end()) return haystack.end();
+		return found - haystackLow.begin();
+	}
+#endif
+
+
 	std::string urlEncode(const std::string& str , char special = '%' , char * noChange = 0);
 	std::string urlDecode(const std::string& str , char special = '%');
 
