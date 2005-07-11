@@ -54,14 +54,14 @@ namespace Stamina { namespace DT {
 		// rows
 		tRowId DataTable::getRowId(unsigned int row) const {
 			if (isRowId(row)) return row;
-			if (row >= this->getRowCount()) return -1;
+			if (row >= this->getRowCount()) return rowNotFound;
 			return flagId(_rows[row]->getId());
 		}
 		tRowId DataTable::getRowPos(tRowId row) const {
 			if (!isRowId(row)) return row;
 			for (unsigned int i=0; i < _rows.size(); i++)
 				if (_rows[i]->getId() == row) return i;
-			return -1;
+			return rowNotFound;
 		}
 
 		inline static bool isRowId(unsigned int val) {
@@ -152,6 +152,17 @@ namespace Stamina { namespace DT {
 			return this->setValue(row, id, ValueStr(val), dropDefault);
 		}
 
+		inline const wchar_t * getWCh(tRowId row , tColId id, wchar_t* buffer, unsigned int buffSize = 0) {
+			Value v = ValueWideStr(buffer, buffSize);
+			if (this->getValue(row, id, v))
+				return v.vWChar;
+			else
+				return 0;
+		}
+		inline bool setWCh(tRowId row , tColId id , const wchar_t * val, bool dropDefault = false) {
+			return this->setValue(row, id, ValueWideStr(val), dropDefault);
+		}
+
 		inline TypeBin getBin(tRowId row , tColId id, const TypeBin& val ) {
 			Value v = ValueBin(val);
 			if (!this->getValue(row, id, v)) {
@@ -192,6 +203,21 @@ namespace Stamina { namespace DT {
 			return setCh(row, id, val.c_str(), dropDefault);
 		}
 
+		inline std::wstring getWStr(tRowId row , tColId id) {
+			Value v = ValueWideStr(0, -1); // this way we will get string duplicate
+			if (this->getValue(row, id, v)) {
+				std::wstring s = v.vWChar;
+				free(v.vWChar);
+				return s;
+			} else {
+				return L"";
+			}
+		}
+		inline bool setWStr(tRowId row , tColId id , const std::wstring& val, bool dropDefault = false) {
+			return setWCh(row, id, val.c_str(), dropDefault);
+		}
+
+
 		const ColumnsDesc& getColumns() {
 			return this->_cols;
 		}
@@ -228,7 +254,7 @@ namespace Stamina { namespace DT {
 		bool canAccess(tRowId row) throw(...);
 
 		/* Gets the value of a field using type conversion.
-		- When retrieving ctypeString there are several possible ways of setting input buffer in Value:
+		- When retrieving ctypeString/ctypeWideString there are several possible ways of setting input buffer in Value:
 			vChar = 0 buffSize = -1  - a duplicate is returned in vChar
 			vChar = 0 buffSize = 0   - size of the string is returned in buffSize
 			vChar = * buffSize = 0   - if the column is of the type string, the @a vChar is replaced with the internal value pointer (it's READ ONLY and it's not thread-safe! you MUST lock the row first!). Otherwise, the small buffer * (at least 32 bytes) that is provided in @a vChar is used for conversion
@@ -258,12 +284,13 @@ namespace Stamina { namespace DT {
 
 		/**Generates password digest*/
 		void setPassword(const std::string& pass) {
-			_passwordDigest = createPasswordDigest(pass);
+			setPasswordDigest(createPasswordDigest(pass));
 		}
 
 		/**Sets password digest*/
 		void setPasswordDigest(const MD5Digest& digest) {
 			this->_passwordDigest = digest;
+			this->_changed = true;
 		}
 
 		const MD5Digest& getPasswordDigest() {
@@ -281,13 +308,16 @@ namespace Stamina { namespace DT {
 
 		inline const void setParam(const std::string& name, const std::string& value) {
 			_params[name] = value;
+			_changed = true;
 		}
 
 		inline void resetParam(const std::string& name) {
+			_changed = true;
 			_params.erase(name);
 		}
 
 		inline void resetParams() {
+			_changed = true;
 			_params.clear();
 		}
 
@@ -305,6 +335,7 @@ namespace Stamina { namespace DT {
 			return _timeLastBackup;
 		}
 		void setTimeLastBackup(const Time64& time) {
+			_changed = true;
 			_timeLastBackup = time;
 		}
 

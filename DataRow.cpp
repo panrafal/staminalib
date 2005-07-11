@@ -93,16 +93,19 @@ namespace Stamina { namespace DT {
 			for (unsigned int i = 0 ; i < _size ; i++) {
 				switch (_table->getColumns().getColumnByIndex(i).getType()) {
 					case ctypeInt64:
-						if (_data[i]) delete _data[i];
+						if (_data[i]) delete (__int64*)_data[i];
 						break;
 					case ctypeString:
-						if (_data[i]) delete [] _data[i];
+						if (_data[i]) delete [] (char*)_data[i];
+						break;
+					case ctypeWideString:
+						if (_data[i]) delete [] (wchar_t*)_data[i];
 						break;
 					/*case DT_CT_STRING:
                if (data[i]) delete data[i];
                break;*/
 					case ctypeBin:
-						if (_data[i]) delete [] _data[i];
+						if (_data[i]) delete [] (char*)_data[i];
 						break;
 				}
 			}
@@ -172,7 +175,26 @@ namespace Stamina { namespace DT {
 					_data[colIndex] = (void*)strcpy((char *)_data[colIndex] , (char *)val);
 				}
 				break;}
-			/*case DT_CT_STRING:
+
+			case ctypeWideString: {
+				if (val == 0 || (dropDefault && col.getDefValue() && (wcscmp((wchar_t*)col.getDefValue(), (wchar_t*)val) == 0))) {
+					if (_data[colIndex] != 0) delete [] (wchar_t*)_data[colIndex];
+					_data[colIndex] = 0;
+				} else {
+					size_t valLen = wcslen((wchar_t *)val);
+					size_t curLen = _data[colIndex] ? wcslen((wchar_t *)_data[colIndex]): 0;
+					if (_data[colIndex] && (valLen > curLen || valLen < curLen/2)) {
+						delete [] (wchar_t*)_data[colIndex];
+						_data[colIndex]=0;
+					}
+					if (!_data[colIndex]) {
+						_data[colIndex] = new wchar_t [valLen + 1];
+					}
+					_data[colIndex] = (void*)wcscpy((wchar_t *)_data[colIndex] , (wchar_t *)val);
+				}
+				break;}
+							  
+							  /*case DT_CT_STRING:
 				if (!data[i]) data[i]=(void*)new string(*((string *)val));
 				else *(string *)data[i]=*((string *)val);
 				break;*/

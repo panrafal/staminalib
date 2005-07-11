@@ -63,6 +63,9 @@ namespace Stamina { namespace DT {
 		if (!_table) return false;
 		MD5Digest digest(_table->getPasswordDigest());
 		if (_passwordDigest.empty()) return true;
+		if (digest.empty()) {
+			digest.calculate("");
+		}
 		if (_passwordSalt)
 			digest.addSalt(_passwordSalt);
 		return digest == _passwordDigest;
@@ -744,6 +747,24 @@ namespace Stamina { namespace DT {
 						rowObj.set(colId, (DataEntry)"", true);
 					}
 					break;}
+				case ctypeWideString: {
+					unsigned int length;
+					readData(&length, 4);
+					if (ftell(_file) + length > _fileSize)
+						throw DTException(errBadFormat);
+					if (skip) {
+						skipBytes = length;
+					} else if (length > 0) {
+						char * buffer = new char [length + 2];
+						buffer[length] = 0;
+						buffer[length+1] = 0;
+						readCryptedData(col, buffer, length);
+						rowObj.set(colId, (DataEntry)buffer, true);
+						delete [] buffer;
+					} else {
+						rowObj.set(colId, (DataEntry)L"", true);
+					}
+					break;}
 				case ctypeBin: {
 					TypeBin bin;
 					bin.buff = 0;
@@ -842,6 +863,15 @@ namespace Stamina { namespace DT {
 					case ctypeString: {
 						char * val = skip ? 0 : (char *)rowObj.get(colId);
 						unsigned int length = (val == 0 ? 0 : strlen(val));
+						writeData(&length, 4, &rowSize);
+						if (val && length > 0) {
+							writeCryptedData(col, val, length, &rowSize);
+						}
+						break;}
+					case ctypeWideString: {
+						wchar_t * val = skip ? 0 : (wchar_t *)rowObj.get(colId);
+						unsigned int length = (val == 0 ? 0 : wcslen(val));
+						length *= 2;
 						writeData(&length, 4, &rowSize);
 						if (val && length > 0) {
 							writeCryptedData(col, val, length, &rowSize);

@@ -71,6 +71,8 @@ namespace Stamina { namespace DT {
 			v.setType(type, true);
 			if (this->isLoader())
 				v.setFlag(cflagIsLoaded, true);
+			else 
+				v.setFlag(cflagIsDefined, true);
 			v.setId(id);
 			v.setDefValue(def);
 			v.setName(name);
