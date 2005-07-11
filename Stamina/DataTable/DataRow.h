@@ -14,8 +14,6 @@
 
 namespace Stamina { namespace DT {
 
-	typedef void* DataEntry;
-
 	class DataTable;
 
 	class DataRow {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
@@ -82,6 +80,10 @@ namespace Stamina { namespace DT {
 		/** Removes flag from the row Id */
 		inline static tRowId unflagId(tRowId row) {
 			return (tRowId)( row&(~DT::rowIdFlag) );
+		}
+
+		DataTable* getOwner() {
+			return _table;
 		}
 
 
