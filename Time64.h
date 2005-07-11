@@ -146,7 +146,7 @@ namespace Stamina {
 		}
 
 		int toDays() const {
-			return floor((float)this->sec / (60*60*24));
+			return (int)floor((float)this->sec / (60*60*24));
 		}
 
 	private:

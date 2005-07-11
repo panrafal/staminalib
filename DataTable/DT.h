@@ -51,6 +51,9 @@ namespace Stamina { namespace DT {
 		errRowNotFound = 0x1006,
 		errBadParameter = 0x1007,
 		errWriteError = 0x1008,
+		errAlreadyLoaded = 0x1009,
+		errNotLoaded = 0x1010,
+		errNotChanged = 0x1011,
 		errFileError = 0x10000000,
 
 		resSkipped = 1,
@@ -68,6 +71,8 @@ namespace Stamina { namespace DT {
 		ctypeInt64		= 3,
 		ctype64			= 3,
 		ctypeBin		= 4, ///< Binary data stored with TypeBin
+		ctypeWideString = 5,
+		ctypeWString    = ctypeWideString,
 		ctypeUnknown	= -1,
 	};
 
@@ -90,6 +95,7 @@ namespace Stamina { namespace DT {
 		cflagSecret		= 0x400, ///< This column contains secret personal information (like passwords)
 
 		cflagIsLoaded   = 0x100000, ///< This column was loaded from file
+		cflagIsDefined  = 0x200000, ///< This column was defined inside
 
 		cflagCryptMask	= 0xFF000, ///< Mask for cryptographic flags
 		cflagXor		= 0x01000, ///< This column uses XOR codecs
@@ -121,11 +127,12 @@ namespace Stamina { namespace DT {
 	typedef unsigned int tColId;
 	typedef enColumnType tColType;
 	typedef unsigned int tRowId;
+	typedef void* DataEntry;
 
-	const tRowId rowNotFound = -1;
-	const tRowId allRows = -1;
-	const tColId colNotFound = -1;
-	const tColId colByName = -1;
+	const tRowId rowNotFound = (tRowId) -1;
+	const tRowId allRows = (tRowId) -1;
+	const tColId colNotFound = (tRowId) -1;
+	const tColId colByName = (tRowId) -1;
 //	const tRowId rowIdFlag = DT_ROWID_MASK;
 
 	struct _TypeBin {
@@ -159,15 +166,17 @@ namespace Stamina { namespace DT {
 				union {
 					char * vChar;
 					const char * vCChar;
+					wchar_t * vWChar;
+					const wchar_t * vCWChar;
 				};
-				unsigned int buffSize;
+				int buffSize;
 			};
 			int vInt;
 			__int64 vInt64;
 			_TypeBin vBin;
 
 		};
-		Value(tColType type=ctypeUnknown):type(type) {vInt64 = 0;buffSize=0;}
+		Value(tColType type=ctypeUnknown):type((short)type) {vInt64 = 0;buffSize=0;}
 
 		enColumnType getType() const {
 			return (enColumnType) this->type;
@@ -189,6 +198,25 @@ namespace Stamina { namespace DT {
 	}
 	inline Value ValueStrGetSize() {
 		Value v(ctypeString);
+		v.vChar = 0;
+		v.buffSize = 0;
+		return v;
+	}
+
+	inline Value ValueWideStr(const wchar_t* value, int buffSize=0) {
+		Value v(ctypeWideString);
+		v.vCWChar = value;
+		v.buffSize = buffSize;
+		return v;
+	}
+	inline Value ValueWideStrDuplicate() {
+		Value v(ctypeWideString);
+		v.vWChar = 0;
+		v.buffSize = -1;
+		return v;
+	}
+	inline Value ValueWideStrGetSize() {
+		Value v(ctypeWideString);
 		v.vChar = 0;
 		v.buffSize = 0;
 		return v;
@@ -228,6 +256,9 @@ namespace Stamina { namespace DT {
 
 		static inline Find EqStr(tColId col, const char* str) {
 			return Find(eq, col, ValueStr(str));
+		}
+		static inline Find EqWStr(tColId col, const wchar_t* str) {
+			return Find(eq, col, ValueWideStr(str));
 		}
 		static inline Find EqInt(tColId col, int value) {
 			return Find(eq, col, ValueInt(value));

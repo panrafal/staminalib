@@ -53,11 +53,12 @@ protected:
 		CPPUNIT_ASSERT( cols.setColumn((tColId)1, ctypeString | cflagXor, "Hmmm?") != colNotFound );
 		CPPUNIT_ASSERT( cols.setColumn((tColId)2, ctypeString | cflagXor, "Hmmm?", "2") != colNotFound );
 		CPPUNIT_ASSERT( cols.setColumn(colByName, ctypeString | cflagXor, "Hmmm?", "3") != colNotFound );
+		CPPUNIT_ASSERT( cols.setColumn(colByName, ctypeWideString | cflagXor, L"Hmmm?", "4") != colNotFound );
 
 		CPPUNIT_ASSERT( cols.getColumnByIndex(0).getId() == 1 );
 		CPPUNIT_ASSERT( cols.getColumn((tColId)2).getType() == ctypeString);
 		CPPUNIT_ASSERT( cols.getColumn("3").getId() != colByName );
-		CPPUNIT_ASSERT( cols.getColumn("3").getFlags() == (ctypeString | cflagXor) );
+		CPPUNIT_ASSERT( cols.getColumn("3").getFlags() == (ctypeString | cflagXor | cflagIsDefined) );
 	}
 
 	void testJoin() {

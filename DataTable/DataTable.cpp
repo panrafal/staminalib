@@ -37,7 +37,7 @@ namespace Stamina { namespace DT {
     }
 
     tRowId DataTable::addRow(tRowId id) {
-		return this->insertRow(-1, id);
+		return this->insertRow(rowNotFound, id);
     }
 
     tRowId DataTable::insertRow(unsigned int rowPos , tRowId id) {
@@ -88,7 +88,6 @@ namespace Stamina { namespace DT {
         row = (tRowId) getRowPos(row);
         if (row == rowNotFound || row >= _rows.size()) {
 			throw DTException(errNoRow);
-            return 0;
 		}
         try {
 /*            if (id == DT_C_ID) ret=(DataEntry)rows[row]->id;
@@ -98,7 +97,6 @@ namespace Stamina { namespace DT {
         } catch (...) {
 			throw DTException(errNoRow);
 		}
-        return 0;
     }
 
     bool DataTable::set(tRowId row , tColId id , DataEntry val,bool dropDefault) {
@@ -107,7 +105,6 @@ namespace Stamina { namespace DT {
         row = (tRowId) getRowPos(row);
 		if (row == rowNotFound || row >= _rows.size()) {
 			throw DTException(errNoRow);
-            return false;
 		}
         try {
             _rows[row]->set(id, val, dropDefault);
@@ -170,7 +167,6 @@ namespace Stamina { namespace DT {
 			row = getRowPos(row);
 			if (row == rowNotFound || row >= _rows.size()) {
 				throw DTException(errNoRow);
-                return false;
 			}
 			if (_rows[row]->canAccess() == false)
 				return false;
@@ -228,7 +224,7 @@ namespace Stamina { namespace DT {
         
 		this->lock(allRows);
 
-		unsigned int found = -1;
+		unsigned int found = rowNotFound;
 
 		for (unsigned int i = this->getRowPos((tRowId) startPos); i < this->getRowCount(); i++) {
 			found = i;
@@ -240,7 +236,7 @@ namespace Stamina { namespace DT {
 				// sprawdzamy...
 
 				Value value(find->value.getType());
-				if (value.getType() == ctypeString) {
+				if (value.getType() == ctypeString || value.getType() == ctypeWideString) {
 					// Pozniej trzeba to zwolnic
 					value.buffSize = -1;
 				}
@@ -249,6 +245,9 @@ namespace Stamina { namespace DT {
 				switch (value.getType()) {
 					case ctypeString:
 						cmp = stricmp(value.vCChar, find->value.vCChar);
+						break;
+					case ctypeWideString:
+						cmp = _wcsicmp(value.vCWChar, find->value.vCWChar);
 						break;
 					case ctypeInt64:
 						if (value.vInt64 > find->value.vInt64)
@@ -264,28 +263,28 @@ namespace Stamina { namespace DT {
 						break;
 				}
 
-				if (value.type == ctypeString) {
+				if (value.type == ctypeString || value.type == ctypeWideString) {
 					free(value.vChar);
 				}
 
 				switch (find->operation) {
 					case Find::eq:
-						if (cmp != 0) found = -1;
+						if (cmp != 0) found = rowNotFound;
 						break;
 					case Find::neq:
-						if (cmp == 0) found = -1;
+						if (cmp == 0) found = rowNotFound;
 						break;
 					case Find::gt:
-						if (cmp <= 0) found = -1;
+						if (cmp <= 0) found = rowNotFound;
 						break;
 					case Find::gteq:
-						if (cmp < 0) found = -1;
+						if (cmp < 0) found = rowNotFound;
 						break;
 					case Find::lt:
-						if (cmp >= 0) found = -1;
+						if (cmp >= 0) found = rowNotFound;
 						break;
 					case Find::lteq:
-						if (cmp > 0) found = -1;
+						if (cmp > 0) found = rowNotFound;
 						break;
 				}
 			} while (--args != 0 && found == i);
@@ -313,15 +312,16 @@ namespace Stamina { namespace DT {
 		const Column& column = this->_cols.getColumn(col);
 		if (column.getType() == ctypeUnknown) return false;
 
-		if (value.getType() == ctypeUnknown) value.type = column.getType();
+		if (value.getType() == ctypeUnknown) value.type = (short)column.getType();
 
 		DataEntry val = this->get(row, col);
 		switch (value.getType()) {
 		case ctypeInt: 
 			switch (column.getType()) {
 			case ctypeInt: value.vInt = (int)val; return true;
-			case ctypeInt64: value.vInt = val ? *(__int64*)val : 0; return true;
+			case ctypeInt64: value.vInt = (int) (val ? *(__int64*)val : 0); return true;
 			case ctypeString: value.vInt = val ? atoi((char*)val) : 0; return true;
+			case ctypeWideString: value.vInt = val ? _wtoi((wchar_t*)val) : 0; return true;
 			};
 			return false;
 		case ctypeInt64: 
@@ -329,6 +329,7 @@ namespace Stamina { namespace DT {
 			case ctypeInt: value.vInt64 = (int)val; return true;
 			case ctype64: value.vInt64 = val? *(__int64*)val : 0; return true;
 			case ctypeString: value.vInt64 = val ? _atoi64((char*)val) : 0; return true;
+			case ctypeWideString: value.vInt64 = val ? _wtoi64((wchar_t*)val) : 0; return true;
 			};
 			return false;
 		case ctypeString: 
@@ -344,7 +345,26 @@ namespace Stamina { namespace DT {
 						value.vCChar = ch;
 					} else {
 						value.vChar = 0;
-						value.buffSize = strlen(ch);
+						value.buffSize = strlen(ch) + 1;
+					}
+				}
+				return true;
+			} else if (column.getType() == ctypeWideString) {
+				const wchar_t* wch = val ? (wchar_t*)val : L"";
+				if (value.vChar && value.buffSize != -1 && value.buffSize != 0) {
+					WideCharToMultiByte(CP_ACP, 0, wch, -1, value.vChar, value.buffSize, 0, 0);
+					value.vChar[value.buffSize - 1] = 0;
+				} else if (value.buffSize == -1) {
+					size_t len = wcslen(wch);
+					value.vChar = (char*) malloc(len + 1);
+					WideCharToMultiByte(CP_ACP, 0, wch, len + 1, value.vChar, len + 1, 0, 0);
+					value.vChar[len] = 0;
+				} else {
+					if (value.vChar && value.buffSize == 0) {
+						return false;
+					} else {
+						value.vChar = 0;
+						value.buffSize = wcslen(wch) + 1;
 					}
 				}
 				return true;
@@ -363,10 +383,69 @@ namespace Stamina { namespace DT {
 				case ctype64: _i64toa(val ? *(__int64*)val : 0 , value.vChar , 10); return true;
 				default:
 					value.vChar[0] = 0;
+					return false;
 				};
-				return true;
+				//return true;
 			}
-			return false; // string
+//			return false; // string
+
+		case ctypeWideString: 
+			if (column.getType() == ctypeWideString) {
+				const wchar_t* wch = val ? (wchar_t*)val : L"";
+				if (value.vWChar && value.buffSize != -1 && value.buffSize != 0) {
+					wcsncpy(value.vWChar, wch, value.buffSize / 2);
+					value.vWChar[value.buffSize / 2 - 1] = 0;
+				} else if (value.buffSize == -1) {
+					value.vWChar = wcsdup(wch);
+				} else {
+					if (value.vWChar && value.buffSize == 0) {
+						value.vCWChar = wch;
+					} else {
+						value.vWChar = 0;
+						value.buffSize = wcslen(wch) * 2 + 2;
+					}
+				}
+				return true;
+			} else if (column.getType() == ctypeString) {
+				const char* ch = val ? (char*)val : "";
+				if (value.vWChar && value.buffSize != -1 && value.buffSize != 0) {
+					MultiByteToWideChar(CP_ACP, 0, ch, -1, value.vWChar, value.buffSize / 2);
+					value.vWChar[value.buffSize/2 - 1] = 0;
+				} else if (value.buffSize == -1) {
+					size_t len = strlen(ch);
+					value.vWChar = (wchar_t*)malloc((len+1) * 2);
+					MultiByteToWideChar(CP_ACP, 0, ch, len + 1 /*0*/, value.vWChar, len + 1);
+					value.vWChar[len] = 0;
+				} else {
+					if (value.vWChar && value.buffSize == 0) {
+						return false;
+					} else {
+						value.vWChar = 0;
+						value.buffSize = strlen(ch)*2 + 2;
+					}
+				}
+				return true;
+			} else {
+				if (!value.vWChar && value.buffSize == -1) {
+					value.vWChar = (wchar_t*)malloc(64);
+					//value.buffSize = 32;
+				}
+				if (value.vWChar == 0) {
+					value.buffSize = 64;
+					return false;
+				}
+				// pozosta³e mo¿liwoœci to dostarczony dzia³aj¹cy bufor i nic wiêcej... 
+				switch (column.getType()) {
+				case ctypeInt: _itow((int)val , value.vWChar , 10); return true;
+				case ctype64: _i64tow(val ? *(__int64*)val : 0 , value.vWChar , 10); return true;
+				default:
+					value.vWChar[0] = 0;
+					return false;
+				};
+				//return true;
+			}
+//			return false; // string
+
 		case ctypeBin:
 			if (column.getType() == ctypeBin) {
 				static TypeBin emptyBin;
@@ -405,16 +484,18 @@ namespace Stamina { namespace DT {
 		const Column& column = this->_cols.getColumn(col);
 		if (column.getType() == ctypeUnknown) return false;
 
-		if (value.getType() == ctypeUnknown) value.type = column.getType();
+		if (value.getType() == ctypeUnknown) value.type = (short)column.getType();
 
 		DataEntry val = 0;
 		__int64 val64;
 		char buff [32];
+		void* alloc = 0;
 		switch (column.getType()) {
 		case ctypeInt: 
 			switch (value.getType()) {
 			case ctypeInt: val = (DataEntry) value.vInt; break;
 			case ctypeString: val = (DataEntry) chtoint(value.vCChar); break;
+			case ctypeWideString: val = (DataEntry) chtoint(value.vCWChar); break;
 			case ctype64: val = (DataEntry) value.vInt64; break;
 			default: return false;
 			};
@@ -423,6 +504,7 @@ namespace Stamina { namespace DT {
 			switch (value.getType()) {
 			case ctypeInt: val64 = value.vInt; break;
 			case ctypeString: val64 = chtoint64(value.vCChar); break;
+			case ctypeWideString: val64 = chtoint64(value.vCWChar); break;
 			case ctype64: val64 = value.vInt64; break;
 			default: return false;
 			}; 
@@ -432,10 +514,31 @@ namespace Stamina { namespace DT {
 			switch (value.getType()) {
 			case ctypeInt: itoa(value.vInt , buff , 10); val = buff; break;
 			case ctypeString: val = value.vChar; break;
+			case ctypeWideString: {
+				size_t len = wcslen(value.vCWChar);
+				alloc = malloc(len + 1);
+				WideCharToMultiByte(CP_ACP, 0, value.vCWChar, len + 1 /*0*/, (LPSTR)alloc, len + 1, 0, 0);
+				val = alloc; 
+				break;}
 			case ctype64: _i64toa(value.vInt64 , buff , 10); val = buff; break;
 			default: return false;
 			};
 			break;}
+		case ctypeWideString: {
+			switch (value.getType()) {
+			case ctypeInt: _itow(value.vInt, (wchar_t*)buff , 10); val = buff; break;
+			case ctypeWideString: val = value.vWChar; break;
+			case ctypeString: {
+				size_t len = strlen(value.vCChar);
+				alloc = malloc((len+1)*2);
+				MultiByteToWideChar(CP_ACP, 0, value.vCChar, len + 1 /*0*/, (LPWSTR)alloc, len + 1);
+				val = alloc; 
+				break;}
+			case ctype64: _i64tow(value.vInt64 , (wchar_t*)buff , 10); val = buff; break;
+			default: return false;
+			};
+			break;}
+
 		case ctypeBin: {
 			if (value.getType() == ctypeBin) {
 				val = &value.vBin;
@@ -445,6 +548,7 @@ namespace Stamina { namespace DT {
 		}
 
 		this->set(row,col,val,dropDefault); 
+		if (alloc) free(alloc);
 		return true;
 	}
 

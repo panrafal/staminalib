@@ -4,6 +4,7 @@
 #include "..\FileBin.h"
 #include <Stamina\MD5.h>
 #include <Stamina\Helpers.h>
+#include <Stamina\WideChar.h>
 
 using namespace Stamina;
 using namespace Stamina::DT;
@@ -51,6 +52,8 @@ protected:
 	static const tColId colBin = 7;
 	static const tColId colBinDef = 8;
 	static const tColId colExtra = 9;
+	static const tColId colWide = 10;
+	static const tColId colWideDef = 11;
   
 	tRowId row1;
 	tRowId row2;
@@ -59,6 +62,7 @@ protected:
 	std::string testString1, testStringDef;
 	std::string testString2;
 	std::string testString3;
+	std::wstring testWide, testWideDef;
 
 	std::string password;
 	bool cryptAll;
@@ -100,11 +104,16 @@ public:
 		testString3 = "AAHSGAJSGASJGASJGJSGASGJSGASHGSHAGSHGSAG";
 		testStringDef = "DEFAULT";
 
+		testWide = L"¥Œê¹œ¹ê¹œ¹ó³ñ¿ŸSDSAJDHSDY WSADSJDH ";
+		testWideDef = L"D¹FAULT";
+
 		_colsNoExtra.setColumn(colInt, ctypeInt , 0, "Int");
 		_colsNoExtra.setColumn(colIntDef, ctypeInt | cflagXor, (DataEntry) testIntDef, "IntDef");
 		_colsNoExtra.setColumn(1000, ctypeInt | cflagDontSave);
 		_colsNoExtra.setColumn(colString, ctypeString, 0, "String");
 		_colsNoExtra.setColumn(colStringDef, ctypeString | cflagXor, (void*)testStringDef.c_str(), "StringDef");
+		_colsNoExtra.setColumn(colWide, ctypeWideString, 0, "Wide");
+		_colsNoExtra.setColumn(colWideDef, ctypeWideString | cflagXor, (void*)testWideDef.c_str(), "WideDef");
 		_colsNoExtra.setColumn(1001, ctypeString | cflagDontSave);
 		_colsNoExtra.setColumn(col64, ctype64, 0, "64");
 		_colsNoExtra.setColumn(col64Def, ctype64 | cflagXor, &test64Def, "64Def");
@@ -142,6 +151,7 @@ protected:
 		dt.setBin(row1, colBin, testBin);
 		dt.setStr(row1, colString, testString1);
 		dt.setStr(row1, colStringDef, testString2);
+		dt.setWStr(row1, colWide, testWide);
 		dt.setStr(row2, colString, testString2);
 		dt.setStr(row3, colString, testString3);
 
@@ -199,7 +209,7 @@ protected:
 		tColId colString2 = 100;
 		dt.setColumn(colString2, ctypeString | cflagXor, (DataEntry) testStringDef.c_str());
 
-		dt.mergeColumns(_cols);
+		dt.mergeColumns(_colsNoExtra);
 
 		dt.setPassword(password);
 
@@ -207,12 +217,17 @@ protected:
 		fbl.assign(dt);
 		CPPUNIT_ASSERT( fbl.load(getFileName("testLoad")) == success );
 
+		CPPUNIT_ASSERT( dt.getColumns().getColumn(colExtra).hasFlag(cflagIsLoaded) );
+		CPPUNIT_ASSERT( dt.getColumns().getColumn(colString).hasFlag(cflagIsDefined) );
+
 		CPPUNIT_ASSERT( fbl.hasFileFlag(FileBin::fflagCryptAll) == cryptAll );
 
 		CPPUNIT_ASSERT_EQUAL( testString1, dt.getStr(row1, colString) );
 		CPPUNIT_ASSERT_EQUAL( testString2, dt.getStr(row1, colStringDef) );
 		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getStr(row2, colStringDef) );
 		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getStr(row2, colString2) );
+		CPPUNIT_ASSERT_EQUAL( testWide, dt.getWStr(row1, colWide) );
+		CPPUNIT_ASSERT_EQUAL( testWideDef, dt.getWStr(row1, colWideDef) );
 		CPPUNIT_ASSERT_EQUAL( testInt, dt.getInt(row1, colInt) );
 		CPPUNIT_ASSERT_EQUAL( test64, dt.get64(row1, col64) );
 		CPPUNIT_ASSERT( dt.getBin(row1, colBin, binBuffer) == testBin );
@@ -222,6 +237,7 @@ protected:
 
 		dt.setStr(row1, colString, testString2);
 		dt.setStr(row2, colString2, testString2);
+		dt.setStr(row1, colWide, testString1);
 
 		FileBin fbs;
 		fbs.assign(dt);
@@ -241,6 +257,7 @@ protected:
 		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row1, colStringDef) );
 		CPPUNIT_ASSERT_EQUAL( testStringDef, dt2.getStr(row2, colStringDef) );
 		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row2, colString2) );
+		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getStr(row1, colWide) );
 
 	}
 
@@ -291,9 +308,12 @@ protected:
 		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getStr(rowA, colString) );
 		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(rowB, colString) );
 
+
+		CPPUNIT_ASSERT_EQUAL( testWide, dt2.getWStr(row1, colWide) );
 		CPPUNIT_ASSERT_EQUAL( testInt, dt2.getInt(row1, colInt) );
 		CPPUNIT_ASSERT( dt2.getBin(row1, colBin, binBuffer) == testBin );
 
+		CPPUNIT_ASSERT_EQUAL( testWideDef, dt2.getWStr(rowA, colWideDef) );
 		CPPUNIT_ASSERT_EQUAL( testIntDef, dt2.getInt(rowA, colIntDef) );
 		CPPUNIT_ASSERT( dt2.getBin(rowA, colBinDef, binBuffer) == testBinDef );
 
@@ -414,7 +434,7 @@ protected:
 					fb3.readRow(row, false);
 					cp.doStep();
 					read = dt3.getInt(row, colInt);
-					if (dt3.getInt(row, colInt) != i || dt3.getStr(row, colString) != inttostr(i) || dt3.getStr(row, colStringDef) != testStringDef) {
+					if (dt3.getInt(row, colInt) != i || dt3.getStr(row, colString) != inttostr(i) || dt3.getStr(row, colStringDef) != testStringDef || dt3.getWStr(row, colWideDef) != testWideDef) {
 						failed = i;
 						break;
 					}

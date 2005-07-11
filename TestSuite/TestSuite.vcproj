@@ -25,6 +25,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="3"
+				BrowseInformation="1"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"/>
@@ -154,10 +155,19 @@
 			Name="Tests"
 			Filter="">
 			<File
+				RelativePath="..\DataTable\Test\TestColumns.cpp">
+			</File>
+			<File
+				RelativePath="..\DataTable\Test\TestCrypt.cpp">
+			</File>
+			<File
 				RelativePath="..\DataTable\Test\TestFileBin.cpp">
 			</File>
 			<File
 				RelativePath="..\Test\TestFindFile.cpp">
+			</File>
+			<File
+				RelativePath="..\DataTable\Test\TestTable.cpp">
 			</File>
 		</Filter>
 		<File
