@@ -25,6 +25,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="3"
+				BrowseInformation="1"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"/>
@@ -595,6 +596,9 @@
 			</File>
 			<File
 				RelativePath=".\Version.h">
+			</File>
+			<File
+				RelativePath=".\WideChar.h">
 			</File>
 			<File
 				RelativePath=".\Window.h">

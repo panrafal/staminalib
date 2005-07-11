@@ -54,6 +54,8 @@ namespace Stamina {
 #endif
 	int chtoint(const char * str , unsigned char base=0xFF);
 	__int64 chtoint64(const char * str , unsigned char base = 0xFF);
+	int chtoint(const wchar_t * str , unsigned char base=0xFF);
+	__int64 chtoint64(const wchar_t * str , unsigned char base = 0xFF);
 
 
 
@@ -80,6 +82,13 @@ namespace Stamina {
 		STR::value_type* ch = (STR::value_type*) str.c_str();
 		ch[str.length()-1] = 0;
 		return ch;
+	}
+
+	inline size_t strlen(const char* txt) {
+		return ::strlen(txt);
+	}
+	inline size_t strlen(const wchar_t* txt) {
+		return wcslen(txt);
 	}
 
 	template <class STR>

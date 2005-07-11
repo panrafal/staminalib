@@ -82,7 +82,8 @@ namespace Stamina {
 		return s;
 	}
 
-	template <typename NUMBER> NUMBER strToNumber(const char * str , unsigned char base) {
+/*
+	template <typename NUMBER, typename CHAR> NUMBER strToNumber(const CHAR * str , unsigned char base) {
 		if (!str) return 0;
 		bool sign=false; // ujemna
 		// sprawdzamy znak ujemnoœci, który zawsze jest PRZED ew. definicj¹ bazy...
@@ -108,12 +109,51 @@ namespace Stamina {
 		}
 		return sign? -l : l;
 	}
+*/
+	inline int checkIntChar(const char*& str, unsigned char& base) {
+		int sign = 1;
+		if (*str == '-') {sign = -1; str++;}
+		// Sprawdzamy base..
+		if (base == 0xFF) {
+			if (str[0] == '#' || (str[0]=='0' && str[1]=='x')) {
+				str += (str[0] == '#') ? 1 : 2;
+				base = 16;
+			} else base = 10;
+		}
+		return sign;
+	}
+	inline int checkIntChar(const wchar_t*& str, unsigned char& base) {
+		int sign = 1;
+		if (*str == L'-') {sign = -1; str++;}
+		// Sprawdzamy base..
+		if (base == 0xFF) {
+			if (str[0] == L'#' || (str[0] == L'0' && str[1] == L'x')) {
+				str += (str[0] == L'#') ? 1 : 2;
+				base = 16;
+			} else base = 10;
+		}
+		return sign;
+	}
 
 	int chtoint(const char * str , unsigned char base) {
-		return strToNumber<unsigned int>(str, base);
+		int sign = checkIntChar(str, base);
+		return sign * strtoul(str, 0, base);
+		//return strToNumber<unsigned int>(str, base);
 	}
 	__int64 chtoint64(const char * str , unsigned char base) {
-		return strToNumber<unsigned __int64>(str, base);
+		int sign = checkIntChar(str, base);
+		//return strToNumber<unsigned __int64>(str, base);
+		return sign * _strtoui64(str, 0, base);
+	}
+	int chtoint(const wchar_t * str , unsigned char base) {
+		int sign = checkIntChar(str, base);
+		return sign * wcstoul(str, 0, base);
+		//return strToNumber<unsigned int>(str, base);
+	}
+	__int64 chtoint64(const wchar_t * str , unsigned char base) {
+		int sign = checkIntChar(str, base);
+		//return strToNumber<unsigned __int64>(str, base);
+		return sign * _wcstoui64(str, 0, base);
 	}
 
 
