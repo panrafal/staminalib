@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <string>
 #include <Wininet.h>
 #include <boost/intrusive_ptr.hpp>
 #include "Exception.h"

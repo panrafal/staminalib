@@ -11,6 +11,7 @@
 #include <windows.h>
 #include <stdstring.h>
 #include "WinHelper.h"
+#include "Helpers.h"
 #include <io.h>
 #include <direct.h>
 #include <shlwapi.h>
@@ -503,7 +504,30 @@ end:
 	}
 
 
+	bool _SetDllDirectory(const char * dir) {
+#ifdef UNICODE
+		static FARPROC proc = GetProcAddress(GetModuleHandle("kernel32.dll") ,  "SetDllDirectoryW");
+#else
+		static FARPROC proc = GetProcAddress(GetModuleHandle("kernel32.dll") ,  "SetDllDirectoryA");
+#endif
+		if (proc) {		 
+			return ((bool (__stdcall*)(IN LPCSTR lpPathName))proc)(dir);
+		} else {return false;}  
+	}
 
+	std::string getErrorMsg(int err) {
+		std::string s;
+		FormatMessage(
+			FORMAT_MESSAGE_FROM_SYSTEM,
+			NULL,
+			err ? err:GetLastError(),
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+			stringBuffer(s, 1024),
+			1024,
+			NULL
+		);
+		return s;
+	}
 
 
 };

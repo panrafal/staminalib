@@ -32,7 +32,7 @@ namespace Stamina {
 	You should call TLS::detach before thread is destroyed! Otherwise there will be an unused object hanging in memory!
 	*/
 
-	template <class T> class TLS {
+	template <class T> class ThreadLocalStorage {
 	public:
 
 		/**Returns a reference to the current thread's object.
@@ -58,11 +58,11 @@ namespace Stamina {
 			}
 		}
 
-		TLS() {
+		ThreadLocalStorage() {
 	        tls_index = TlsAlloc();
 		}
 
-		~TLS() {
+		~ThreadLocalStorage() {
 			detach();
 			TlsFree(tls_index);
 		}

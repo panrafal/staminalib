@@ -220,15 +220,15 @@ namespace Stamina {
 		{
 			std::string re = "";
 			int i = 0;
-			if (start) re = _subject.substr(0 , start);
+			if (_start) re = _subject.substr(0 , _start);
 			while (limit==0 || i<limit) {
 				if (process()<=0) break;
-				re += _subject.substr(start,_vector[0] - start);
+				re += _subject.substr(_start,_vector[0] - _start);
 				re += func(this);
-				start = _vector[1];
+				_start = _vector[1];
 				i++;
 			}
-			re += _subject.substr(start , _subject.length() - start);
+			re += _subject.substr(_start , _subject.length() - _start);
 			this->reset();
 			return re;
 		}

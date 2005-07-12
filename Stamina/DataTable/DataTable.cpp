@@ -219,7 +219,14 @@ namespace Stamina { namespace DT {
 
 
 	tRowId DataTable::findRow(unsigned int startPos, int argCount, ...) {
-	    va_list marker;
+		va_list list;
+		va_start(list, argCount);
+		tRowId result = findRow(startPos, argCount, list);
+		va_end(list);
+		return result;
+	}
+
+	tRowId DataTable::findRow(unsigned int startPos, int argCount, va_list list) {
 	    if (argCount == 0) return rowNotFound;
         
 		this->lock(allRows);
@@ -229,7 +236,9 @@ namespace Stamina { namespace DT {
 		for (unsigned int i = this->getRowPos((tRowId) startPos); i < this->getRowCount(); i++) {
 			found = i;
 			int args = argCount;
-			va_start( marker, argCount );
+	
+			va_list marker = list;
+
 			do {
 				Find* find = va_arg( marker, Find*);
 				if (!find) break;
@@ -288,7 +297,7 @@ namespace Stamina { namespace DT {
 						break;
 				}
 			} while (--args != 0 && found == i);
-			va_end( marker );
+			//va_end( marker );
 
 			if (found == i)
 				break;

@@ -83,21 +83,6 @@ namespace Stamina {
 		std::string _stringBlock;
 	};
 
-	struct FILEVERSIONINFO {
-	    VS_FIXEDFILEINFO * ffi;
-	    WORD major , minor , release , build;
-        bool readInfo;
-	    std::string Comments , InternalName , ProductName ,
-		    CompanyName , LegalCopyright , ProductVersion ,
-		    FileDescription , LegalTrademarks , PrivateBuild ,
-		    FileVersion , OriginalFilename , SpecialBuild ,
-		    URL;
-        FILEVERSIONINFO(bool readInfo=false) {major=minor=release=build=0;ffi=0;this->readInfo=readInfo;}
-	};
-
-	// DEFINES
-
-	bool FileVersionInfo(const char * fn , char * fmt=0 , FILEVERSIONINFO * res = 0);
 
 
 };

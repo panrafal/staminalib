@@ -71,7 +71,50 @@ namespace Stamina {
 
 	char * str_tr(char * str , const char * chIn , const char * chOut);
 
+
+	/** Looks for an argument in programs arguments list
+	@param find Name to find with special character (ie. "/find" "-help" "-?" etc.)
+	@param getValue Returns the value of an argument (ie. "/find=VALUE"
+	@param def Default value to return if nothing is found...
+	@return Returns found argument or it's value
+	*/
+	const char * getArgV(const char * find , bool getValue=false , const char * def = 0);
+
+	const char * getArgV(const char * const * argList , int argCount , const char * find , bool getValue=false , const char * def=0);
+
+	const char * searchArray(const char * find , const char ** ar  , size_t count , bool getNext=false);
+
+
 #ifdef _STRING_
+
+	inline size_t stringLength(const char* str) {
+		return strlen(str);
+	}
+	inline size_t stringLength(const wchar_t* str) {
+		return wcslen(str);
+	}
+	template <typename CHAR>
+	inline size_t stringLength(const std::basic_string<CHAR>& str) {
+		return str.size();
+	}
+
+/*	inline std::string::iterator stringBegin(char* str) {
+		return std::string::iterator(str);
+	}
+	inline std::wstring::iterator stringBegin(wchar_t* str) {
+		return std::wstring::iterator(str);
+	}
+	template <typename CHAR>
+	inline std::basic_string<CHAR>::iterator stringBegin(std::basic_string<CHAR>& str) {
+		return str.begin();
+	}
+*/
+	inline char charToLower(char ch) {
+		return tolower(ch);
+	}
+	inline wchar_t charToLower(wchar_t ch) {
+		return towlower(ch);
+	}
 
 	template <class STR>
 		inline typename STR::value_type* stringBuffer(STR& str, typename STR::size_type size = STR::npos) 
@@ -84,30 +127,30 @@ namespace Stamina {
 		return ch;
 	}
 
-	inline size_t strlen(const char* txt) {
-		return ::strlen(txt);
-	}
-	inline size_t strlen(const wchar_t* txt) {
-		return wcslen(txt);
-	}
-
 	template <class STR>
 		inline void stringRelease(STR& str, typename STR::size_type size = STR::npos) 
 	{
-		str.resize(size == STR::npos ? strlen(str.c_str()) : size);
+		str.resize(size == STR::npos ? stringLength(str.c_str()) : size);
 	}
 
-#ifdef _LOCALE_
-	template <typename _Elem>
-		inline size_t find_noCase(const std::basic_string<_Elem> haystack, const std::basic_string<_Elem> needle) {
-		std::basic_string<_Elem> haystackLow = std::tolower(haystack, std::locale());
-		std::basic_string<_Elem> needleLow = std::tolower(needle, std::locale());
-		std::basic_string<_Elem>::const_iterator found = haystackLow.find(needle);
-		if (found == haystackLow.end()) return haystack.end();
-		return found - haystackLow.begin();
-	}
-#endif
 
+	template <typename CHAR>
+	inline size_t find_noCase(const CHAR* haystack, const CHAR* needle) {
+		const CHAR* found = needle;
+		const CHAR* current = haystack;
+		while (*current) {
+			if (charToLower(*current) == charToLower(*found)) {
+				found++;
+				if (*found == 0) return current - haystack - (found - 1 - needle);
+			} else if (found != needle) {
+				found = needle;
+				continue;
+			}
+			current ++;
+		};
+		return -1;
+	}
+    
 
 	std::string urlEncode(const std::string& str , char special = '%' , char * noChange = 0);
 	std::string urlDecode(const std::string& str , char special = '%');
@@ -135,6 +178,11 @@ namespace Stamina {
 #ifdef _STRING_
 	std::string longToIp(long adr);
 #endif
+
+	template <typename TYPE>
+	inline char * safeChar(TYPE v) {
+		return v ? (char*)v : "";
+	}
 
 
 // Directories
