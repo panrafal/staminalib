@@ -16,9 +16,10 @@
 
 */
 
+#include <Stamina\Exception.h>
+
 namespace Stamina { namespace DT {
 
-#include <Stamina\Exception.h>
 
 	const unsigned int rowIdFlag = 0x40000000;
 	const unsigned int rowIdMax = 0x3FFFFFFF;
@@ -76,15 +77,17 @@ namespace Stamina { namespace DT {
 		ctypeUnknown	= -1,
 	};
 
-#define DT_CT_INT		Stamina::DT::ctypeInt
-#define DT_CT_PCHAR		Stamina::DT::ctypeString
+#define DT_CT_INT		::Stamina::DT::ctypeInt
+#define DT_CT_PCHAR		::Stamina::DT::ctypeString
 #define DT_CT_STR		DT_CT_PCHAR
-#define DT_CT_STRING	Stamina::DT::ctypeString
-#define DT_CT_64		Stamina::DT::ctypeInt64
-#define DT_CT_BIN		Stamina::DT::ctypeBin
-#define DT_CT_UNKNOWN	Stamina::DT::ctypeUnknown
+#define DT_CT_STRING	::Stamina::DT::ctypeString
+#define DT_CT_64		::Stamina::DT::ctypeInt64
+#define DT_CT_BIN		::Stamina::DT::ctypeBin
+#define DT_CT_UNKNOWN	::Stamina::DT::ctypeUnknown
 
-#define DT_CT_TYPEMASK	Stamina::DT::ctypeMask
+#define DT_CT_CXOR		::Stamina::DT::cflagXor
+
+#define DT_CT_TYPEMASK	::Stamina::DT::ctypeMask
 
 
 	enum enColumnFlag {

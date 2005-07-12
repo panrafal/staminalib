@@ -171,6 +171,32 @@ namespace Stamina {
 	}
 
 
+	const char * searchArray(const char * find , const char ** ar  , size_t count , bool getValue) {
+		size_t findLen = strlen(find);
+		for (size_t i=0; i<count; i++)
+
+			if (strlen(ar[i]) >= findLen && !_strnicmp(find , ar[i] , findLen)) {
+				if (ar[i][findLen] != 0 && ar[i][findLen] != '=')
+					continue;
+				if (getValue) {
+					char * value = strchr(ar[i] , '=');
+					if (!value) 
+						return 0;
+					return value + 1;
+				} else return ar[i];
+			}
+			return 0;
+	}
+	const char * getArgV(const char * const * argList , int argCount , const char * find , bool getValue , const char * def) {
+		const char * r = searchArray(find , (const char**)argList , argCount , getValue);
+		return r ? r : def;
+	}
+	const char * getArgV(const char * find , bool getValue , const char * def) {
+		return getArgV((const char**)__argv+1 , __argc-1 , find , getValue , def);
+	}
+
+
+
 	#ifdef __BORLANDC__
 	#define VSNPRINTF vsnprintf
 	#else

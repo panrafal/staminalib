@@ -36,6 +36,18 @@ namespace Stamina {
 		inline Version(const Version& b) {
 			*this = b;
 		}
+		inline Version(const char* str) {
+			minor = release = build = 0;
+			char* v = (char*)str;
+			this->major = (short)strtoul(v, &v, 10);
+			if (*v != '.') return;
+			this->minor = (short)strtoul(++v, &v, 10);
+			if (*v != '.') return;
+			this->release = (short)strtoul(++v, &v, 10);
+			if (*v != '.') return;
+			this->build = (short)strtoul(++v, &v, 10);
+			if (*v != '.') return;
+		}
 		inline Version& operator = (const Version& b) {
 			major = b.major;
 			minor = b.minor;

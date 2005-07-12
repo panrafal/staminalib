@@ -111,6 +111,8 @@ namespace Stamina { namespace DT {
 		*/
         tRowId findRow(unsigned int startPos, int argCount, ...);
 
+		tRowId findRow(unsigned int startPos, int argCount, va_list list);
+
 		inline tRowId findRow(unsigned int startPos, Find& f1) {
 			return this->findRow(startPos, 1, &f1);
 		}

@@ -167,6 +167,9 @@
 				RelativePath="..\Test\TestFindFile.cpp">
 			</File>
 			<File
+				RelativePath="..\Test\TestHelpers.cpp">
+			</File>
+			<File
 				RelativePath="..\DataTable\Test\TestTable.cpp">
 			</File>
 		</Filter>

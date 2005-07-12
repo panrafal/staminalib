@@ -17,6 +17,12 @@ namespace Stamina {
 	void setInstance(HINSTANCE inst);
 	HINSTANCE getInstance();
 
+	inline void setHInstance(HINSTANCE inst) {
+		setInstance(inst);
+	}
+	inline HINSTANCE getHInstance() {
+		return getInstance();
+	}
 
 	int parseScrollRequest(HWND hwnd, short bar, short trackPos, short request, short line);
 	
@@ -75,7 +81,7 @@ namespace Stamina {
 
 
 	void setRectSizeByEdge(int edge , RECT * rc , int w, int h);
-	void clipSize(int edge , RECT * rc , int minW , int minH, int maxW, int maxH);
+	void clipSize(int edge , RECT * rc , int minW , int minH, int maxW = 0x7FFFFFFF, int maxH = 0x7FFFFFFF);
 
 #ifdef _STRING_
 	std::string regQueryString(HKEY hKey , const char * name, const char * def = 0);
@@ -83,6 +89,16 @@ namespace Stamina {
 #endif
 	long regSetDWord(HKEY hKey , const char * name , int val);
 	long regSetDWord(HKEY hKey , const char * name , int val);
+
+	inline DWORD regQueryDWord(HKEY & hKey , const char * name , DWORD def) {
+		unsigned long type, count=sizeof(DWORD);
+		long value;
+		if (!RegQueryValueEx(hKey,name, 0, &type, (LPBYTE)&value, &count))
+			if (type==REG_DWORD)
+				return value;
+		return def;
+	}
+
 
 	int getDllVersion(LPCTSTR lpszDllName);
 	bool isComctl(unsigned int maj , unsigned int min);
@@ -119,6 +135,9 @@ namespace Stamina {
 		else
 			return "";
 	}
+
+	std::string getErrorMsg(int err = 0);
+
 #endif
 
 	inline void runAPCqueue() {
@@ -134,5 +153,9 @@ namespace Stamina {
 		}
 		return true;
 	}
+
+	bool _SetDllDirectory(const char * dir);
+
+
 
 };
