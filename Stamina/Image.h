@@ -42,6 +42,20 @@ namespace Stamina {
 	}
 
 
+	inline COLORREF getUniqueColor(int i, int stepping, int range, bool bright, bool reversed = false) {
+		int loss = range / stepping;
+		int r = (i % stepping) * loss;
+		i = i / stepping;
+		int g = (i % stepping) * loss;
+		i = i / stepping;
+		int b = (i % stepping) * loss;
+		if (bright) {
+			r = 0xff - r;
+			g = 0xff - g;
+			b = 0xff - b;
+		}
+		return reversed ? RGB(b,g,r) : RGB(r,g,b);
+	}
 
 
 

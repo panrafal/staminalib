@@ -79,7 +79,7 @@ namespace Stamina {
 			return !major && !minor && !release && !build;
 		}
 
-		inline int getInt() const {
+		inline unsigned int getInt() const {
 			return ((((major)&0xF)<<28) | (((minor)&0xFF)<<20) | (((release)&0xFF)<<12) | ((build)&0xFFF));
 		}
 		inline __int64 getInt64() const {
