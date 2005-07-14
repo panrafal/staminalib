@@ -260,6 +260,11 @@ namespace Stamina { namespace DT {
 		static inline Find EqStr(tColId col, const char* str) {
 			return Find(eq, col, ValueStr(str));
 		}
+#ifdef _STRING_
+		static inline Find EqStr(tColId col, const std::string& str) {
+			return Find(eq, col, ValueStr(str.c_str()));
+		}
+#endif
 		static inline Find EqWStr(tColId col, const wchar_t* str) {
 			return Find(eq, col, ValueWideStr(str));
 		}
