@@ -106,6 +106,10 @@ namespace Stamina { namespace Unique {
 
 		virtual bool __stdcall registerId(tId id, const StringRef& name);
 		virtual tId __stdcall registerName(const StringRef& name, const oRange& range);
+		tId registerName(const StringRef& name, tRangeId range) {
+			return registerName(name, getRange(range));
+		}
+
 		virtual bool __stdcall unregister(tId id) {
 			return unregister(getName(id));
 		}
@@ -138,6 +142,14 @@ namespace Stamina { namespace Unique {
 			if (found == _map.end()) return oDomain();
 			return found->second;
 		}
+
+		virtual oDomain __stdcall getDomain(const StringRef& name) const {
+			for (tMap::const_iterator it = _map.begin(); it != _map.end(); ++it) {
+				if (it->second->getDomainName() == name) return it->second;
+			}
+			return oDomain();
+		}
+
 		virtual void __stdcall registerDomain(const oDomain& domain) {
 			if (domain->getDomainId() == domainNotFound) return;
 			if (domainExists(domain->getDomainId())) return;

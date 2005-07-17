@@ -16,6 +16,7 @@
 #include <math.h>
 #include <time.h>
 #include <io.h>
+#include <direct.h>
 
 namespace Stamina {
 
@@ -214,12 +215,7 @@ namespace Stamina {
 	/** Unifies the path by replacing all '\' and '/' to @a delimiter and by adding/removing the ending slash */
 	std::string unifyPath(const std::string& path, bool slashSuffix = false, char delimiter = '\\');
 
-	inline std::string getCurrentDirectory() {
-		std::string s;
-		_getcwd(stringBuffer(s, 255), 255);
-		stringRelease(s);
-		return s;
-	}
+	std::string getCurrentDirectory();
 
 #ifdef _WINDOWS_
 	template<class LIST> int deleteFiles(const LIST& files) {

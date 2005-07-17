@@ -394,6 +394,14 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 	}
 
 
+	std::string getCurrentDirectory() {
+		std::string s;
+		_getcwd(stringBuffer(s, 255), 255);
+		stringRelease(s);
+		return s;
+	}
+
+
 	int createDirectories(const std::string& path) {
 		if (path.empty()) return 0;	
 		int c = 0;
