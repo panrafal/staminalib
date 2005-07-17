@@ -82,6 +82,17 @@ namespace Stamina { namespace DT {
         return true;
     }
 
+	void DataTable::swapRows(tRowId a, tRowId b) {
+        Locker lock(_cs);
+        _changed = true;
+		a = getRowPos(a);
+		b = getRowPos(a);
+		if (a == rowNotFound || b == rowNotFound) return;
+		DataRow* temp = _rows[a];
+		_rows[a] = _rows[b];
+		_rows[b] = temp;
+	}
+
 
     DataEntry DataTable::get(tRowId row , tColId id) {
         Locker lock(_cs);
