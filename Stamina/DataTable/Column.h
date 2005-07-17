@@ -127,7 +127,7 @@ namespace Stamina { namespace DT {
 		tColId getNewUniqueId(void);
 		tColId getNameId(const char * name) const;
 
-		bool isLoader() {
+		bool isLoader() const {
 			return _loader;
 		}
 		void setLoader(bool loader) {

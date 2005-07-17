@@ -32,6 +32,18 @@ namespace Stamina {
 	}
 
 	std::string FileVersion::getString(const std::string& name) {
+		unsigned int size = 0;
+		const char* buff = getChar(name.c_str(), &size);
+		if (size != 0) {
+			std::string s = buff;
+			//s.assign(buff, size);
+			return s;
+		} else {
+			return "";
+		}
+	}
+
+	const char* FileVersion::getChar(const char* name, unsigned int* sizePtr) {
 		if (_stringBlock.empty()) {
 			if (! this->chooseTranslation())
 				return "";
@@ -39,10 +51,10 @@ namespace Stamina {
 		LPTSTR buff;
 		unsigned int size = 0;
 		if ((size = queryValue((_stringBlock + name).c_str(), (void**)&buff)) != 0) {
-			std::string s;
-			s.assign(buff, size);
-			return s;
+			if (sizePtr) *sizePtr = size;
+			return buff;
 		} else {
+			if (sizePtr) *sizePtr = 0;
 			return "";
 		}
 	}
