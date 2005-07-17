@@ -163,6 +163,31 @@ namespace Stamina { namespace Unique {
 
 	oDomainList basicDomainList();
 
-	iDomainList* mainInstance();
+	iDomainList* instance();
+
+
+	inline tId getId(tDomainId domainId, const StringRef& name) {
+		oDomain domain = instance()->getDomain(domainId);
+		if (!domain) return idNotFound;
+		return domain->getId(name);
+	}
+	inline String getName(tDomainId domainId, tId id) {
+		oDomain domain = instance()->getDomain(domainId);
+		if (!domain) return "";
+		return domain->getName(id);
+	}
+
+	inline bool registerId(tDomainId domainId, tId id, const StringRef& name) {
+		oDomain domain = instance()->getDomain(domainId);
+		if (!domain) return idNotFound;
+		return domain->registerId(id, name);
+	}
+	inline tId registerName(tDomainId domainId, const StringRef& name, tRangeId range) {
+		oDomain domain = instance()->getDomain(domainId);
+		if (!domain) return idNotFound;
+		return domain->registerName(name, range);
+	}
+
+
 
 };};

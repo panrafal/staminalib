@@ -15,9 +15,19 @@ namespace Stamina { namespace Unique {
 
 	oDomainList domainList;
 
-	iDomainList* mainInstance() {
+	iDomainList* instance() {
 		if (!domainList) {
 			domainList = new DomainList();
+
+			oDomain domains = new Domain(domainDomain, "domain");
+			oDomain ranges = new Domain(domainRange, "range");
+
+			domainList->registerDomain(domains);
+			domainList->registerDomain(ranges);
+
+			domains->addRange(new Range(rangeMain, iRange::typeBoth, 0, 1, 0x7FFFFFFF, commonUniqueStart), true);
+
+			ranges->addRange(new Range(rangeMain, iRange::typeBoth, 0, 1, 0x7FFFFFFF, commonUniqueStart), true);
 		}
 		return domainList.get();
 	}
