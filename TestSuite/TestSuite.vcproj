@@ -172,6 +172,9 @@
 			<File
 				RelativePath="..\DataTable\Test\TestTable.cpp">
 			</File>
+			<File
+				RelativePath="..\Test\TestUnique.cpp">
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt">

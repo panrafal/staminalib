@@ -42,4 +42,9 @@ namespace Stamina {
 		const char* _ch;
 	};
 
+
+	inline bool operator == (const String& a, const StringRef& b) {
+		return stricmp(a.c_str(), b) == 0;
+	}
+
 }

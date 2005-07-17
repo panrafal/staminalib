@@ -111,7 +111,7 @@ namespace Stamina { namespace Unique {
 		}
 
 		virtual bool __stdcall registerId(tId id, const StringRef& name) =0;
-		virtual tId __stdcall registerName(const StringRef& name, const oRange& range);
+		virtual tId __stdcall registerName(const StringRef& name, const oRange& range) =0;
 		tId registerName(const StringRef& name, tRangeId range) {
 			return registerName(name, getRange(range));
 		}
@@ -128,12 +128,18 @@ namespace Stamina { namespace Unique {
 		virtual oRange __stdcall getRange(tRangeId rangeId) =0;
         virtual bool __stdcall removeRange(const oRange& range) =0;
 
+		bool idInRange(tRangeId rangeId, tId id) {
+			oRange range = getRange(rangeId);
+			if (!range) return false;
+			return range->containsId(id);
+		}
+
 	};
 
 
 	typedef SharedPtr<iDomain> oDomain;
 
-	oDomain domainBasic(tDomainId id, const StringRef& name);
+	oDomain basicDomain(tDomainId id, const StringRef& name);
 
 
 	class iDomainList: public iSharedObject {
@@ -143,6 +149,7 @@ namespace Stamina { namespace Unique {
 
 
 		virtual oDomain __stdcall getDomain(tDomainId id) const =0;
+		virtual oDomain __stdcall getDomain(const StringRef& name) const =0;
 		virtual void __stdcall registerDomain(const oDomain& domain) =0;
 		virtual void __stdcall unregisterDomain(const oDomain& domain) =0;
 
@@ -154,7 +161,7 @@ namespace Stamina { namespace Unique {
 
 	typedef SharedPtr<iDomainList> oDomainList;
 
-	oDomainList domainListBasic();
+	oDomainList basicDomainList();
 
 	iDomainList* mainInstance();
 

@@ -61,11 +61,17 @@ namespace Stamina {
 		bool operator == (const StaticPtr & b) const {
 			return this->_obj == b.get();
 		}
+		bool operator == (bool b) const {
+			return (this->_obj != 0) == b;
+		}
 		bool operator != (const T * b) const {
 			return this->_obj != b;
 		}
 		bool operator != (const StaticPtr & b) const {
 			return this->_obj != b.get();
+		}
+		bool operator != (bool b) const {
+			return (this->_obj != 0) != b;
 		}
 	private:
 		T * _obj;
