@@ -157,5 +157,21 @@ namespace Stamina {
 	bool _SetDllDirectory(const char * dir);
 
 
+// ------------------- LIST VIEW --------------------------------------
+
+
+	LPARAM ListView_GetItemData(HWND hwnd , int pos);
+
+
+	int ListView_ItemFromPoint(HWND hwnd , POINT pt);
+	ListView_Deselect(HWND hwnd);
+	int ListView_GetSelItems(HWND hwnd , int count , int * buff);
+	ListView_SetCurSel (HWND hwnd , int pos);
+	int ListView_AddString(HWND hwnd , const char * txt , int image = 0 , LPARAM param = 0);
+	ListView_SetString(HWND hwnd , int item , int subitem , char * txt);
+	int ListView_AddColumn(HWND hwnd , const char * txt , int cx);
+	int ListView_MoveItem(HWND hwnd , int pos , int newPos);
+
+
 
 };

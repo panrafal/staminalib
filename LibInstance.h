@@ -28,7 +28,7 @@ namespace Stamina {
 		}
 
 		virtual void free(void* buff) {
-			free(buff);
+			::free(buff);
 		}
 
 	private:

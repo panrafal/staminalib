@@ -27,7 +27,7 @@ namespace Stamina {
 		return LockResource(rsrc);
 	}
 
-	std::string loadString(UINT id, HINSTANCE inst = 0) {
+	inline std::string loadString(UINT id, HINSTANCE inst = 0) {
 		std::string buff;
 		unsigned int size = LoadString( inst ? inst : Stamina::getInstance(), id, stringBuffer(buff, 2047), 2048);
 		stringRelease(buff, size);
@@ -66,6 +66,8 @@ namespace Stamina {
 		bool chooseTranslation(int index = 0);
 
 		std::string getString(const std::string& name);
+
+		const char* getChar(const char* name, unsigned int* sizePtr = 0);
 
 		unsigned int queryValue(const TCHAR* subBlock, LPVOID * buffer) const {
 			if (_buffer == 0) return 0;

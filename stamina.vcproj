@@ -25,7 +25,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="3"
-				BrowseInformation="1"
+				BrowseInformation="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"/>
@@ -409,6 +409,9 @@
 				RelativePath=".\ToolTipXitems.cpp">
 			</File>
 			<File
+				RelativePath=".\Unique.cpp">
+			</File>
+			<File
 				RelativePath=".\Window.cpp">
 			</File>
 			<File
@@ -593,6 +596,12 @@
 			</File>
 			<File
 				RelativePath=".\ToolTipX.h">
+			</File>
+			<File
+				RelativePath=".\Unique.h">
+			</File>
+			<File
+				RelativePath=".\UniqueImpl.h">
 			</File>
 			<File
 				RelativePath=".\Version.h">

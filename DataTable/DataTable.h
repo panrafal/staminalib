@@ -87,6 +87,8 @@ namespace Stamina { namespace DT {
 			return _rows.size();
 		}
 
+		void swapRows(tRowId a, tRowId b);
+
 		void clearRows();
 
 		tRowId getNewRowId() {
@@ -224,6 +226,10 @@ namespace Stamina { namespace DT {
 			return this->_cols;
 		}
 
+		void clearColumns() {
+			this->_cols.clear();
+		}
+
 		void mergeColumns(const ColumnsDesc& columns) {
 			this->_cols.join(columns, false);
 		}
@@ -249,6 +255,14 @@ namespace Stamina { namespace DT {
 				return getRowPos(id) != rowNotFound;
 			else 
 				return getRowId(id) != rowNotFound;
+		}
+
+		void setChanged() {
+			_changed = true;
+		}
+
+		bool isChanged() {
+			return _changed;
 		}
 
 		void lock(tRowId row) throw(...);
