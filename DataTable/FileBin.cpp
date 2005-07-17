@@ -138,7 +138,7 @@ namespace Stamina { namespace DT {
 			openmode = "wb";
 			_recreating = true;
 			_table->_timeModified.now();
-			if (this->makeBackups && _temp_enabled == false) {
+			if (this->makeBackups && useTempFile == false && _temp_fileName.empty()) {
 				// je¿eli nie u¿ywamy tempa backup musi byæ ju¿ teraz!
 				this->backupFile(true);
 			}

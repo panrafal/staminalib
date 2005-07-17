@@ -246,7 +246,7 @@ namespace Stamina { namespace DT {
 		void backupFile(bool move = true);
 
 		static std::string makeBackupFilename(const std::string& filename, const Time64& time = Time64(true)) {
-			return filename + time.strftime(".%m-%d-%Y %H-%M-%S.bak");
+			return filename + time.strftime(".%d-%m-%Y %H-%M-%S.bak");
 		}
 
 		/** Removes old backups leaving only few of them.
