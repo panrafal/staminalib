@@ -22,10 +22,10 @@ namespace Stamina {
 			this->build = ((version))&0xFFF;
 		}
 		inline Version(int high, int low) {
-			this->major = HIWORD(high);
-			this->minor = LOWORD(high);
-			this->release = HIWORD(low);
-			this->build = LOWORD(low);
+			this->major = high >> 16;
+			this->minor = high & 0xFFFF;
+			this->release = low >> 16;
+			this->build = low & 0xFFFF;
 		}
 		inline Version(short major, short minor, short release, short build) {
 			this->major = major;
@@ -113,6 +113,46 @@ namespace Stamina {
 
 	public:
 		short major, minor, release, build;
+	};
+
+
+	enum enVersionCategory {
+		versionUnknown,
+		versionClass,
+		versionModule,
+		versionAPI
+	};
+
+
+	/** Defines version information about class/module/API. */
+	class ModuleVersion {
+	public:
+		/**
+		@warn name @b must be a static string! Don't use std::string, String, or anything like that in here!
+		*/
+		ModuleVersion(enVersionCategory category, const char* name, const Version& version):_category(category), _name(name), _version(version) {
+		}
+
+		bool operator == (const ModuleVersion&b) {
+			return _category == b._category && stricmp(_name, b._name) == 0 && _version == b._version;
+		}
+
+		enVersionCategory getCategory() const {
+			return _category;
+		}
+
+		const char* getName() const {
+			return _name;
+		}
+
+		const Version& getVersion() const {
+			return _version;
+		}
+
+	private:
+		enVersionCategory _category;
+		const char* _name;
+		const Version& _version;
 	};
 
 };

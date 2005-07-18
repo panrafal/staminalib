@@ -24,6 +24,8 @@
 
 #include "ObjectPtr.h"
 
+#include "Version.h"
+
 #ifdef STAMINA_DEBUG
 	#include <list>
 	#include "CriticalSection.h"
@@ -40,7 +42,7 @@ namespace Stamina {
 
 	class ObjectClassInfo {
 	public:
-		ObjectClassInfo(const char* name, short size, ObjectClassInfo* base):_name(name),_size(size),_base(base),_uid(0),_libInstance(LibInstance::get()) {
+		ObjectClassInfo(const char* name, short size, ObjectClassInfo* base, const Version& version = Version()):_name(name),_size(size),_base(base),_uid(0),_libInstance(LibInstance::get()), _version(version) {
 		}
 		inline const char * getName() const {
 			return _name;
@@ -55,6 +57,14 @@ namespace Stamina {
 
 		inline LibInstance& getLibInstance() const {
 			return _libInstance;
+		}
+
+		inline const Version& getVersion() const {
+			return _version;
+		}
+
+		inline ModuleVersion getModuleVersion() const {
+			return ModuleVersion(versionClass, _name, _version);
 		}
 
 		inline bool operator == (ObjectClassInfo& b) {
@@ -96,18 +106,20 @@ namespace Stamina {
 		const short _size;
 		ObjectClassInfo* const _base;
 		LibInstance& _libInstance;
+		const Version _version;
 	};
-#define STAMINA_OBJECT_CLASS_DEFINE(TYPE, NAME, BASE) \
+#define STAMINA_OBJECT_CLASS_DEFINE(TYPE, NAME, BASE, VERSION) \
 	static ::Stamina::ObjectClassInfo& staticClassInfo() {\
-	static ::Stamina::ObjectClassInfo oci = ::Stamina::ObjectClassInfo(NAME, sizeof(TYPE), &BASE::staticClassInfo());\
+	static ::Stamina::ObjectClassInfo oci = ::Stamina::ObjectClassInfo(NAME, sizeof(TYPE), &BASE::staticClassInfo(), VERSION);\
 		return oci;\
 	}\
 	::Stamina::ObjectClassInfo& getClass() const {\
 		return staticClassInfo();\
 	}
 
-#define STAMINA_OBJECT_CLASS(TYPE, BASE) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE)
+#define STAMINA_OBJECT_CLASS(TYPE, BASE) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, Version())
 	
+#define STAMINA_OBJECT_CLASS_VERSION(TYPE, BASE, VERSION) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, VERSION)
 
 	/** Basic object interface */
 	class iObject {

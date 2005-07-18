@@ -8,6 +8,9 @@
  *  $Id$
  */
 
+#ifndef __STAMINA_STRING__
+#define __STAMINA_STRING__
+
 #pragma once
 
 #include <string>
@@ -48,3 +51,5 @@ namespace Stamina {
 	}
 
 }
+
+#endif

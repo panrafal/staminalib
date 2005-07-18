@@ -112,7 +112,7 @@ namespace Stamina { namespace Unique {
 
 		virtual bool __stdcall registerId(tId id, const StringRef& name) =0;
 		virtual tId __stdcall registerName(const StringRef& name, const oRange& range) =0;
-		tId registerName(const StringRef& name, tRangeId range) {
+		tId registerName(const StringRef& name, tRangeId range = rangeDefault) {
 			return registerName(name, getRange(range));
 		}
 		virtual bool __stdcall unregister(tId id) =0;
@@ -164,6 +164,7 @@ namespace Stamina { namespace Unique {
 	oDomainList basicDomainList();
 
 	iDomainList* instance();
+	void setInstance(const oDomainList& list);
 
 
 	inline tId getId(tDomainId domainId, const StringRef& name) {
@@ -182,12 +183,15 @@ namespace Stamina { namespace Unique {
 		if (!domain) return idNotFound;
 		return domain->registerId(id, name);
 	}
-	inline tId registerName(tDomainId domainId, const StringRef& name, tRangeId range) {
+	inline tId registerName(tDomainId domainId, const StringRef& name, tRangeId range = rangeDefault) {
 		oDomain domain = instance()->getDomain(domainId);
 		if (!domain) return idNotFound;
 		return domain->registerName(name, range);
 	}
 
+	inline oDomain getDomain(tDomainId domainId) {
+		return instance()->getDomain(domainId);
+	}
 
 
 };};

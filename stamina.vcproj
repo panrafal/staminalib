@@ -574,6 +574,9 @@
 				RelativePath=".\stdafx.h">
 			</File>
 			<File
+				RelativePath=".\String.h">
+			</File>
+			<File
 				RelativePath=".\Task.h">
 			</File>
 			<File
