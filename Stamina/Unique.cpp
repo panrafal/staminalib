@@ -31,6 +31,9 @@ namespace Stamina { namespace Unique {
 		}
 		return domainList.get();
 	}
+	void setInstance(const oDomainList& list) {
+		domainList = list;
+	}
 
 
 	oRange basicRange(tRangeId rangeId, iRange::enType type, unsigned int priority,  unsigned int minimum, unsigned int maximum, unsigned int uniqueStart) {

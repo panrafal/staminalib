@@ -12,8 +12,14 @@
 
 #include "Rect.h"
 
+#if defined(_STRING_) && !defined(__STAMINA_STRING__)
+// je¿eli jest std::string, upewnijmy siê czy jest StringRef który bardzo siê przyda...
+#include "String.h"
+
+#endif
+
 namespace Stamina {
-	
+
 	void setInstance(HINSTANCE inst);
 	HINSTANCE getInstance();
 
@@ -134,6 +140,12 @@ namespace Stamina {
 			return buffer;
 		else
 			return "";
+	}
+
+	inline String getEnvironmentVariable(const StringRef& name) {
+		TCHAR buff [1024];
+		GetEnvironmentVariable(name, buff, 1024);
+		return buff;
 	}
 
 	std::string getErrorMsg(int err = 0);
