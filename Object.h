@@ -153,7 +153,7 @@ namespace Stamina {
 		}
 		/** Static class information */
 		static ObjectClassInfo& staticClassInfo() {
-			static ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), 0);
+			static ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), 0, Version(0,1,0,0));
 			return oci;
 		}
 
@@ -208,7 +208,7 @@ namespace Stamina {
 
 		virtual ~iLockableObject() {};
 
-		STAMINA_OBJECT_CLASS(Stamina::iLockableObject, iObject);
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::iLockableObject, iObject, Version(0,1,0,0));
 
 	private:
 
@@ -230,7 +230,7 @@ namespace Stamina {
 		virtual unsigned int __stdcall getUseCount() =0;
 		virtual ~iSharedObject() {};
 
-		STAMINA_OBJECT_CLASS(Stamina::iSharedObject, iLockableObject);
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSharedObject, iLockableObject, Version(0,1,0,0));
 
 	private:
 
