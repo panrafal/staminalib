@@ -412,6 +412,9 @@
 				RelativePath=".\Unique.cpp">
 			</File>
 			<File
+				RelativePath=".\VersionControl.cpp">
+			</File>
+			<File
 				RelativePath=".\Window.cpp">
 			</File>
 			<File
@@ -608,6 +611,9 @@
 			</File>
 			<File
 				RelativePath=".\Version.h">
+			</File>
+			<File
+				RelativePath=".\VersionControl.h">
 			</File>
 			<File
 				RelativePath=".\WideChar.h">
