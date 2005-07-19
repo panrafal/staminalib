@@ -20,6 +20,7 @@
 #include <Stamina\CriticalSection.h>
 #include <Stamina\MD5.h>
 #include <Stamina\Time64.h>
+#include <Stamina\Version.h>
 
 #include "DT.h"
 #include "DataRow.h"
@@ -37,6 +38,8 @@ namespace Stamina { namespace DT {
 	const char* const paramOwner = "Owner";
 	const char* const paramAgent = "Agent";
 
+	const ModuleVersion dataTableVersion (versionModule, "DataTable", Version(3,0,0,0));
+	STAMINA_REGISTER_VERSION(DataTable, dataTableVersion);
 
 	class DataTable {
 	public:
