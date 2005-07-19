@@ -192,7 +192,7 @@ namespace Stamina {
 	}
 
 	bool Request::send(const std::string& headers, const std::string& data) {
-		return HttpSendRequest(_hRequest, headers.c_str(), headers.length(), (void*)data.c_str(), data.length());
+		return HttpSendRequest(_hRequest, headers.c_str(), headers.length(), (void*)data.c_str(), data.length())!=0;
 	}
 
 	int Request::getStatusCode() {
@@ -222,6 +222,20 @@ namespace Stamina {
 		}
 	}
 
+	std::string Request::getHeaderString(const std::string& header, DWORD size) {
+          string txt = header;
+          if (HttpQueryInfo(_hRequest , HTTP_QUERY_CUSTOM , Stamina::stringBuffer(txt, size) , &size , 0)) {
+               stringRelease(txt, size);
+               return txt;
+          } else {
+               if (GetLastError()==ERROR_INSUFFICIENT_BUFFER) {
+                    return getHeaderString(header, size + 1);
+               } else {
+                    return "";
+               }
+          }
+     }
+	
 	int Request::getInfoInt(int type) {
 		int value;
 		DWORD size = 4;
