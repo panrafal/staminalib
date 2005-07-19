@@ -156,3 +156,11 @@ namespace Stamina {
 	};
 
 };
+
+#ifndef __STAMINA_VERSIONCONTROL__
+
+#define STAMINA_REGISTER_VERSION(NAME, MODULE)
+
+#define STAMINA_REGISTER_CLASS_VERSION(CLASS)
+
+#endif

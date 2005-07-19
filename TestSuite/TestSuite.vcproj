@@ -175,6 +175,9 @@
 			<File
 				RelativePath="..\Test\TestUnique.cpp">
 			</File>
+			<File
+				RelativePath="..\Test\TestVersionControl.cpp">
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt">

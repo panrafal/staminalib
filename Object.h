@@ -117,7 +117,7 @@ namespace Stamina {
 		return staticClassInfo();\
 	}
 
-#define STAMINA_OBJECT_CLASS(TYPE, BASE) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, Version())
+#define STAMINA_OBJECT_CLASS(TYPE, BASE) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, ::Stamina::Version())
 	
 #define STAMINA_OBJECT_CLASS_VERSION(TYPE, BASE, VERSION) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, VERSION)
 
@@ -244,6 +244,7 @@ namespace Stamina {
 	};
 
 };
+
 
 // For compatibility with boost::intrusive_ptr
 namespace boost {
