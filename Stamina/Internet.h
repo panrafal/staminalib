@@ -182,6 +182,7 @@ namespace Stamina {
 		int getStatusCode();
 		std::string getStatusText();
 		std::string getInfoString(int type, DWORD size = 100);
+		std::string getHeaderString(const std::string& header, DWORD size = 255);
 		std::string getLocation();
 		int getInfoInt(int type);
 
