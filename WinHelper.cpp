@@ -62,7 +62,7 @@ namespace Stamina {
 
 
 	bool getKeyState(int vkey) {
-		return GetKeyState(vkey) & 0x80;
+		return ( GetKeyState(vkey) & 0x80 ) != 0;
 	}
 
 	const char* vkeyToAscii(int vkey, int scan) {

@@ -252,10 +252,10 @@ namespace Stamina { namespace ToolTipX {
 		bool isAutomated() {return this->_automated;}
 		bool isAttached() {return this->_attached;}
 
-		int enterWait; // czas oczekiwania na wyœwietlenie
-		int enterSiblingTimeout;
-		int hideTimeout;
-		int moveDelay;
+		unsigned int enterWait; // czas oczekiwania na wyœwietlenie
+		unsigned int enterSiblingTimeout;
+		unsigned int hideTimeout;
+		unsigned int moveDelay;
 
 	private:
 		typedef std::multimap<HWND, oTarget> tTargets;
