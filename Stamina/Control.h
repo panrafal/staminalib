@@ -37,6 +37,8 @@ namespace Stamina {
 			mouseCaptured = 0x100,
 		};
 
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::Control, iSharedObject, Version(1,0,0,0));
+
 	public:
 
 		/**  */
@@ -191,5 +193,7 @@ namespace Stamina {
 		bool _needsRefresh;
 	};
 
+
+	STAMINA_REGISTER_CLASS_VERSION(Control);
 
 };

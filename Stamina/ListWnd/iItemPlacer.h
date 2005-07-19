@@ -28,12 +28,16 @@ namespace ListWnd
 
 	public:
 
+		STAMINA_OBJECT_CLASS_VERSION(ListWnd::iItemPlacer, iSharedObject, Version(1,0,0,0));
+
 		virtual bool place(ListView* lv,
 					 const oItemCollection& collection,
 					 const oItemCollection& parent,
 					 RefreshFlags refresh)=0;
 
 	};/* END INTERFACE DEFINITION IItemPlacer */
+
+	STAMINA_REGISTER_CLASS_VERSION(iItemPlacer);
 
 	class oItemPlacer: public SharedPtr<iItemPlacer> {
 	};

@@ -1,5 +1,6 @@
 #include <stdafx.h>
 #include <cppunit/extensions/HelperMacros.h>
+#include <Stamina/VersionControl.h>
 #include "..\FindFileFiltered.h"
 #include <Stamina\Helpers.h>
 #include <Stamina\Time64.h>

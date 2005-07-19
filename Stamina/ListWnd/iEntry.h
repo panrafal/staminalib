@@ -25,12 +25,13 @@ namespace Stamina {
 namespace ListWnd {
 	class ListView;
 	class iCollection;
+
 	class iEntry: public iSharedObject
 	{
 
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::ListWnd::iEntry, iSharedObject);
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::ListWnd::iEntry, iSharedObject, Version(1,0,0,0));
 
 		virtual bool operator < (iEntry& b) {
 			return false;
@@ -110,7 +111,7 @@ namespace ListWnd {
 	{
 
 	public:
-		STAMINA_OBJECT_CLASS(Stamina::ListWnd::iCollection, iEntry)
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::ListWnd::iCollection, iEntry, Version(1,0,0,0));
 
 		virtual void insertEntry(ListView* lv,
 							  const oEntry& entry,
@@ -153,6 +154,7 @@ namespace ListWnd {
 	// -----------------------------------------------------------
 
 
+	STAMINA_REGISTER_CLASS_VERSION(iCollection);
 
 
 } /* ListWnd */

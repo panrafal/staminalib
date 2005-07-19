@@ -25,7 +25,14 @@
 #include <boost\signals.hpp>
 namespace Stamina {
 namespace ListWnd {
+
+	const ModuleVersion listWndVersion (versionModule, "ListWnd", Version(1,0,0,0));
+
+	STAMINA_REGISTER_VERSION(ListWnd, listWndVersion);
+
 	class iListView: public iLockableObject {
+	public:
+		STAMINA_OBJECT_CLASS(ListWnd::iListView, iLockableObject);
 	};
 	/*TODO: Oddzieliæ Collection i? ItemCollection*/
 	class ListView: public LockableObject<iListView>

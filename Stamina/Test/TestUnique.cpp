@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cppunit/extensions/HelperMacros.h>
+#include <Stamina/VersionControl.h>
 #include "..\UniqueImpl.h"
 
 using namespace Stamina;
