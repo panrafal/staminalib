@@ -21,14 +21,16 @@ namespace ListWnd
 	class iItem: public iSharedObject
 	{
 	public:
-		STAMINA_OBJECT_CLASS(Stamina::ListWnd::iItem, iSharedObject)
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::ListWnd::iItem, iSharedObject, Version(1,0,0,0))
 
 	};
 
 	class iItemCollection: public iItem
 	{
-		STAMINA_OBJECT_CLASS(Stamina::ListWnd::iItemCollection, iItem)
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::ListWnd::iItemCollection, iItem, Version(1,0,0,0))
 	};
+
+	STAMINA_REGISTER_CLASS_VERSION(iItemCollection);
 
 /*	class iItemCollection: public iItem, public iItemCollection_iface
 	{

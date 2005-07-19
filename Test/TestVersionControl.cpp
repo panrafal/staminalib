@@ -2,8 +2,9 @@
 
 #include <string>
 #include <cppunit/extensions/HelperMacros.h>
-//#include "..\VersionControl.h"
+#include "..\VersionControl.h"
 #include "..\Object.h"
+#include "..\Helpers.h"
 
 const Stamina::ModuleVersion testVersion = Stamina::ModuleVersion(Stamina::versionModule, "TestAuto", Stamina::Version(4,3,2,1));
 
@@ -31,7 +32,15 @@ protected:
   
 
 public:
+
+	void testUp() {
+//		OutputDebugString(stringf("%x", &__version__iSharedObject).c_str());
+	}
+
 	void setUp() {
+		//(&__version__iSharedObject)[0];
+		return;
+		testUp();
 	}
 	void tearDown() {
 	}

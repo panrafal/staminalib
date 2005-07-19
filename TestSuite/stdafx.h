@@ -21,4 +21,6 @@
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TestRunner.h> 
 
+//#include <Stamina/VersionControl.h>
+
 // TODO: reference additional headers your program requires here

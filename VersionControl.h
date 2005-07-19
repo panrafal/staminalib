@@ -36,9 +36,12 @@ namespace Stamina {
 		bool registerModule(const ModuleVersion& module) {
 			OutputDebugString("registerModule: ");
 			OutputDebugString(module.getName());
-			OutputDebugString("\n");
 
-			if (std::find(_list.begin(), _list.end(), module) != _list.end()) return false;
+			if (std::find(_list.begin(), _list.end(), module) != _list.end()) {
+				OutputDebugString(" !!!! \n");
+				return false;
+			}
+			OutputDebugString("\n");
 			_list.push_back(module);
 			return true;
 		}
@@ -49,6 +52,7 @@ namespace Stamina {
 				if (registerModule(it->getModuleVersion()) == false)
 					break;
 				it = it->getBaseInfo();
+				break;
 			} while (it);
 		}
 
@@ -115,19 +119,17 @@ namespace Stamina {
 
 	class VersionControlRegistrar {
 	public:
-		VersionControlRegistrar(const ModuleVersion& module) {
+		VersionControlRegistrar(const ModuleVersion& module):version(module) {
 			registerVersion(module);
 		}
-		VersionControlRegistrar(const ObjectClassInfo& info) {
+		VersionControlRegistrar(const ObjectClassInfo& info):version(info.getModuleVersion()) {
 			registerVersion(info);
 		}
-		VersionControlRegistrar() {}
+		ModuleVersion version;
 	};
 
-
-
 #define STAMINA_REGISTER_VERSION(NAME, MODULE) \
-	const ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
+	extern __declspec(dllexport) __declspec(selectany) const ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
 
 #define STAMINA_REGISTER_CLASS_VERSION(CLASS) \
 	STAMINA_REGISTER_VERSION(CLASS, CLASS::staticClassInfo())

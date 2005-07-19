@@ -34,6 +34,8 @@ namespace Stamina {
 	class Logger: public iSharedObject {
 	public:
 	
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::Logger, iSharedObject, Version(1,0,0,0));
+
 		inline bool hasLevel(LogLevel level) {
 			return (_level & level) == level;
 		}
@@ -101,5 +103,6 @@ namespace Stamina {
 	}
 
 
+	STAMINA_REGISTER_CLASS_VERSION(Logger);
 
 };
