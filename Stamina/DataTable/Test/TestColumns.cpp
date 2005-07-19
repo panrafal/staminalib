@@ -1,5 +1,6 @@
 #include <stdafx.h>
 #include <cppunit/extensions/HelperMacros.h>
+#include <Stamina/VersionControl.h>
 #include "..\DataTable.h"
 #include <Stamina\MD5.h>
 #include <Stamina\Helpers.h>

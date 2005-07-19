@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <list>
 #include "ObjectImpl.h"
 #include "RegEx.h"
 #include "FindFile.h"
