@@ -73,7 +73,19 @@ namespace Stamina {
 	}
 
 	int Internet::getUrlPort(const string& url) {
-		return 80;
+		Stamina::RegEx regex;
+		if (regex.match("#:([0-9])#", url.c_str()))
+			return regex[1];
+		else {
+			std::string protocol = getUrlProtocol(url);
+			if(protocol == "http")
+				return 80;
+			else if(protocol == "ftp")
+				return 21;
+			else if(protocl == "https")
+				return 443;
+		}
+		return -1;
 	}
 
 	std::string Internet::combineUrl(const std::string& url, const std::string& parent) {

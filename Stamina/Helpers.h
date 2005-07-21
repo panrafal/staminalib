@@ -75,7 +75,7 @@ namespace Stamina {
 
 	/** Looks for an argument in programs arguments list
 	@param find Name to find with special character (ie. "/find" "-help" "-?" etc.)
-	@param getValue Returns the value of an argument (ie. "/find=VALUE"
+	@param getValue Returns the value of an argument (ie. "/find=VALUE")
 	@param def Default value to return if nothing is found...
 	@return Returns found argument or it's value
 	*/
