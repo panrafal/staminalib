@@ -58,6 +58,7 @@ namespace Stamina {
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
 		*/
 		inline void assignCheapReference(const CHAR* data, unsigned int length = lengthUnknown) {
+			S_ASSERT(data);
 			this->reset();
 			this->_flag = true;
 			this->_buffer = (CHAR*)data;
@@ -66,6 +67,8 @@ namespace Stamina {
 
 		/** Makes a copy of data */
 		inline void assign(const CHAR* data, unsigned int size) {
+			S_ASSERT(data);
+			S_ASSERT(size <= maxBufferSize);
 			this->makeRoom(size, 0);
 			copy(_buffer, data, size);
 			this->_length = size;
@@ -74,6 +77,7 @@ namespace Stamina {
 
 		/** Calculates the number of bytes needed to store @a newSize of data. It only expands current buffer size. */
 		inline unsigned int calculateRoom(unsigned int newSize) {
+			S_ASSERT(newSize <= maxBufferSize);
 			unsigned int allocSize = getBufferSize();
 			if (newSize > allocSize) {
 				if (allocSize < (maxBufferSize/2)) 
@@ -88,6 +92,7 @@ namespace Stamina {
 		@return Returns true if buffor was (re)allocated
 		*/
 		inline bool makeRoom(unsigned int newSize, unsigned int keepData = wholeData) {
+			S_ASSERT(newSize < maxBufferSize);
 			if (hasOwnBuffer()) {
 				if (newSize > getBufferSize()) {
 					this->resize(calculateRoom(newSize), keepData);
@@ -126,9 +131,14 @@ namespace Stamina {
 		*/
 		inline void append(const CHAR* data, unsigned int dataSize) {
 			if (dataSize == 0) return;
+			S_ASSERT(dataSize <= maxBufferSize);
+			S_ASSERT(dataSize + getLength() <= maxBufferSize);
 			makeRoom(getLength() + dataSize);
-			_length += dataSize;
+			S_ASSERT(_buffer != 0);
+			S_ASSERT(data != 0);
+			S_ASSERT(getBufferSize() >= dataSize + getLength());
 			copy(_buffer + getLength(), data, dataSize);
+			_length += dataSize;
 			markValid();
 		}
 
@@ -136,29 +146,49 @@ namespace Stamina {
 		*/
 		inline void prepend(const CHAR* data, unsigned int dataSize) {
 			if (dataSize == 0) return;
+			unsigned currentLength = getLength();
+			S_ASSERT(dataSize <= maxBufferSize);
+			S_ASSERT(dataSize + currentLength <= maxBufferSize);
 			if (isValid()) {
 				moveRight(0, dataSize); // wywoluje makeroom
 			} else {
 				makeRoom(dataSize, 0);
 			}
-			_length += dataSize;
+			S_ASSERT(_buffer != 0);
+			S_ASSERT(data != 0);
+			S_ASSERT(getBufferSize() >= dataSize + currentLength);
 			copy(_buffer, data, dataSize);
+			_length = currentLength + dataSize;
 			markValid();
 		}
 
-		/** Inserts data into the buffer. Fails if buffer is not valid.
-		@param pos The position where to insert the data
+		/** Inserts data into any position in the buffer.
+		@param pos The position where to insert the data. Can be beyond currently allocated data!
+
+		@warning This function allows to insert data at virtually any location. It automatically expands the buffer, leaving completely random data between insert position and the end of previous data. Use with caution!
 		*/
 		inline void insert(unsigned int pos, const CHAR* data, unsigned int dataSize) {
 			if (dataSize == 0) return;
+			unsigned currentLength = getLength();
+			if (pos > maxBufferSize) pos = currentLength;
+			S_ASSERT(dataSize <= maxBufferSize);
+			S_ASSERT(dataSize + currentLength <= maxBufferSize);
+			S_ASSERT(pos + dataSize <= maxBufferSize);
 			if (isValid()) {
-				moveRight(pos, dataSize); // wywoluje makeroom
+				if (pos >= getLength()) {
+					makeRoom(pos + dataSize);
+				} else {
+					moveRight(pos, dataSize); // wywoluje makeroom
+				}
 			} else {
 				makeRoom(dataSize, 0);
 				pos = 0;
 			}
+			S_ASSERT(_buffer != 0);
+			S_ASSERT(data != 0);
+			S_ASSERT(getBufferSize() >= pos + dataSize);
 			copy(_buffer + pos, data, dataSize);
-			_length += dataSize;
+			_length = max(currentLength + dataSize, pos + dataSize);
 			markValid();
 		}
 
@@ -228,10 +258,13 @@ namespace Stamina {
 				// skoro nic nie ucinamy - d³ugoœæ pozostaje bez zmian. Przy zmianie z reference mog³a siê jednak zmieniæ, wiêc przywracamy star¹.
 				this->_length = dataLength;
 				if (getBuffer() != from) { // kopiujemy pozosta³oœci
+					S_ASSERT(_size >= (start - offset + length) + dataLength - (start + length - offset));
 					copy(to + start - offset + length, from + start - offset + length, dataLength - (start + length - offset));
 				}
 			}
-
+			S_ASSERT(from);
+			S_ASSERT(to);
+			S_ASSERT(_size >= start + length);
 			from += start;
 			to += start - offset;
 			while (length--) {
@@ -268,6 +301,10 @@ namespace Stamina {
 
 			this->_length = max(truncate ? 0 : dataLength, start + offset + length);
 
+			S_ASSERT(from != 0);
+			S_ASSERT(to != 0);
+			S_ASSERT(_size > start + length);
+
             from += start + length;
 			to += start + length + offset;
 
@@ -298,6 +335,8 @@ namespace Stamina {
 				if (keepData > newSize) keepData = newSize;
 				unsigned int size = newSize;
 				CHAR* buffer = _alloc(size);
+				S_ASSERT(buffer != 0);
+				S_ASSERT(size >= keepData && size > 0);
 				copy(buffer, _buffer, keepData);
 				freeBuffer();
 				this->_buffer = buffer;
@@ -310,6 +349,8 @@ namespace Stamina {
 				unsigned int size = newSize;
 				if (size > 0) {
 					this->_buffer = _alloc(size);
+					S_ASSERT(this->_buffer != 0);
+					S_ASSERT(size > 0);
 				}
 				this->_size = size;
 				this->_flag = true; // discard
@@ -390,8 +431,11 @@ namespace Stamina {
 		inline void markValid() {
 			if ( this->hasOwnBuffer() ) {
 				_flag = false;
-				if (this->_length != lengthUnknown)
+				if (this->_length != lengthUnknown) {
+					S_ASSERT(_size >= _length && _size > 0);
+					S_ASSERT(_buffer != 0);
 					this->_buffer[this->_length] = 0;
+				}
 			}
 		}
 

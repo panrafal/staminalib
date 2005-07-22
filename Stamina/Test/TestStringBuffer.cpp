@@ -458,6 +458,12 @@ protected:
 			b.moveLeft(5, 10, size*2);
 			CPPUNIT_ASSERT_EQUAL( test.substr(10), tString(b.getString()) );
 		}
+		{ // przesuwamy pust¹ referencjê
+			StringBuffer<CHAR> b;
+			b.assignCheapReference((CHAR*)L"", 0);
+			b.moveLeft(0, 2);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
 	}
 
 	void testMoveLeft() {
@@ -561,6 +567,13 @@ protected:
 			b.moveRight(5, 10, size*2);
 			CPPUNIT_ASSERT_EQUAL( test.substr(0, 15) + test.substr(5), tString(b.getString()) );
 		}
+		{ // przesuwamy pust¹ referencjê
+			StringBuffer<CHAR> b;
+			b.assignCheapReference((CHAR*)L"", 0);
+			b.moveRight(0, 1);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+
 	}
 
 	void testMoveRight() {
@@ -571,18 +584,196 @@ protected:
 	}
 
 	void testAppend() {
+		tString test1 = shortString();
+		tString test2 = mediumString();
+		{
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.append(test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1 + test2, tString(b.getString()) );
+		}
+		{ // do pustego
+ 			StringBuffer<CHAR> b;
+			b.append(test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2, tString(b.getString()) );
+		}
+		{ // do pustej referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference((CHAR*)L"", 0);
+			b.append(test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2, tString(b.getString()) );
+		}
+		{ // dodajemy puste
+			StringBuffer<CHAR> b; 
+			b.assign(test1.c_str(), test1.size());
+			b.append((CHAR*)L"", 0);
+			CPPUNIT_ASSERT_EQUAL( test1, tString(b.getString()) );
+		}
 	}
 
 	void testPrepend() {
+		tString test1 = shortString();
+		tString test2 = mediumString();
+		{
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.prepend(test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2 + test1, tString(b.getString()) );
+		}
+		{ // do pustego
+			StringBuffer<CHAR> b;
+			b.prepend(test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2, tString(b.getString()) );
+		}
+		{ // do pustej referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference((CHAR*)L"", 0);
+			b.prepend(test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2, tString(b.getString()) );
+		}
+		{ // dodajemy puste
+			StringBuffer<CHAR> b; 
+			b.assign(test1.c_str(), test1.size());
+			b.prepend((CHAR*)L"", 0);
+			CPPUNIT_ASSERT_EQUAL( test1, tString(b.getString()) );
+		}
 	}
 
 	void testInsert() {
+		tString test1 = shortString();
+		tString test2 = mediumString();
+		{ // na pocz¹tek
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.insert(0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2 + test1, tString(b.getString()) );
+		}
+		{ // w œrodek
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.insert(10, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2 + test1.substr(10), tString(b.getString()) );
+		}
+		{ // na koniec
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.insert(b.getLength(), test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1 + test2, tString(b.getString()) );
+		}
+		{ // do pustego na pocz¹tek
+			StringBuffer<CHAR> b;
+			b.insert(0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2, tString(b.getString()) );
+		}
+		{ // dodajemy puste
+			StringBuffer<CHAR> b; 
+			b.assign(test1.c_str(), test1.size());
+			b.insert(10, (CHAR*)L"", 0);
+			CPPUNIT_ASSERT_EQUAL( test1, tString(b.getString()) );
+		}
+		{ // wstawiamy poza
+			StringBuffer<CHAR> b; 
+			b.assign(test1.c_str(), test1.size());
+			b.insert(b.getLength() * 2, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.size()*2 + test2.size(), b.getLength() );
+		}
+		{ // do pustej referencji
+			StringBuffer<CHAR> b; 
+			b.assignCheapReference((CHAR*)L"", 0);
+			b.insert(0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2, tString(b.getString()) );
+		}
 	}
 
 	void testErase() {
+		tString test = shortString();
+		{
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.erase(5, 10);
+			CPPUNIT_ASSERT_EQUAL( test.substr(0, 5) + test.substr(15), tString(b.getString()) );
+		}
+		{ // usuwamy za du¿o
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.erase(5, test.size());
+			CPPUNIT_ASSERT_EQUAL( test.substr(0, 5), tString(b.getString()) );
+		}
+		{ // usuwamy 0
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.erase(5, 0);
+			CPPUNIT_ASSERT_EQUAL( test, tString(b.getString()) );
+		}
+		{ // czyscimy doszczetnie
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.erase(0, test.size());
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+		{ // kasujemy poczatek
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.erase(0, 10);
+			CPPUNIT_ASSERT_EQUAL( test.substr(10), tString(b.getString()) );
+		}
+		{ // kasujemy z referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference(test.c_str(), test.size());
+			b.erase(5, 10);
+			CPPUNIT_ASSERT_EQUAL( test.substr(0, 5) + test.substr(15), tString(b.getString()) );
+		}
+		{ // kasujemy z pustej referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference((CHAR*)L"", 0);
+			b.erase(0, 10);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+		{ // kasujemy z pustego
+			StringBuffer<CHAR> b;
+			b.erase(0, 10);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+
 	}
 
 	void testTruncate() {
+		tString test = shortString();
+		{
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.truncate(5);
+			CPPUNIT_ASSERT_EQUAL( test.substr(0, 5), tString(b.getString()) );
+		}
+		{ // kasujemy poza
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.truncate(200);
+			CPPUNIT_ASSERT_EQUAL( test, tString(b.getString()) );
+		}
+		{ // kasujemy do zera
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.truncate(0);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+		{ // kasujemy z referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference(test.c_str(), test.size());
+			b.truncate(5);
+			CPPUNIT_ASSERT_EQUAL( test.substr(0, 5), tString(b.getString()) );
+		}
+		{ // kasujemy z pustej referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference((CHAR*)L"", 0);
+			b.truncate(0);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+		{ // kasujemy z pustego
+			StringBuffer<CHAR> b;
+			b.truncate(0);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
 	}
 
 	void testMakeUnique() {
@@ -604,14 +795,64 @@ protected:
 	}
 
 	void testDiscard() {
+		tString test = shortString();
+		{
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.discard();
+			CPPUNIT_ASSERT( b.isValid() == false );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isEmpty() == false );
+			CHAR* buff = b.getBuffer();
+			b.assign(test.c_str(), test.size());
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.isEmpty() == false );
+			CPPUNIT_ASSERT( buff == b.getBuffer() );
+		}
+		{ // na pustym
+			StringBuffer<CHAR> b;
+			b.discard();
+			CPPUNIT_ASSERT( b.isValid() == false );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == false );
+			CPPUNIT_ASSERT( b.isEmpty() == true );
+		}
+		{ // na referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference(test.c_str(), test.size());
+			b.discard();
+			CPPUNIT_ASSERT( b.isValid() == false );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == false );
+			CPPUNIT_ASSERT( b.isEmpty() == true );
+		}
 	}
 
 	void testReset() {
+		tString test = shortString();
+		{
+			StringBuffer<CHAR> b;
+			b.assign(test.c_str(), test.size());
+			b.reset();
+			CPPUNIT_ASSERT( b.isValid() == false );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == false );
+		}
+		{ // na pustym
+			StringBuffer<CHAR> b;
+			b.reset();
+			CPPUNIT_ASSERT( b.isValid() == false );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == false );
+		}
+		{ // na referencji
+			StringBuffer<CHAR> b;
+			b.assignCheapReference(test.c_str(), test.size());
+			b.reset();
+			CPPUNIT_ASSERT( b.isValid() == false );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == false );
+		}
 	}
 
 
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStringBuffer<char> );
-//CPPUNIT_TEST_SUITE_REGISTRATION( TestStringBuffer<wchar_t> );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestStringBuffer<wchar_t> );
 
