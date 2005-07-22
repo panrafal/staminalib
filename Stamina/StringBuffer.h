@@ -125,6 +125,7 @@ namespace Stamina {
 		/** Appends data to the end of the buffer
 		*/
 		inline void append(const CHAR* data, unsigned int dataSize) {
+			if (dataSize == 0) return;
 			makeRoom(getLength() + dataSize);
 			_length += dataSize;
 			copy(_buffer + getLength(), data, dataSize);
@@ -134,6 +135,7 @@ namespace Stamina {
 		/** Prepends data to the buffer 
 		*/
 		inline void prepend(const CHAR* data, unsigned int dataSize) {
+			if (dataSize == 0) return;
 			if (isValid()) {
 				moveRight(0, dataSize); // wywoluje makeroom
 			} else {
@@ -148,6 +150,7 @@ namespace Stamina {
 		@param pos The position where to insert the data
 		*/
 		inline void insert(unsigned int pos, const CHAR* data, unsigned int dataSize) {
+			if (dataSize == 0) return;
 			if (isValid()) {
 				moveRight(pos, dataSize); // wywoluje makeroom
 			} else {
@@ -158,6 +161,28 @@ namespace Stamina {
 			_length += dataSize;
 			markValid();
 		}
+
+		inline void erase(unsigned int pos, unsigned int count = wholeData) {
+			if (!isValid() || count == 0) return;
+			if (count > getLength() || pos + count > getLength()) count = getLength() - pos;
+			if (pos + count >= getLength()) {
+				truncate(pos);
+				return;
+			}
+			moveLeft(pos + count, count);
+		}
+
+		/** Truncates buffer data at the specified position. */
+		inline void truncate(unsigned int pos) {
+			if (!isValid()) return;
+			if (pos > getLength()) pos = getLength();
+			if (isReference()) {
+				makeUnique(pos);
+			}
+			this->_length = pos;
+			this->markValid();
+		}
+
 
 		/** Moves contents of the buffer to the left (optimized). Fails if buffer is not valid.
 		@param start Position of the first character to move
@@ -188,7 +213,7 @@ namespace Stamina {
 			}
 			if (length == 0) {
 				if (truncate) 
-					this->truncate(0);
+					this->truncate(start - offset);
 				return;
 			}
 			if (isReference()) {
@@ -222,9 +247,10 @@ namespace Stamina {
 		@param start Position of the first character to move
 		@param offset Offset of movement
 		@param length Length of data to move
+		@param truncate Truncates data beyond moved data
 		*/
-		void moveRight(unsigned int start, unsigned int offset, unsigned int length = wholeData) {
-			if (!isValid()) return;
+		void moveRight(unsigned int start, unsigned int offset, unsigned int length = wholeData, bool truncate = true) {
+			if (!isValid() || offset == 0) return;
 			unsigned int dataLength = getLength();
 			if (length > dataLength) length = dataLength;
 			if (start > dataLength) return;
@@ -232,36 +258,26 @@ namespace Stamina {
 				length = dataLength - start;
 
 			CHAR* from = _buffer;
-			if (isReference()) {
+			if (isReference() && truncate) {
 				makeRoom(start + offset + length, start + offset); // potrzebujmey tylko co ma byæ na pocz¹tku...
 			} else {
-				makeRoom(start + offset + length); // potrzebujemy wszystko
-				CHAR* from = _buffer;
+				makeRoom(max(truncate ? 0 : dataLength, start + offset + length)); // potrzebujemy wszystko
+				from = _buffer;
 			}
 			CHAR* to = _buffer;
 
-			this->_length = dataLength + offset;
+			this->_length = max(truncate ? 0 : dataLength, start + offset + length);
 
             from += start + length;
 			to += start + length + offset;
 
 			while (length--) {
-				*to = *from;
 				--to;
 				--from;
+				*to = *from;
 			}
 			markValid();
 
-		}
-
-		inline void truncate(unsigned int pos) {
-			if (!isValid()) return;
-			if (pos > getLength()) pos = getLength();
-			if (isReference()) {
-				makeUnique(pos);
-			}
-			this->_length = pos;
-			this->markValid();
 		}
 
 		// -- more internal
