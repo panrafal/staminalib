@@ -14,6 +14,7 @@
 #pragma once
 
 #include "Assert.h"
+#include "Memory.h"
 
 namespace Stamina {
 
@@ -56,15 +57,15 @@ namespace Stamina {
 
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
 		*/
-		inline void assignCheapReference(CHAR* data) {
+		inline void assignCheapReference(const CHAR* data) {
 			this->reset();
 			this->_flag = true;
-			this->_buffer = data;
+			this->_buffer = (CHAR*)data;
 			this->_length = lengthUnknown;
 		}
 
 		/** Makes a copy of data */
-		inline void assign(CHAR* data, unsigned int size) {
+		inline void assign(const CHAR* data, unsigned int size) {
 			this->makeRoom(size, 0);
 			copy(_buffer, data, size);
 			this->_length = size;
@@ -104,6 +105,7 @@ namespace Stamina {
 		*/
 		inline void makeUnique(unsigned int keepData = wholeData) {
 			if (isReference()) {
+				if (keepData > getLength()) keepData = getLength();
 				resize(keepData, keepData);
 			}
 		}
@@ -238,8 +240,9 @@ namespace Stamina {
 
 		void resize(unsigned int newSize, unsigned int keepData = wholeData) {
 			S_ASSERT(newSize <= maxBufferSize);
-			if (keepData && this->isValid()) {
+			if (keepData && newSize > 0 && this->isValid()) {
 				if (keepData > getLength()) keepData = getLength();
+				if (keepData > newSize) keepData = newSize;
 				unsigned int size = newSize;
 				CHAR* buffer = _alloc(size);
 				copy(buffer, _buffer, keepData);
@@ -252,7 +255,9 @@ namespace Stamina {
 			} else {
 				freeBuffer();
 				unsigned int size = newSize;
-				this->_buffer = _alloc(size);
+				if (size > 0) {
+					this->_buffer = _alloc(size);
+				}
 				this->_size = size;
 				this->_flag = true; // discard
 				this->_length = 0;
@@ -264,6 +269,8 @@ namespace Stamina {
 			if (! this->isReference()) {
 				_flag = true;
 				this->_length = 0;
+			} else {
+				reset();
 			}
 		}
 
@@ -303,7 +310,7 @@ namespace Stamina {
 		}
 
 		inline bool isEmpty() const {
-			return _flag == false && _size == 0;
+			return _buffer == 0 && _size == 0;
 		}
 
 		inline bool hasOwnBuffer() const {
@@ -316,6 +323,7 @@ namespace Stamina {
 		inline void freeBuffer() {
 			if (hasOwnBuffer()) {
 				_free(_buffer, getBufferSize());
+				_buffer = 0;
 			}
 		}
 
@@ -323,15 +331,19 @@ namespace Stamina {
 		inline void markValid() {
 			if (! this->isReference()) {
 				_flag = false;
-				if (this->_length == lengthUnknown)
+				if (this->_length != lengthUnknown)
 					this->_buffer[this->_length] = 0;
 			}
 		}
 
 
 		/** Returned memory block is always @a size + 1 of size */
-		static CHAR* _alloc(unsigned int &size);
-		static void _free(CHAR* buff, unsigned int size);
+		static CHAR* _alloc(unsigned int &size) {
+			return Memory::allocBuffer<CHAR>(size);
+		}
+		static void _free(CHAR* buff, unsigned int size) {
+			Memory::freeBuffer<CHAR>(buff, size);
+		}
 
 		CHAR* _buffer;
 		bool _flag : 1;
@@ -339,6 +351,10 @@ namespace Stamina {
 		bool _active : 1;
 		unsigned int _length : 31;
 	};
+
+
+	template StringBuffer<char>;
+	template StringBuffer<wchar_t>;
 
 
 };

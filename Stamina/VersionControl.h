@@ -17,6 +17,7 @@
 #include <algorithm>
 #include "Object.h"
 #include "Version.h"
+#include "Lib.h"
 
 namespace Stamina {
 
@@ -34,14 +35,14 @@ namespace Stamina {
 		}
 
 		bool registerModule(const ModuleVersion& module) {
-			OutputDebugString("registerModule: ");
-			OutputDebugString(module.getName());
+			//OutputDebugString("registerModule: ");
+			//OutputDebugString(module.getName());
 
 			if (std::find(_list.begin(), _list.end(), module) != _list.end()) {
-				OutputDebugString(" !!!! \n");
+				//OutputDebugString(" !!!! \n");
 				return false;
 			}
-			OutputDebugString("\n");
+			//OutputDebugString("\n");
 			_list.push_back(module);
 			return true;
 		}
@@ -52,7 +53,7 @@ namespace Stamina {
 				if (registerModule(it->getModuleVersion()) == false)
 					break;
 				it = it->getBaseInfo();
-				break;
+				//break;
 			} while (it);
 		}
 
@@ -135,12 +136,14 @@ namespace Stamina {
 	STAMINA_REGISTER_VERSION(CLASS, CLASS::staticClassInfo())
 
 
-	STAMINA_REGISTER_CLASS_VERSION(iSharedObject); // + iLockableObject, +iObject - w object.h nie ma mo¿liwoœci rejestracji...
-
+	STAMINA_REGISTER_CLASS_VERSION(iObject);
+	STAMINA_REGISTER_CLASS_VERSION(iLockableObject);
+	STAMINA_REGISTER_CLASS_VERSION(iSharedObject); // w object.h nie ma mo¿liwoœci rejestracji...
 	STAMINA_REGISTER_CLASS_VERSION(VersionControl);
+	STAMINA_REGISTER_VERSION(StaminaLib, Lib::version);
+
 
 };
-
 
 
 

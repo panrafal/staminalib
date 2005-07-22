@@ -9,6 +9,7 @@
  */
 
 #include "stdafx.h"
+#include "StringBuffer.h"
 #include "String.h"
 #include "Memory.h"
 
@@ -18,16 +19,5 @@ namespace Stamina {
 
 // --- StringBuffer ---------------------------------------------------------
 
-	template StringBuffer<char>;
-	template StringBuffer<wchar_t>;
 
-	template <typename CHAR>
-	CHAR* StringBuffer<CHAR>::_alloc(unsigned int &size) {
-		return Memory::allocBuffer<CHAR>(size);
-	}
-
-	template <typename CHAR>
-	void StringBuffer<CHAR>::_free(CHAR* buff, unsigned int size) {
-		Memory::freeBuffer<CHAR>(buff, size);
-	}
 };
