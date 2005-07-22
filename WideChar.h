@@ -45,6 +45,16 @@ namespace Stamina {
 		return fromUnicode(in, codePage);
 	}
 
+	template <typename STROUT, class STRIN>
+	inline STROUT keepChar(const STRIN& in , UINT codePage = CP_ACP) {
+		if (sizeof(STROUT::value_type) == sizeof(char)) {
+			return *((STROUT*)&keepMultiByte(in, codePage));
+		} else {
+			return *((STROUT*)&keepWideChar(in, codePage));
+		}
+	}
+
+
 	inline std::ostream& operator << (std::ostream& stream, const wchar_t * txt) {
 		return stream << keepMultiByte(txt);
 	}

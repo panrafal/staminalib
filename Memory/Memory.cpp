@@ -24,7 +24,7 @@ void __stdcall sm_free(void* buff) {
 
 // --- Pooled buffers
 
-#define GETBYTES(TYPE) (sizeof(TYPE) / 8)
+#define GETBYTES(TYPE) (sizeof(TYPE))
 
 #define DECLARE_POOLED_BUFFER(TYPE, SIZE, SMALL, MEDIUM)\
 	class BufferSmallTag##SIZE {};\

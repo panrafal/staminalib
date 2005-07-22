@@ -222,11 +222,6 @@
 			<File
 				RelativePath=".\FindFile.cpp">
 				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Debug_scrt|Win32"
 					ExcludedFromBuild="TRUE">
 					<Tool
@@ -340,6 +335,9 @@
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\String.cpp">
 			</File>
 			<File
 				RelativePath=".\Task.cpp">
@@ -537,7 +535,13 @@
 				RelativePath=".\MD5.h">
 			</File>
 			<File
+				RelativePath=".\Memory.h">
+			</File>
+			<File
 				RelativePath=".\Menu.h">
+			</File>
+			<File
+				RelativePath=".\Mutex.h">
 			</File>
 			<File
 				RelativePath=".\Object.h">
@@ -574,6 +578,9 @@
 			</File>
 			<File
 				RelativePath=".\String.h">
+			</File>
+			<File
+				RelativePath=".\StringBuffer.h">
 			</File>
 			<File
 				RelativePath=".\Task.h">
@@ -658,6 +665,60 @@
 			</File>
 			<File
 				RelativePath=".\Test\TestHelpers.cpp">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_scrt|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_scrt|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Test\TestString.cpp">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_scrt|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_scrt|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Test\TestStringBuffer.cpp">
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="TRUE">

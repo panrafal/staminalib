@@ -22,6 +22,14 @@
 #define S_MEMORY_DLL __declspec(dllimport)
 #endif
 
+#ifndef S_MEMORY_EXPORTS
+#ifdef _DEBUG
+#pragma comment(lib, "SMemory_d.lib")
+#else
+#pragma comment(lib, "SMemory.lib")
+#endif
+#endif
+
 namespace Stamina { namespace Memory {
 
 	extern "C" {
