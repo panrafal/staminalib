@@ -24,17 +24,17 @@ namespace Stamina {
 	Supports:
 	 - cheap referencing - operations on external buffer of unknown size
 	 - data discard - ability to discard buffer's data without freeing the memory
-	 - up to 0x7FFFFFFF bytes of length
+	 - up to 0x0FFFFFFF (268.435.455) bytes of length
 	 - additional _active flag/bit
-	 - always makes room for \0 char at the string's end. All buffer and data sizes don't count the terminating null character!
+	 - always makes room for \0 char at the string's end. All buffer and data sizes don't count the terminating null character and neither You should do that!
 
 	*/
 	template <typename CHAR>
 	class StringBuffer {
 	public:
 		const static unsigned int pooledBufferSize = 64;
-		const static unsigned int maxBufferSize = 0x7FFFFFFF;
-		const static unsigned int lengthUnknown = 0x7FFFFFFF;
+		const static unsigned int maxBufferSize = 0x0FFFFFFF;
+		const static unsigned int lengthUnknown = 0x0FFFFFFF;
 		const static unsigned int wholeData = 0xFFFFFFFF;
 	public:
 		inline StringBuffer(): _size(0), _buffer(0), _active(0), _length(0) {
@@ -57,11 +57,11 @@ namespace Stamina {
 
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
 		*/
-		inline void assignCheapReference(const CHAR* data) {
+		inline void assignCheapReference(const CHAR* data, unsigned int length = lengthUnknown) {
 			this->reset();
 			this->_flag = true;
 			this->_buffer = (CHAR*)data;
-			this->_length = lengthUnknown;
+			this->_length = length;
 		}
 
 		/** Makes a copy of data */
@@ -163,25 +163,52 @@ namespace Stamina {
 		@param start Position of the first character to move
 		@param offset Offset of movement
 		@param length The length of data to move
+		@param truncate Truncates buffer after moved data
 		*/
-		void moveLeft(unsigned int start, unsigned int offset, unsigned int length = wholeData) {
-			if (!isValid()) return;
+		void moveLeft(unsigned int start, unsigned int offset, unsigned int length = wholeData, bool truncate = true) {
+			if (!isValid() || offset == 0) return;
 			CHAR* from = _buffer;
+			unsigned int dataLength = getLength();
+			if (length > dataLength) length = dataLength;
 			if (start < offset) {
+				if (length > (offset - start)) {
+					length -= (offset - start); // musimy skróciæ d³ugoœæ kopiowania o tyle, o ile póŸniej je zaczynamy
+				} else {
+					length = 0;
+				}
 				start = offset;
 			}
-			if (start >= getLength()) return; // nie ma sk¹d ich przesuwaæ
-			if (length > getLength()) length = getLength();
-			if (length + start > getLength()) {
-				length = getLength() - start;
+			if (start >= dataLength) {// nie ma sk¹d ich przesuwaæ
+				if (truncate) 
+					this->truncate(0);
+				return;
+			} 
+			if (length + start > dataLength) {
+				length = dataLength - start;
+			}
+			if (length == 0) {
+				if (truncate) 
+					this->truncate(0);
+				return;
 			}
 			if (isReference()) {
-				makeUnique(start - offset); // kopiujemy tylko to co zostanie na pocz¹tku
+				// makeUnique bylby z³y bo nie rezerwowa³by bufora na przenoszenie
+				resize(truncate ? start - offset + length : dataLength, start - offset); // kopiujemy tylko to co zostanie na pocz¹tku
 			}
 			CHAR* to = _buffer;
+
+			if (truncate/* || (length + start >= this->_length)*/) {
+				this->_length = start - offset + length;
+			} else {
+				// skoro nic nie ucinamy - d³ugoœæ pozostaje bez zmian. Przy zmianie z reference mog³a siê jednak zmieniæ, wiêc przywracamy star¹.
+				this->_length = dataLength;
+				if (getBuffer() != from) { // kopiujemy pozosta³oœci
+					copy(to + start - offset + length, from + start - offset + length, dataLength - (start + length - offset));
+				}
+			}
+
 			from += start;
 			to += start - offset;
-			this->_length = start - offset + length;
 			while (length--) {
 				*to = *from;
 				++to;
@@ -225,6 +252,16 @@ namespace Stamina {
 			}
 			markValid();
 
+		}
+
+		inline void truncate(unsigned int pos) {
+			if (!isValid()) return;
+			if (pos > getLength()) pos = getLength();
+			if (isReference()) {
+				makeUnique(pos);
+			}
+			this->_length = pos;
+			this->markValid();
 		}
 
 		// -- more internal
@@ -298,6 +335,10 @@ namespace Stamina {
 			return _buffer;
 		}
 
+		inline const CHAR* getString() {
+			return isValid() ? _buffer : (CHAR*)L"";
+		}
+
 		//
 
 		/** Returns true if data is valid (not discarded) */
@@ -323,13 +364,15 @@ namespace Stamina {
 		inline void freeBuffer() {
 			if (hasOwnBuffer()) {
 				_free(_buffer, getBufferSize());
-				_buffer = 0;
 			}
+			_buffer = 0;
+			_size = 0;
+			_flag = false;
 		}
 
 		/** Marks data as valid (if it's not referenced) */
 		inline void markValid() {
-			if (! this->isReference()) {
+			if ( this->hasOwnBuffer() ) {
 				_flag = false;
 				if (this->_length != lengthUnknown)
 					this->_buffer[this->_length] = 0;
@@ -347,9 +390,11 @@ namespace Stamina {
 
 		CHAR* _buffer;
 		bool _flag : 1;
-		unsigned int _size : 31;
 		bool _active : 1;
-		unsigned int _length : 31;
+		int _align1 : 2;
+		unsigned int _size : 28;
+		int _align2 : 4;
+		unsigned int _length : 28;
 	};
 
 

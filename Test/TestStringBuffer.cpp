@@ -10,6 +10,8 @@
 #include <ConvertUTF.h>
 
 using namespace Stamina;
+using std::cout;
+using std::endl;
 
 template <typename CHAR>
 class TestStringBuffer : public CPPUNIT_NS::TestFixture
@@ -28,6 +30,8 @@ class TestStringBuffer : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testAppend );
 	CPPUNIT_TEST( testPrepend );
 	CPPUNIT_TEST( testInsert );
+	CPPUNIT_TEST( testErase );
+	CPPUNIT_TEST( testTruncate );
 	CPPUNIT_TEST( testMakeUnique );
 	CPPUNIT_TEST( testDiscard );
 	CPPUNIT_TEST( testReset );
@@ -47,20 +51,35 @@ public:
 	}
 
 	tString shortString() {
-		std::string s;
-		s.resize(30, 'a');
+		static std::string s;
+		if (s.empty()) {
+			s.resize(30);
+			for (unsigned int i = 0; i < 30; ++i) {
+				s[i] = '0' + (i % 24);
+			}
+		}
 		return keepChar<std::basic_string<CHAR> >(s);
 	}
 
 	tString mediumString() {
-		std::string s;
-		s.resize(70, 'b');
+		static std::string s;
+		if (s.empty()) {
+			s.resize(70);
+			for (unsigned int i = 0; i < 70; ++i) {
+				s[i] = 'a' + (i % 24);
+			}
+		}
 		return keepChar<std::basic_string<CHAR> >(s);
 	}
 
 	tString longString() {
-		std::string s;
-		s.resize(500, 'c');
+		static std::string s;
+		if (s.empty()) {
+			s.resize(500);
+			for (unsigned int i = 0; i < 500; ++i) {
+				s[i] = 'A' + (i % 24);
+			}
+		}
 		return keepChar<std::basic_string<CHAR> >(s);
 	}
 
@@ -274,9 +293,172 @@ protected:
 	}
 
 	void testMakeRoom() {
+		{ // na czysto
+			StringBuffer<CHAR> b;
+			CHAR* buff = b.getBuffer();
+			b.makeRoom(poolSmall - 2);
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == false );
+			CPPUNIT_ASSERT( b.getBufferSize() == poolSmall );
+			CPPUNIT_ASSERT( b.getBuffer() != buff );
+			buff = b.getBuffer();
+			b.assign(shortString().c_str(), shortString().size());
+			b.makeRoom(poolMedium - 2);
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() == poolMedium );
+			CPPUNIT_ASSERT( b.getBuffer() != buff );
+			buff = b.getBuffer();
+			b.makeRoom(poolSmall - 2); // zmniejszamy - bez zmian
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() == poolMedium );
+			CPPUNIT_ASSERT( b.getBuffer() == buff );
+			buff = b.getBuffer();
+			b.makeRoom(5000); // zwiekszamy znacznie - bufor sie dopasowuje
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() == 5000 );
+			CPPUNIT_ASSERT( b.getBuffer() != buff );
+			buff = b.getBuffer();
+			b.makeRoom(5010); // zwiekszamy troche - bufor powinien podskoczyæ mocniej
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() > 5010 );
+			CPPUNIT_ASSERT( b.getBuffer() != buff );
+			buff = b.getBuffer();
+			b.makeRoom(5100); // zwiekszamy troche - przy tym rozmiarze bufora powinno wystarczyæ
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() > 5100 );
+			CPPUNIT_ASSERT( b.getBuffer() == buff );
+			buff = b.getBuffer();
+			b.makeRoom(0); // zerujemy - room wystarczy - wiêc nie ma wyniku
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() > 5100 );
+			CPPUNIT_ASSERT( b.getBuffer() == buff );
+			buff = b.getBuffer();
+			b.makeRoom(3000); // dalej wystarcza
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() > 3000 );
+			CPPUNIT_ASSERT( b.getBuffer() == buff );
+			buff = b.getBuffer();
+		}
+		{ // z reference
+			StringBuffer<CHAR> b;
+			tString ref = shortString();
+			b.assignCheapReference(ref.c_str());
+			b.makeRoom(poolSmall);
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.isValid() == true );
+			CPPUNIT_ASSERT( b.getBufferSize() == poolSmall );
+			CPPUNIT_ASSERT_EQUAL( shortString(), tString(b.getBuffer()) );
+		}
+	}
+
+	void testMoveLeft(bool byRef) {
+		tString test = shortString();
+		size_t size = test.size();
+		const CHAR* testRef = test.c_str();
+		{ // przesuwamy ca³y tekst od pocz¹tku
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(0, 5);
+			CPPUNIT_ASSERT_EQUAL( test.substr(5), tString(b.getString()) );
+		}
+		{ // przesuwamy kawa³ek tekstu od pocz¹tku - bez truncate
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			// 0123456789012345678901234567890
+			// 2343456789012345678901234567890
+			b.moveLeft(0, 2, 5, false);
+			CPPUNIT_ASSERT_EQUAL( test.substr(2, 3) + test.substr(3), tString(b.getString()) );
+		}
+		{ // przesuwamy ca³y tekst od pocz¹tku - bez truncate
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(0, 5, StringBuffer<CHAR>::wholeData, false);
+			CPPUNIT_ASSERT_EQUAL( test.substr(5) + test.substr(size - 5), tString(b.getString()) );
+		}
+		{ // przesuwamy kawa³ek tekstu od pocz¹tku - z truncate
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			// 0123456789012345678901234567890
+			// 2343456789012345678901234567890
+			b.moveLeft(0, 2, 5, true);
+			CPPUNIT_ASSERT_EQUAL( test.substr(2, 3), tString(b.getString()) );
+		}
+		{ // przesuwamy ca³y tekst zostawiaj¹c dwie litery na pocz¹tku
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(7, 5);
+			CPPUNIT_ASSERT_EQUAL( test.substr(0, 2) + test.substr(7), tString(b.getString()) );
+		}
+		{ // przesuwamy kilka liter w œrodku - bez truncate
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(7, 5, 5, false);
+			// 123456789012345678901234567890
+			// 128901289012345678901234567890
+			CPPUNIT_ASSERT_EQUAL( test.substr(0, 2) + test.substr(7, 5) + test.substr(7), tString(b.getString()) );
+		}
+		{ // przesuwamy jedn¹ literê w œrodku - bez truncate
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(1, 1, 1, false);
+			CPPUNIT_ASSERT_EQUAL( test.substr(1, 1) + test.substr(1, 1) + test.substr(2), tString(b.getString()) );
+		}
+		{ // przesuwamy poza zakres
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(0, size + 2);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+		{ // przesuwamy poza zakres zbyt krotkim ciagiem bez truncate - nic siê nie powinno zmienic
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(0, 10, 5, false);
+			CPPUNIT_ASSERT_EQUAL( test, tString(b.getString()) );
+		}
+		{ // przesuwamy poza zakres zbyt krotkim ciagiem z truncate - powinien sie wyczyscic
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(0, 10, 5, true);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+		{ // przesuwamy, ale zero znaków - z truncate
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(0, 10, 0, true);
+			CPPUNIT_ASSERT_EQUAL( tString(), tString(b.getString()) );
+		}
+		{ // przesuwamy, ale zero znaków - bez truncate
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(0, 10, 0, false);
+			CPPUNIT_ASSERT_EQUAL( test, tString(b.getString()) );
+		}		
+		{ // nie ruszamy
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(5, 0);
+			CPPUNIT_ASSERT_EQUAL( test, tString(b.getString()) );
+		}
+		{ // przesuwamy za d³ugi tekst
+			StringBuffer<CHAR> b;
+			if (byRef) b.assignCheapReference(testRef); else b.assign(testRef, size);
+			b.moveLeft(5, 10, size*2);
+			CPPUNIT_ASSERT_EQUAL( test.substr(10), tString(b.getString()) );
+		}
 	}
 
 	void testMoveLeft() {
+		cout << " NoRef ";
+		testMoveLeft(false);
+		cout << " Ref ";
+		testMoveLeft(true);
 	}
 
 	void testMoveRight() {
@@ -289,6 +471,12 @@ protected:
 	}
 
 	void testInsert() {
+	}
+
+	void testErase() {
+	}
+
+	void testTruncate() {
 	}
 
 	void testMakeUnique() {
