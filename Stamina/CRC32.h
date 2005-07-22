@@ -18,20 +18,31 @@
 
 namespace Stamina {
 
+	/** Class that implements CRC32 hash algorithm.
+	*/
 	class CRC32 {
 
 	public:
 
+		/** Constructor
+		*/
 		CRC32() {
 			buildLookup();
 			reset();
 		}
 
+		/** Calculates CRC-32 hash.
+		@param text Pointer to a null-terminated string containing data,
+					which should be calculated hash code from.
+		@return Unsinged long value containing calculated hash.
+		*/
 		inline unsigned long calculate(const char * text) {
 			reset();
 			return add(text , strlen(text));
 		}
 
+		/** Calculates CRC-32 hash, but starts from previous calculations state.
+		*/
 		inline unsigned long CRC32::add(const char * buffer , unsigned int size) {
 			while(size--) 
 				_state = (_state >> 8) ^ _lookup[(_state & 0xFF) ^ *buffer++]; 
