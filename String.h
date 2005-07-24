@@ -25,6 +25,8 @@ namespace Stamina {
 
 	/** Universal String class. Transparently supports both MultiByte(template specified CorePage) and WideChar (UTF-16) encodings at the same time.
 	Default codepage is CP_ACP (default system codepage).
+
+	All positions refer to character positions - ie. in polish word "≥Ûdü" a letter 'd' is in UTF-8 stored at byte 4, however it's real character position is 2
 	*/
 	template <CP = CP_ACP>
 	class String: public iObject {
@@ -34,10 +36,12 @@ namespace Stamina {
 
 		typedef StringIterator<CP> iterator;
 		typedef StringType<char, CP>::Iterator iteratorA;
-		typedef StringType<char, CP>::Iterator teratorW;
+		typedef StringType<char, CP>::Iterator iteratorW;
 
 		const static unsigned int lengthUnknown = 0x0FFFFFFF;
 		const static unsigned int wholeData = 0xFFFFFFFF;
+		const static unsigned int npos = 0xFFFFFFFF;
+		const static unsigned int notFound = 0xFFFFFFFF;
 
 	public:
 		String() {
@@ -46,7 +50,7 @@ namespace Stamina {
 		template <OTHERCP>
 		String(const StringRef<OTHERCP>& b) {
 			b.prepareType(true);
-			assign(b.getData<wchar_t>(), b.getLength<wchar_t>());
+			assign(b.getData<wchar_t>(), b.getDataSize<wchar_t>());
 		}
 
 		template<>
@@ -81,12 +85,12 @@ namespace Stamina {
 
 		template <int CODEPAGE = CP>
 		inline String<CODEPAGE> getString() const {
-			return String<CODEPAGE>(getData<wchar_t>(), getLength<wchar_t>());
+			return String<CODEPAGE>(getData<wchar_t>(), getDataSize<wchar_t>());
 		}
 
 		template <typename CHAR>
 		inline StringRef<CP> getRef() const {
-			return StringRef<CP>(getData<CHAR>(), getLength<CHAR>());
+			return StringRef<CP>(getData<CHAR>(), getDataSize<CHAR>());
 		}
 
 
@@ -117,43 +121,63 @@ namespace Stamina {
 		// ------ character access
 
 		template <typename CHAR>
-		inline unsigned int getLength() const {
-			getBuffer<CHAR>().getLength();
+		inline unsigned int getDataSize() const {
+			getBuffer<CHAR>().getDataSize();
 		}
 
-		inline unsigned int getLength() const {
+		inline unsigned int getDataSize() const {
 			if (isWide())
-				return _w.getLength();
+				return _w.getDataSize();
 			else
-				return _a.getLength();
+				return _a.getDataSize();
 		}
 
-		inline unsigned int getCharCount() const {
+		inline unsigned int getLength() const {
 			if (empty()) return 0;
 			if (isWide()) {
-				return StringType<wchar_t, CP>(getData);
+				return StringType<wchar_t, CP>::getLength(getData<wchar_t>(), getDataEnd<wchar_t>());
 			} else {
+				return StringType<char, CP>::getLength(getData<char>(), getDataEnd<char>());
 			}
 			/*TODO*/
 		}
 
 		inline bool empty() const {
-			return getLength() > 0;
+			return getDataSize() > 0;
 		}
 
-		inline unsigned int getDataPos(unsigned int charPos) {
-			/*TODO*/
-			return charPos;
+		template <typename CHAR>
+		inline unsigned int getDataPos(int charPos) {
+			return StringType<CHAR, CP>::getDataPos(getData<CHAR>(), getDataEnd<CHAR>(), charPos);
 		}
-
+		template <typename CHAR>
 		inline unsigned int getCharPos(unsigned int dataPos) {
-			/*TODO*/
-			return dataPos;
+			return StringType<CHAR, CP>::getCharPos(getData<CHAR>(), getDataEnd<CHAR>(), dataPos);
 		}
 
-		inline StringRef<CP> substr(unsigned int start) {
-			unsigned int count = getLength();
-			if (start > getLength()) start = getLength();
+		/** Returns position of character in active data buffer */
+		inline unsigned int getDataPos(int charPos) {
+			if (isWide()) {
+				return getDataPos<wchar_t>(charPos);
+			} else {
+				return getDataPos<char>(charPos);
+			}
+		}
+		/** Returns real character position */
+		inline unsigned int getCharPos(unsigned int dataPos) {
+			if (isWide()) {
+				return getCharPos<wchar_t>(dataPos);
+			} else {
+				return getCharPos<char>(dataPos);
+			}
+		}
+
+		inline StringRef<CP> substr(int start) const {
+			unsigned int count = getDataSize();
+			start = getDataPos(start);
+			if (start > count) {
+				return StringRef<CP>();
+			}
 			count -= start;
 			if (isWide())
 				return StringRef<CP>(getData<wchar_t>() + start , count);
@@ -161,9 +185,12 @@ namespace Stamina {
 				return StringRef<CP>(getData<char>() + start , count);
 		}
 
-		inline String<CP> substr(unsigned int start, unsigned int count) {
-			unsigned int count = getLength();
-			if (start > getLength()) start = getLength();
+		inline String<CP> substr(int start, unsigned int count) const {
+			start = getDataPos(start);
+			count = getDataPos(start + count);
+			if (start > count) {
+				return StringRef<CP>();
+			}
 			count -= start;
 			String<CP> str;
 			str.forceType(isWide());
@@ -180,29 +207,38 @@ namespace Stamina {
 		// ------ compare
 
 		inline bool equal(const StringRef<CP>& str, bool ignoreCase = false) const {
+			matchConstTypes(str);
+			if (isWide()) {
+				return StringType<wchar_t, CP>::equal(getData<wchar_t>(), getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), ignoreCase);
+			} else {
+				return StringType<char, CP>::equal(getData<char>(), getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), ignoreCase);
+			}
 			/*TODO*/
 		}
 
-		inline int compare(const StringRef<CP>& str, unsigned int count, bool ignoreCase = false) const {
-			/*TODO*/
+		inline int compare(const StringRef<CP>& str, unsigned int count = lengthUnknown, bool ignoreCase = false) const {
+			matchConstTypes(str);
+			if (isWide()) {
+				return StringType<wchar_t, CP>::compare(getData<wchar_t>(), getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), count, ignoreCase);
+			} else {
+				return StringType<char, CP>::compare(getData<char>(), getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), count, ignoreCase);
+			}
 		}
 
 		// ------ search
 
-		inline unsigned int find(const StringRef<CP>& find, unsigned int start, unsigned int count, bool ignoreCase = false) {
-			/*TODO*/
+		inline unsigned int find(const StringRef<CP>& find, int start, unsigned int count = lengthUnknown, unsigned int seq = 0, bool ignoreCase = false) const {
+			matchConstTypes(str);
+			start = getDataPos(start);
+			if (isWide()) {
+				return StringType<wchar_t, CP>::find(getData<wchar_t>() + start, getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), count, seq, ignoreCase);
+			} else {
+				return StringType<char, CP>::find(getData<char>() + start, getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), count, seq, ignoreCase).getFoundPosition();
+			}
 		}
 
-		inline unsigned int findLast(const StringRef<CP>& find, unsigned int start, unsigned int count, bool ignoreCase = false) {
-			/*TODO*/
-		}
-
-		inline unsigned int findChar(const StringRef<CP>& find, unsigned int start, unsigned int count) {
-			/*TODO*/
-		}
-
-		inline unsigned int findLastChar(const StringRef<CP>& find, unsigned int start, unsigned int count) {
-			/*TODO*/
+		inline unsigned int findLast(const StringRef<CP>& find, int start, unsigned int count, bool ignoreCase = false) const {
+			return find(find, start, count, -1, ignoreCase);
 		}
 
 		// ------ basic modification
@@ -210,18 +246,18 @@ namespace Stamina {
 		inline void assign(const StringRef<CP>& str) {
 			matchTypes(str);
 			if (isWide())
-				_w.assign(str.getData<wchar_t>(), str.getLength<wchar_t>());
+				_w.assign(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
-				_a.assign(str.getData<char>(), str.getLength<char>());
+				_a.assign(str.getData<char>(), str.getDataSize<char>());
 			this->changed();
 		}
 
 		inline void assignCheapReference(const StringRef<CP>& str) {
 			matchTypes(str);
 			if (isWide())
-				_w.assignCheapReference(str.getData<wchar_t>(), str.getLength<wchar_t>());
+				_w.assignCheapReference(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
-				_a.assignCheapReference(str.getData<char>(), str.getLength<char>());
+				_a.assignCheapReference(str.getData<char>(), str.getDataSize<char>());
 			this->changed();
 		}
 
@@ -238,37 +274,53 @@ namespace Stamina {
 		inline void append(const StringRef<CP>& str) {
 			matchTypes(str);
 			if (isWide())
-				_w.append(str.getData<wchar_t>(), str.getLength<wchar_t>());
+				_w.append(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
-				_a.append(str.getData<char>(), str.getLength<char>());
+				_a.append(str.getData<char>(), str.getDataSize<char>());
 			this->changed();
 		}
 
 		inline void prepend(const StringRef<CP>& str) {
 			matchTypes(str);
 			if (isWide())
-				_w.prepend(str.getData<wchar_t>(), str.getLength<wchar_t>());
+				_w.prepend(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
-				_a.prepend(str.getData<char>(), str.getLength<char>());
+				_a.prepend(str.getData<char>(), str.getDataSize<char>());
 			this->changed();
 		}
 
 		inline void insert(unsigned int pos, const StringRef<CP>& str) {
 			matchTypes(str);
 			if (isWide())
-				_w.insertInRange(pos, str.getData<wchar_t>(), str.getLength<wchar_t>());
+				_w.insertInRange(getDataPos<wchar_t>(pos), str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
-				_a.insertInRange(pos, str.getData<char>(), str.getLength<char>());
+				_a.insertInRange(getDataPos<char>(pos), str.getData<char>(), str.getDataSize<char>());
 			this->changed();
 		}
 
-		inline void erase(unsigned int pos, unsigned int count = StringBuffer::wholeData) {
-			if (isWide())
-				_w.erase(pos, count);
-			else
-				_a.erase(pos, count);
+		inline void erase(unsigned int pos, unsigned int count = lengthUnknown) {
+			pos = getDataPos(pos);
+			if (isWide()) {
+				_w.erase(pos, getDataPos<wchar_t>(pos + count) - pos);
+			} else {
+				_a.erase(pos, getDataPos<wchar_t>(pos + count) - pos);
+			}
 			this->changed();
 		}
+
+		inline void replace(unsigned int pos, const StringRef<CP>& str, unsigned int count = lengthUnknown) {
+			matchTypes(str);
+			if (count > this->getLength()) count = this->getLength();
+			if (isWide()) {
+				pos = getDataPos<wchar_t>(pos);
+				_w.replace(pos, getDataPos<wchar_t>(pos + count) - pos, str.getData<wchar_t>(), str.getDataSize<wchar_t>());
+			} else {
+				pos = getDataPos<char>(pos);
+				_w.replace(pos, getDataPos<char>(pos + count) - pos, str.getData<char>(), str.getDataSize<char>());
+			}
+			this->changed();
+		}
+
 
 		inline void clear() {
 			_w.reset();
@@ -278,15 +330,39 @@ namespace Stamina {
 
 		// ------ more modification
 
-		inline void replace(const StringRef<CP>& find, const StringRef<CP>& replace,  unsigned int limit = lengthUnknown, bool ignoreCase = false) {
-			/*TODO*/
+		inline unsigned int replace(const StringRef<CP>& find, const StringRef<CP>& replace,  int start, unsigned int count = lengthUnknown, unsigned int limit = lengthUnknown, bool ignoreCase = false) {
+			matchTypes(replace);
+			unsigned c = 0;
+			while (limit--) {
+				unsigned int found = this->find(find, start, count, ignoreCase);
+				if (found == notFound) {
+					break;
+				}
+				this->replace(found, replace, find.getLength());
+				c++;
+			}
+			this->changed();
+			return c;
 		}
 
 		/** Replaces characters found in @a from with according characters in @to (or with last character @a to, or removes them) 
-		@warning You SHOULDN'T use characters in from/to values if their representation takes more than one character (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @to to use Wide instead.
+
+		@return New length of the string
+
+		@warning You SHOULDN'T use characters in from/to values if their representation takes more than one character (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @to to use Wide type instead.
 		*/
-		inline void replaceChars(const StringRef<CP>& from, const StringRef<CP>& to) {
-			/*TODO*/
+		inline unsigned int replaceChars(const StringRef<CP>& from, const StringRef<CP>& to, unsigned int count = lengthUnknown, unsigned int limit = -1, bool swap = false) {
+			matchTypes(str);
+			if (isWide()) {
+				_w.setLength(
+					StringType<wchar_t, CP>::replaceChars(getData<wchar_t>(), getDataEnd<wchar_t>(), from.getData<wchar_t>(), from.getDataEnd<wchar_t>(), to.getData<wchar_t>(), to.getDataEnd<wchar_t>(), count, limit, swap) );
+				_w.markValid();
+			} else {
+				_a.setLength(
+					StringType<char, CP>::replaceChars(getData<char>(), getDataEnd<char>(), from.getData<char>(), from.getDataEnd<char>(), to.getData<char>(), to.getDataEnd<char>(), count, limit, swap) );
+				_a.markValid();
+			}
+			this->changed();
 		}
 
 		// ------ type handling
@@ -325,18 +401,23 @@ namespace Stamina {
 			String<CP>& noconst = *const_cast<String<CP> >(this);
 			if (wide) {
 				if (_w.isValid() || _a.isValid() == false) return;
-				noconst->_w.makeRoom( MultiByteToWideChar(CP, 0, noconst->_a.getString(), noconst->_a.getLength(), 0, 0), 0);
-				noconst->_w.setLength( MultiByteToWideChar(CP, 0, noconst->_a.getString(), noconst->_a.getLength(), noconst->_w.getBuffer(), noconst->_w.getBufferSize()));
+				noconst->_w.makeRoom( MultiByteToWideChar(CP, 0, noconst->_a.getString(), noconst->_a.getDataSize(), 0, 0), 0);
+				noconst->_w.setLength( MultiByteToWideChar(CP, 0, noconst->_a.getString(), noconst->_a.getDataSize(), noconst->_w.getBuffer(), noconst->_w.getBufferSize()));
 				_w.markValid();
 			} else {
 				if (_a.isValid() || _w.isValid() == false) return;
-				noconst->_a.makeRoom( WideCharToMultiByte(CP, 0, noconst->_w.getString(), noconst->_w.getLength(), 0, 0, 0, 0), 0);
-				noconst->_a.setLength( WideCharToMultiByte(CP, 0, noconst->_w.getString(), noconst->_w.getLength(), noconst->_a.getBuffer(), noconst->_a.getBufferSize(), 0, 0));
+				noconst->_a.makeRoom( WideCharToMultiByte(CP, 0, noconst->_w.getString(), noconst->_w.getDataSize(), 0, 0, 0, 0), 0);
+				noconst->_a.setLength( WideCharToMultiByte(CP, 0, noconst->_w.getString(), noconst->_w.getDataSize(), noconst->_a.getBuffer(), noconst->_a.getBufferSize(), 0, 0));
 				noconst->_a.markValid();
 		);
 			}
 		}
 
+		inline void matchConstTypes(const StringRef<CP>& str) const {
+			if (str.isWide() == this->isWide()) return;
+			if (str.isWide()) this->prepareType(true);
+			if (this->isWide()) str.prepareType(true);
+		}
 
 		/** Matches current and string's types choosing the best option.
 		If @a this uses MultiByte, and @a str uses Wide - @a this becomes Wide if it's not locked (major), or @a str prepares conversion otherwise.
@@ -382,8 +463,13 @@ namespace Stamina {
 		}
 
 		template <typename CHAR>
-		inline const char* getData() const {
+		inline const CHAR* getData() const {
 			return getBuffer<CHAR>().getString();
+		}
+
+		template <typename CHAR>
+		inline const CHAR* getDataEnd() const {
+			return getBuffer<CHAR>().getString() + getBuffer<CHAR>().getDataSize();
 		}
 
 		template <typename CHAR>

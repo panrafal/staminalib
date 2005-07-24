@@ -47,6 +47,11 @@ namespace Stamina {
 			resize(initialSize, 0);
 		}
 
+		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _active(0), _length(0) {
+			assignCheapReference(data, dataSize);
+		}
+
+
 		inline ~StringBuffer() {
 			freeBuffer();
 		}
@@ -210,6 +215,37 @@ namespace Stamina {
 			insert(pos, data, dataSize);
 		}
 
+		inline void replace(unsigned int pos, unsigned int count, const CHAR* data, unsigned int dataSize) {
+			if (dataSize == 0) {
+				this->erase(pos, count);
+			}
+			if (pos > getLength()) {
+				this->append(data, dataSize);
+			}
+			if (count == 0) {
+				this->insert(pos, data, dataSize);
+			}
+			S_ASSERT(data);
+			if (isReference()) {
+				CHAR* from = _buffer;
+				unsigned int currentLength = getLength();
+				makeRoom(currentLength - count + dataSize, pos);
+				S_ASSERT(_buffer);
+				if (dataSize + currentLength - count > 0) {
+					S_ASSERT(getBufferSize() >= dataSize + currentLength - count);
+					// kopiujemy dane po zmienianym...
+					copy(_buffer + pos + dataSize, from + pos + count, currentLength - pos - count);
+				}
+			} else {
+				if (dataSize > count) {
+					moveRight(pos + count, dataSize - count);
+				} else if (dataSize < count) {
+					moveLeft(pos + count, count - dataSize);
+				}
+			}
+			S_ASSERT(getBufferSize() >= pos + dataSize);
+			copy(_buffer + pos, data, dataSize);
+		}
 
 		inline void erase(unsigned int pos, unsigned int count = wholeData) {
 			if (!isValid() || count == 0) return;

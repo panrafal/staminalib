@@ -685,6 +685,10 @@ protected:
 		}
 	}
 
+	void testReplace() {
+		/*TODO*/
+	}
+
 	void testErase() {
 		tString test = shortString();
 		{
