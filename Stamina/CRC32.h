@@ -42,6 +42,9 @@ namespace Stamina {
 		}
 
 		/** Calculates CRC-32 hash, but starts from previous calculations state.
+		@param buffer Pointer to a null-terminated string containing data,
+					which should be calculated hash code from.
+		@return Calculated hash.
 		*/
 		inline unsigned long CRC32::add(const char * buffer , unsigned int size) {
 			while(size--) 
@@ -49,9 +52,16 @@ namespace Stamina {
 			// Exclusive OR the result with the beginning value. 
 			return getState();
 		}
+
+		/** Resets calculation state.
+		*/
 		inline void CRC32::reset() {
 			_state = 0xffffffff;
 		}
+
+		/** Returns calculation state (hash).
+		@return Calculated hash.
+		*/
 		inline unsigned long getState() {
 			return _state ^ 0xffffffff; 
 		}

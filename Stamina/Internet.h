@@ -107,9 +107,16 @@ namespace Stamina {
 		*/
 		static int getUrlPort(const std::string& url);
 
-		/** @brief Combine two urls
+		/** @brief Combine two urls.
+
+		Completes \a url of elements from \a parent, if it's needed.
+		Example:
+		combineUrl("index.html" , "http://blah.com/") = "http://blah.com/index.html";
+		combineUrl("/index.html" , "http://blah.com/katalog") = "http://blah.com/index.html";
+		combineUrl("http://blurp.info/index.html" , "http://blah.com/") = "http://blurp.info/index.html";
+
 		@param url String that contains the URL of target object.
-		@param parent String that contains the URL of target object.
+		@param parent String that contains the URL of parent target object.
 		@return String that contains combined url of \a url and \a parent.
 		@todo Poprawiæ dokumentacjê tej funkcji.
 		*/
