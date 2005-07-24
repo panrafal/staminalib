@@ -67,7 +67,7 @@ namespace Stamina {
 		void lock(); // Zwraca liczbê wczeœniej za³o¿onych blokad
 		void lock(DWORD timeout , char action=0); // Z TimeOutem
 		void lock(DWORD timeout , char * where); // TA_EXCEPT z parametrem
-		void unlock(); // Zwraca liczbê pozosta³ych blokad
+		void unlock();
 		bool canAccess(); // Sprawdza, czy nie ma blokady
 		void access(); // czeka tylko a¿ bêdzie móg³ wejœæ, bez blokowania
 		int getLockCount() {return count;}
