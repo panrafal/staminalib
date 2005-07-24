@@ -13,10 +13,16 @@
 //#define CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 
-#define S_ASSERT(a) _ASSERTE(a);
-#define S_ASSERT_MSG(a, msg) _ASSERTE(a);
+#define S_ASSERT(a) _ASSERTE(a)
+#ifdef _DEBUG
+#define S_ASSERT_MSG(a, msg) _ASSERT_BASE(a, msg)
+#else
+#define S_ASSERT_MSG(a, msg) ((void)0)
+#endif
 
-#define S_ERROR(msg) 
+#define S_DEBUG_ERROR(msg) S_ASSERT_MSG(false, msg)
+
+#define S_ERROR(msg) _ASSERT_BASE(false, msg)
 
 #if 0
 //#ifdef _DEBUG

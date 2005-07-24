@@ -32,6 +32,9 @@ namespace Stamina {
 	template <typename CHAR>
 	class StringBuffer {
 	public:
+
+		friend class String;
+
 		const static unsigned int pooledBufferSize = 64;
 		const static unsigned int maxBufferSize = 0x0FFFFFFF;
 		const static unsigned int lengthUnknown = 0x0FFFFFFF;
@@ -53,6 +56,13 @@ namespace Stamina {
 		}
 		inline bool isActive() {
 			return _active;
+		}
+
+		inline void setMajor(bool major) {
+			_active = force;
+		}
+		inline bool isMajor() {
+			return _major;
 		}
 
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
@@ -116,14 +126,17 @@ namespace Stamina {
 		}
 
 		/** Returns number of used bytes in the buffer */
-		inline unsigned int getLength() {
+		inline unsigned int getLength() const {
 			if (_length == lengthUnknown) {
-				_length = 0;
+				static_cast<StringBuffer<CHAR> >(this)->_length = 0;
 				if (!isEmpty() && isValid()) {
 					CHAR* ch = _buffer;
-					while (*(ch++)) ++_length;
+					while (*(ch++)) static_cast<StringBuffer<CHAR> >(this)->++_length;
 				}
 			}
+			return _length;
+		}
+		inline unsigned int getKnownLength() {
 			return _length;
 		}
 
@@ -191,6 +204,12 @@ namespace Stamina {
 			_length = max(currentLength + dataSize, pos + dataSize);
 			markValid();
 		}
+
+		inline void insertInRange(unsigned int pos, const CHAR* data, unsigned int dataSize) {
+			if (pos > getLength()) pos = getLength();
+			insert(pos, data, dataSize);
+		}
+
 
 		inline void erase(unsigned int pos, unsigned int count = wholeData) {
 			if (!isValid() || count == 0) return;
@@ -415,18 +434,6 @@ namespace Stamina {
 			return _size > 0;
 		}
 
-	private:
-
-
-		inline void freeBuffer() {
-			if (hasOwnBuffer()) {
-				_free(_buffer, getBufferSize());
-			}
-			_buffer = 0;
-			_size = 0;
-			_flag = false;
-		}
-
 		/** Marks data as valid (if it's not referenced) */
 		inline void markValid() {
 			if ( this->hasOwnBuffer() ) {
@@ -439,6 +446,22 @@ namespace Stamina {
 			}
 		}
 
+		inline void setLength(unsigned int length) {
+			_length = length;
+		}
+
+
+	private:
+
+
+		inline void freeBuffer() {
+			if (hasOwnBuffer()) {
+				_free(_buffer, getBufferSize());
+			}
+			_buffer = 0;
+			_size = 0;
+			_flag = false;
+		}
 
 		/** Returned memory block is always @a size + 1 of size */
 		static CHAR* _alloc(unsigned int &size) {
@@ -451,7 +474,8 @@ namespace Stamina {
 		CHAR* _buffer;
 		bool _flag : 1;
 		bool _active : 1;
-		int _align1 : 2;
+		bool _major : 1;
+		int _align1 : 1;
 		unsigned int _size : 28;
 		int _align2 : 4;
 		unsigned int _length : 28;
