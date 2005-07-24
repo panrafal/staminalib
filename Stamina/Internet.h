@@ -33,6 +33,8 @@ namespace Stamina {
 	class Internet: public Stamina::SharedObject<Stamina::iSharedObject> {
 	public:
 
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::Internet, iSharedObject, Version(1,0,0,0));
+
 		Internet(HINTERNET session);
 
 		~Internet();
@@ -61,6 +63,8 @@ namespace Stamina {
 
 	class Connection: public SharedObject<iSharedObject> {
 	public:
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::Connection, iSharedObject, Version(1,0,0,0));
+
 		enum Type {
 			typeUnknown,
 			typeHttp
@@ -125,6 +129,7 @@ namespace Stamina {
 
 	class Request: public SharedObject<iSharedObject> {
 	public:
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::Request, iSharedObject, Version(1,0,0,0));
 
 		class ExceptionBadRequest: public ExceptionInternet {
 		public:
@@ -202,5 +207,8 @@ namespace Stamina {
 		HINTERNET _hRequest;
 	};
 
+	STAMINA_REGISTER_CLASS_VERSION(Internet);
+	STAMINA_REGISTER_CLASS_VERSION(Connection);
+	STAMINA_REGISTER_CLASS_VERSION(Request);
 
 };

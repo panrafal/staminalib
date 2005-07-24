@@ -30,22 +30,25 @@ namespace Stamina {
 		virtual int getLockCount() = 0;
 	};
 
+	class Lock_blank:public Lock {
+	public:
+		__inline void lock() {} 
+		__inline void unlock() {} 
+		int getLockCount() {return 0;}
+		__inline bool canAccess() {return true;}
+	};
+
+
 	/* Scoped locking of iLockable */
 	template <class TLO> class LockerTmpl {
 	public:
 		__inline LockerTmpl(TLO* lo):_lo(lo) {
-			lock();
-		}
-		__inline LockerTmpl(TLO& lo):_lo(&lo) {
-			lock();
-		}
-		__inline ~LockerTmpl(){
-			unlock();
-		}
-		__inline void lock() {
 			_lo->lock();
 		}
-		__inline void unlock() {
+		__inline LockerTmpl(TLO& lo):_lo(&lo) {
+			_lo->lock();
+		}
+		__inline ~LockerTmpl(){
 			_lo->unlock();
 		}
 	protected:
@@ -53,6 +56,23 @@ namespace Stamina {
 	};
 	typedef LockerTmpl<Lock> Locker;
 	typedef Locker LockerCS;
+
+	/** FastLocker works the same as LockerTmpl. However it doesn't use virtual functions, but call them directly on specified class (which could enable some compiler optimizations).
+	*/
+	template <class TLO> class FastLocker {
+	public:
+		__inline FastLocker(TLO* lo):_lo(lo) {
+			_lo->TLO::lock();
+		}
+		__inline FastLocker(TLO& lo):_lo(&lo) {
+			_lo->TLO::lock();
+		}
+		__inline ~FastLocker(){
+			_lo->TLO::unlock();
+		}
+	protected:
+		TLO * _lo;
+	};
 
 
 };

@@ -24,9 +24,6 @@ namespace Stamina {
 		const char* const copyright = "Copyright (C)2005 Stamina";
 		const char* const moreCopyright = "Copyright (C)2005 Rafa³ Lindemann";
 
-
-		STAMINA_REGISTER_VERSION(stamina, version);
-
 	} 
 }
 
