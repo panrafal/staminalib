@@ -6,7 +6,7 @@
 #include <Stamina/VersionControl.h>
 #include <Stamina/WideChar.h>
 #include <Stamina/StringBuffer.h>
-#include <Stamina/String.h>
+//#include <Stamina/String.h>
 #include <ConvertUTF.h>
 
 using namespace Stamina;
@@ -686,7 +686,68 @@ protected:
 	}
 
 	void testReplace() {
-		/*TODO*/
+		tString test1 = mediumString();
+		tString test2 = shortString();
+		{ // na pocz¹tku - zerowy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(0, 0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2 + test1, tString(b.getString()) );
+		}
+		{ // na pocz¹tku
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(0, 5, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2 + test1.substr(5), tString(b.getString()) );
+		}
+		{ // w œrodek - krótszy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 5);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2.substr(0,5) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // w œrodek - równy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 10);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2.substr(0,10) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // w œrodek - d³u¿szy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 15);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2.substr(0, 15) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // na œrodek - zerowa wstawka
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2 + test1.substr(10), tString(b.getString()) );
+		}
+		{ // na œrodek - zerowa podmianka
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 0);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // na œrodek - zerowo generalnie
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 0, test2.c_str(), 0);
+			CPPUNIT_ASSERT_EQUAL( test1, tString(b.getString()) );
+		}
+		{ // na koñcu
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(test1.size(), 10, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1 + test2, tString(b.getString()) );
+		}
+		{ // na koñcu - za daleko
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(200, 0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1 + test2, tString(b.getString()) );
+		}
 	}
 
 	void testErase() {

@@ -20,8 +20,9 @@
 
 namespace Stamina {
 
-//	typedef std::string String;
+	typedef std::string String;
 
+#ifdef UGABUGA
 
 	/** Universal String class. Transparently supports both MultiByte(template specified CorePage) and WideChar (UTF-16) encodings at the same time.
 	Default codepage is CP_ACP (default system codepage).
@@ -485,7 +486,7 @@ namespace Stamina {
 	};
 
 
-
+#endif
 
 	class StringRef {
 	public:

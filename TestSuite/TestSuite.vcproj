@@ -199,6 +199,9 @@
 			<File
 				RelativePath="..\Test\TestStringResults.txt">
 			</File>
+			<File
+				RelativePath="..\Test\TestStringType.cpp">
+			</File>
 			<Filter
 				Name="disabled"
 				Filter=""

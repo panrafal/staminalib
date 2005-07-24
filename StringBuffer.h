@@ -33,7 +33,7 @@ namespace Stamina {
 	class StringBuffer {
 	public:
 
-		friend class String;
+//		friend class String;
 
 		const static unsigned int pooledBufferSize = 64;
 		const static unsigned int maxBufferSize = 0x0FFFFFFF;
@@ -64,7 +64,7 @@ namespace Stamina {
 		}
 
 		inline void setMajor(bool major) {
-			_active = force;
+			_active = major;
 		}
 		inline bool isMajor() {
 			return _major;
@@ -133,10 +133,10 @@ namespace Stamina {
 		/** Returns number of used bytes in the buffer */
 		inline unsigned int getLength() const {
 			if (_length == lengthUnknown) {
-				static_cast<StringBuffer<CHAR> >(this)->_length = 0;
+				const_cast<StringBuffer<CHAR> * >(this)->_length = 0;
 				if (!isEmpty() && isValid()) {
 					CHAR* ch = _buffer;
-					while (*(ch++)) static_cast<StringBuffer<CHAR> >(this)->++_length;
+					while (*(ch++)) const_cast<StringBuffer<CHAR>* >(this)->_length++;
 				}
 			}
 			return _length;

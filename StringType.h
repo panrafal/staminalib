@@ -68,11 +68,11 @@ namespace Stamina {
 				sub(1);
 				return *this;
 			}
-			inline const_iterator& operator += (unsigned int offset) {
+			inline ConstIterator& operator += (unsigned int offset) {
 				add(offset);
 				return *this;
 			}
-			inline const_iterator& operator -= (unsigned int offset) {
+			inline ConstIterator& operator -= (unsigned int offset) {
 				sub(offset);
 				return *this;
 			}
@@ -158,7 +158,6 @@ namespace Stamina {
 					b = b.character();
 				}
 				return use_facet<collate<CHAR> > ( locale ).compare ( (CHAR*)a, (CHAR*)a + charSize(), (CHAR*)b, (CHAR*)b + charSize*() );
-				}
 			}
 
 			inline unsigned int charSize() {
@@ -300,4 +299,15 @@ namespace Stamina {
 
 	};
 
+
+	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator<char, cpUTF8>::charSize() {
+		if ((*_p & 0x80) == 0) return 1;
+		if ((*_p & 0xF0) == 0xF0) return 4;
+		if ((*_p & 0xE0) == 0xE0) return 3;
+		if ((*_p & 0xC0) == 0xC0) return 2;
+	}
+
+
 }
+
+#endif
