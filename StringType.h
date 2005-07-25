@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <locale>
 
 namespace Stamina {
 
@@ -29,10 +30,13 @@ namespace Stamina {
 	public:
 
 		typedef unsigned tCharacter;
-		const static std::locale& locale ();
 		const static unsigned notFound = -1;
 
-		template<typename CHAR, class CP>
+		static const std::locale& locale() {
+			static std::locale loc = std::locale("");
+			return loc;
+		}
+
 		class ConstIterator {
 		public:
 			ConstIterator(const CHAR* ptr):_p(ptr),_char(0) {
@@ -40,12 +44,16 @@ namespace Stamina {
 			ConstIterator():_p(0),_char(notFound) {
 			}
 			inline void add(unsigned int offset) {
-				_p += offset;
 				_char += offset;
+				while (offset--) {
+					_p += charSize();
+				}
 			}
 			inline void sub(unsigned int offset) {
-				_p -= offset;
 				_char -= offset;
+				while (offset--) {
+					_p -= prevCharSize();
+				}
 			}
 
 			inline ConstIterator& operator = (const ConstIterator& b) {
@@ -76,7 +84,14 @@ namespace Stamina {
 				sub(offset);
 				return *this;
 			}
-			inline CHAR operator * () {
+			inline int operator - (const ConstIterator& b) {
+				return _p - b._p;
+			}
+			inline int operator + (const ConstIterator& b) {
+				return _p + b._p;
+			}
+
+			inline CHAR operator * () const {
 				return *_p;
 			}
 
@@ -90,7 +105,7 @@ namespace Stamina {
 				return getPosition();
 			}*/
 
-			inline unsigned int getPosition() {
+			inline unsigned int getPosition() const {
 				return _char;
 			}
 
@@ -98,49 +113,51 @@ namespace Stamina {
 				_char = pos;
 			}
 
-			inline unsigned int getFoundPosition(const ConstIterator& end) {
+			inline unsigned int getFoundPosition(const ConstIterator& end) const {
 				if (*this == end) return notFound;
 				return _char;
 			}
 
-			inline tCharacter character() {
+			inline tCharacter character() const {
 				tCharacter ch = 0;
 				for (unsigned int i = 0; i < charSize(); i++) {
-					((CHAR*)ch)[i] = _p[i];
+					((CHAR*)&ch)[i] = _p[i];
 				}
 				return ch;
 			}
 
-			inline tCharacter getLower() {
+			inline tCharacter getLower() const {
 				tCharacter ch = character();
-				use_facet<ctype<CHAR> >( locale ).tolower( (CHAR*)ch, (CHAR*)ch + charSize() );
+				std::use_facet<std::ctype<CHAR> >( locale() ).tolower( (CHAR*)&ch, (CHAR*)&ch + charSize() );
+				return ch;
 			}
 
-			inline tCharacter getUpper(tCharacter& ch) {
-				character(ch);
-				use_facet<ctype<CHAR> >( locale ).toupper( (CHAR*)ch, (CHAR*)ch + charSize() );
+			inline tCharacter getUpper() const {
+				tCharacter ch = character();
+				std::use_facet<std::ctype<CHAR> >( locale() ).toupper( (CHAR*)&ch, (CHAR*)&ch + charSize() );
+				return ch;
 			}
 
-			inline bool operator == (const ConstIterator<CHAR, CP>& b) {
+			inline bool operator == (const ConstIterator& b) const {
 				return _p == b._p;
 			}
-			inline bool operator != (const ConstIterator<CHAR, CP>& b) {
+			inline bool operator != (const ConstIterator& b) const {
 				return _p != b._p;
 			}
-			inline bool operator >= (const ConstIterator<CHAR, CP>& b) {
+			inline bool operator >= (const ConstIterator& b) const {
 				return _p >= b._p;
 			}
-			inline bool operator <= (const ConstIterator<CHAR, CP>& b) {
+			inline bool operator <= (const ConstIterator& b) const {
 				return _p <= b._p;
 			}
-			inline bool operator < (const ConstIterator<CHAR, CP>& b) {
+			inline bool operator < (const ConstIterator& b) const {
 				return _p < b._p;
 			}
-			inline bool operator > (const ConstIterator<CHAR, CP>& b) {
+			inline bool operator > (const ConstIterator& b) const {
 				return _p > b._p;
 			}
 
-			inline bool charEq(const ConstIterator<CHAR, CP>&b, bool noCase = false) {
+			inline bool charEq(const ConstIterator&b, bool noCase = false) const {
 				if (noCase) {
 					return getLower() == b.getLower();
 				} else {
@@ -148,21 +165,26 @@ namespace Stamina {
 				}
 			}
 
-			inline bool charCmp(const ConstIterator<CHAR, CP>&b, bool noCase = false) {
+			inline int charCmp(const ConstIterator& test, bool noCase = false) const {
 				tCharacter a, b;
 				if (noCase) {
 					a = getLower();
-					b = b.getLower();
+					b = test.getLower();
 				} else {
 					a = character();
-					b = b.character();
+					b = test.character();
 				}
-				return use_facet<collate<CHAR> > ( locale ).compare ( (CHAR*)a, (CHAR*)a + charSize(), (CHAR*)b, (CHAR*)b + charSize*() );
+				return std::use_facet<std::collate<CHAR> > ( locale() ).compare ( (CHAR*)&a, (CHAR*)&a + charSize(), (CHAR*)&b, (CHAR*)&b + charSize() );
 			}
 
-			inline unsigned int charSize() {
+			inline unsigned int charSize() const {
 				return 1;
 			}
+
+			inline unsigned int prevCharSize() const {
+				return 1;
+			}
+
 
 		private:
 			const CHAR* _p;
@@ -227,7 +249,7 @@ namespace Stamina {
 			return 0 //equal;
 		}
 
-		static ConstIterator<CHAR, CP> find(const CHAR* begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, unsigned int count, unsigned int seq, bool noCase) {
+		static ConstIterator find(const CHAR* begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, unsigned int count, unsigned int seq, bool noCase) {
 			if (seq > 0) {
 				ConstIterator<CHAR, CP> last;
 				bool findLast = (seq == -1);
@@ -264,7 +286,7 @@ namespace Stamina {
 
 		}
             
-		void replaceChars(const CHAR* str, const CHAR* end, const CHAR* fromBegin, const CHAR* fromEnd, const CHAR* toBegin, const CHAR* toEnd, unsigned int count, unsigned int limit, bool swap) {
+		static void replaceChars(const CHAR* str, const CHAR* end, const CHAR* fromBegin, const CHAR* fromEnd, const CHAR* toBegin, const CHAR* toEnd, unsigned int count, unsigned int limit, bool swap) {
 			unsigned length = end - str;
 			bool erase = (toBegin == toEnd);
 			while (str < end && limit > 0 && count-- > 0) {
@@ -300,11 +322,23 @@ namespace Stamina {
 	};
 
 
-	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator<char, cpUTF8>::charSize() {
+	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator::charSize() const {
 		if ((*_p & 0x80) == 0) return 1;
 		if ((*_p & 0xF0) == 0xF0) return 4;
 		if ((*_p & 0xE0) == 0xE0) return 3;
 		if ((*_p & 0xC0) == 0xC0) return 2;
+		return 1; // b³¹d!
+	}
+
+	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator::prevCharSize() const {
+		const CHAR* p = _p - 1;
+		if ((*p & 0x80) == 0) return 1;
+		if ((*p & 0xC0) == 0xC0) return 1; // b³¹d!
+		p--;
+		if ((*p & 0xC0) != 0x80) return 2; // 10xxxxxx
+		p--;
+		if ((*p & 0xC0) != 0x80) return 3; // 10xxxxxx
+		return 4;
 	}
 
 

@@ -26,7 +26,7 @@ namespace Stamina {
 	inline std::string fromUnicode(const std::wstring& in, UINT codePage = CP_ACP) {
 		std::string out;
 		stringRelease(out, 
-			WideCharToMultiByte(codePage, 0, in.c_str(), in.length() + 1 /*0*/, stringBuffer(out, in.length() + 1), in.length() + 1, 0, 0) - 1
+			WideCharToMultiByte(codePage, 0, in.c_str(), in.length() + 1 /*0*/, stringBuffer(out, in.length()*2 + 1), in.length()*2 + 1, 0, 0) - 1
 		);
 		return out;
 	}
