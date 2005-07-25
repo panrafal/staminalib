@@ -8,9 +8,6 @@
 #include <Stamina/Helpers.h>
 #include <Stamina/Lock.h>
 #include <Stamina/Mutex.h>
-
-#define TEST_STRING
-
 #include "..\String.h"
 
 #include <ConvertUTF.h>
@@ -22,12 +19,11 @@ __declspec(noinline) int testCall(int a) {
 }
 
 
-class TestString : public CPPUNIT_NS::TestFixture
+class TimeString : public CPPUNIT_NS::TestFixture
 {
   
-	CPPUNIT_TEST_SUITE( TestString );
+	CPPUNIT_TEST_SUITE( TimeString );
   
-	//CPPUNIT_TEST( timeFullStaticInit );
 
 
 	CPPUNIT_TEST_SUITE_END();
@@ -35,6 +31,7 @@ class TestString : public CPPUNIT_NS::TestFixture
 protected:
 
 public:
+
 
 	void setUp() {
 
@@ -49,5 +46,5 @@ protected:
 
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestString );
+CPPUNIT_TEST_SUITE_REGISTRATION( TimeString );
 

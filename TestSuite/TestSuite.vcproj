@@ -208,6 +208,12 @@
 			<File
 				RelativePath="..\Test\TestStringType.cpp">
 			</File>
+			<File
+				RelativePath="..\Test\TimeString.cpp">
+			</File>
+			<File
+				RelativePath="..\Test\TimeStringBuffer.cpp">
+			</File>
 			<Filter
 				Name="disabled"
 				Filter=""

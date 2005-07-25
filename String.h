@@ -16,46 +16,64 @@
 #include <string>
 #include "WideChar.h"
 #include "StringBuffer.h"
-//#include "StringType.h"
+#include "StringType.h"
 
 namespace Stamina {
 
-	typedef std::string String;
+#ifdef TEST_STRING
 
-#ifdef UGABUGA
+	class iString: public iObject {
+	public:
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::iString, iObject, Version(0,1,0,0));
+
+		virtual unsigned int getCodePage() =0;
+
+	};
 
 	/** Universal String class. Transparently supports both MultiByte(template specified CorePage) and WideChar (UTF-16) encodings at the same time.
 	Default codepage is CP_ACP (default system codepage).
 
 	All positions refer to character positions - ie. in polish word "≥Ûdü" a letter 'd' is in UTF-8 stored at byte 4, however it's real character position is 2
 	*/
-	template <CP = CP_ACP>
-	class String: public iObject {
+	template <class CP = cpACP>
+	class String: public iString {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::String, iObject, Version(0,1,0,0));
-
-		typedef StringIterator<CP> iterator;
-		typedef StringType<char, CP>::Iterator iteratorA;
-		typedef StringType<char, CP>::Iterator iteratorW;
+//		typedef StringIterator<CP> iterator;
+//		typedef StringType<char, CP>::Iterator iteratorA;
+//		typedef StringType<wchar_t, CP>::Iterator iteratorW;
 
 		const static unsigned int lengthUnknown = 0x0FFFFFFF;
 		const static unsigned int wholeData = 0xFFFFFFFF;
 		const static unsigned int npos = 0xFFFFFFFF;
 		const static unsigned int notFound = 0xFFFFFFFF;
 
+		class StringRef: public String<CP> {
+		public:
+			StringRef(const StringRef& str) {
+				assignCheapReference(str);
+			}
+		};
+
+
 	public:
 		String() {
 		}
 
-		template <OTHERCP>
-		String(const StringRef<OTHERCP>& b) {
-			b.prepareType(true);
-			assign(b.getData<wchar_t>(), b.getDataSize<wchar_t>());
-		}
+		/*
+		String(const iString& b) {
+			if (b.getCodePage() == CP) {
+				assign();
+			} else {
+				b.prepareType(true);
+				assign(b.getData<wchar_t>(), b.getDataSize<wchar_t>());
+			}
+		}*/
 
-		template<>
-		String(const StringRef<CP>& str) {
+		String(const String<CP>& str) {
+			assign(str);
+		}
+		String(const StringRef& str) {
 			assign(str);
 		}
 
@@ -76,22 +94,22 @@ namespace Stamina {
 		template <typename CHAR>
 		const StringBuffer<CHAR>& getBuffer() const;
 
-		inline template <>	const StringBuffer<char>& getBuffer<char>() const {
+		template <> inline const StringBuffer<char>& getBuffer<char>() const {
 			return _a;
 		}
 
-		inline template <> const StringBuffer<wchar_t>& getBuffer<wchar_t>() const {
+		template <> inline const StringBuffer<wchar_t>& getBuffer<wchar_t>() const {
 			return _w;
 		}
 
-		template <int CODEPAGE = CP>
+		template <class CODEPAGE>
 		inline String<CODEPAGE> getString() const {
 			return String<CODEPAGE>(getData<wchar_t>(), getDataSize<wchar_t>());
 		}
 
 		template <typename CHAR>
-		inline StringRef<CP> getRef() const {
-			return StringRef<CP>(getData<CHAR>(), getDataSize<CHAR>());
+		inline StringRef getRef() const {
+			return StringRef(getData<CHAR>(), getDataSize<CHAR>());
 		}
 
 
@@ -173,7 +191,7 @@ namespace Stamina {
 			}
 		}
 
-		inline StringRef<CP> substr(int start) const {
+		inline StringRef substr(int start) const {
 			unsigned int count = getDataSize();
 			start = getDataPos(start);
 			if (start > count) {
@@ -181,9 +199,9 @@ namespace Stamina {
 			}
 			count -= start;
 			if (isWide())
-				return StringRef<CP>(getData<wchar_t>() + start , count);
+				return StringRef(getData<wchar_t>() + start , count);
 			else 
-				return StringRef<CP>(getData<char>() + start , count);
+				return StringRef(getData<char>() + start , count);
 		}
 
 		inline String<CP> substr(int start, unsigned int count) const {
@@ -207,7 +225,7 @@ namespace Stamina {
 
 		// ------ compare
 
-		inline bool equal(const StringRef<CP>& str, bool ignoreCase = false) const {
+		inline bool equal(const StringRef& str, bool ignoreCase = false) const {
 			matchConstTypes(str);
 			if (isWide()) {
 				return StringType<wchar_t, CP>::equal(getData<wchar_t>(), getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), ignoreCase);
@@ -217,7 +235,7 @@ namespace Stamina {
 			/*TODO*/
 		}
 
-		inline int compare(const StringRef<CP>& str, bool ignoreCase = false, unsigned int count = lengthUnknown) const {
+		inline int compare(const StringRef& str, bool ignoreCase = false, unsigned int count = lengthUnknown) const {
 			matchConstTypes(str);
 			if (isWide()) {
 				return StringType<wchar_t, CP>::compare(getData<wchar_t>(), getDataEnd<wchar_t>(count), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(count), ignoreCase);
@@ -228,7 +246,7 @@ namespace Stamina {
 
 		// ------ search
 
-		inline unsigned int find(const StringRef<CP>& find, int start, bool ignoreCase = false, int skip = 0, unsigned int count = lengthUnknown) const {
+		inline unsigned int find(const StringRef& find, int start, bool ignoreCase = false, int skip = 0, unsigned int count = lengthUnknown) const {
 			matchConstTypes(str);
 			start = getDataPos(start);
 			if (isWide()) {
@@ -238,13 +256,13 @@ namespace Stamina {
 			}
 		}
 
-		inline unsigned int findLast(const StringRef<CP>& find, int start, unsigned int count, bool ignoreCase = false) const {
+		inline unsigned int findLast(const StringRef& find, int start, unsigned int count, bool ignoreCase = false) const {
 			return find(find, start, ignoreCase, -1, count);
 		}
 
 		// ------ basic modification
 
-		inline void assign(const StringRef<CP>& str) {
+		inline void assign(const StringRef& str) {
 			matchTypes(str);
 			if (isWide())
 				_w.assign(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
@@ -253,7 +271,7 @@ namespace Stamina {
 			this->changed();
 		}
 
-		inline void assignCheapReference(const StringRef<CP>& str) {
+		inline void assignCheapReference(const StringRef& str) {
 			matchTypes(str);
 			if (isWide())
 				_w.assignCheapReference(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
@@ -272,7 +290,7 @@ namespace Stamina {
 		}
 
 
-		inline void append(const StringRef<CP>& str) {
+		inline void append(const StringRef& str) {
 			matchTypes(str);
 			if (isWide())
 				_w.append(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
@@ -281,7 +299,7 @@ namespace Stamina {
 			this->changed();
 		}
 
-		inline void prepend(const StringRef<CP>& str) {
+		inline void prepend(const StringRef& str) {
 			matchTypes(str);
 			if (isWide())
 				_w.prepend(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
@@ -290,7 +308,7 @@ namespace Stamina {
 			this->changed();
 		}
 
-		inline void insert(unsigned int pos, const StringRef<CP>& str) {
+		inline void insert(unsigned int pos, const StringRef& str) {
 			matchTypes(str);
 			if (isWide())
 				_w.insertInRange(getDataPos<wchar_t>(pos), str.getData<wchar_t>(), str.getDataSize<wchar_t>());
@@ -309,7 +327,7 @@ namespace Stamina {
 			this->changed();
 		}
 
-		inline void replace(unsigned int pos, const StringRef<CP>& str, unsigned int count = lengthUnknown) {
+		inline void replace(unsigned int pos, const StringRef& str, unsigned int count = lengthUnknown) {
 			matchTypes(str);
 			if (count > this->getLength()) count = this->getLength();
 			if (isWide()) {
@@ -331,7 +349,7 @@ namespace Stamina {
 
 		// ------ more modification
 
-		inline unsigned int replace(const StringRef<CP>& find, const StringRef<CP>& replace,  int start, bool ignoreCase = false, unsigned int limit = lengthUnknown, unsigned int count = lengthUnknown) {
+		inline unsigned int replace(const StringRef& find, const StringRef& replace,  int start, bool ignoreCase = false, unsigned int limit = lengthUnknown, unsigned int count = lengthUnknown) {
 			matchTypes(replace);
 			unsigned c = 0;
 			while (limit--) {
@@ -353,7 +371,7 @@ namespace Stamina {
 		It's always safe to erase (when @a to is empty) multi byte characters.
 		It's always safe to replace characters into smaller types (ie. special language-specific characters into ANSI)
 		*/
-		inline void replaceChars(const StringRef<CP>& from, const StringRef<CP>& to, bool ignoreCase = false, bool keepCase = false, bool swapMatch = false, unsigned int limit = -1, unsigned int count = lengthUnknown) {
+		inline void replaceChars(const StringRef& from, const StringRef& to, bool ignoreCase = false, bool keepCase = false, bool swapMatch = false, unsigned int limit = -1, unsigned int count = lengthUnknown) {
 			matchTypes(str);
 			if (isWide()) {
 				_w.setLength(
@@ -370,7 +388,7 @@ namespace Stamina {
 		// ------ type handling
 
 		inline unsigned int getCodePage() {
-			return CP;
+			return CP::codePage();
 		}
 
 		/** Returns true if String is using Wide (UTF-16) characters */
@@ -415,7 +433,7 @@ namespace Stamina {
 			}
 		}
 
-		inline void matchConstTypes(const StringRef<CP>& str) const {
+		inline void matchConstTypes(const StringRef& str) const {
 			if (str.isWide() == this->isWide()) return;
 			if (str.isWide()) this->prepareType(true);
 			if (this->isWide()) str.prepareType(true);
@@ -426,7 +444,7 @@ namespace Stamina {
 		If @a this uses Wide, and @a str uses MultiByte - @a str prepares conversion buffer
 		If both use the same type, nothing happens
 		*/
-		inline void matchTypes(const StringRef<CP>& str) {
+		inline void matchTypes(const StringRef& str) {
 			if (str.isWide() == this->isWide()) return;
 			if (str.isWide()) { 
 				if (_a.isMajor()) { // wymuszamy u nas MB - przystosowujemy str
@@ -488,7 +506,29 @@ namespace Stamina {
 	};
 
 
-#endif
+
+	template<typename CP = cpACP>
+	class StringRef: public String<CP>::StringRef {
+	public:
+		StringRef(typename const String<CP>::StringRef& str): String<CP>::StringRef(str) {
+		}
+		StringRef() {}
+	};
+
+	/*
+	template<typename CP = cpACP>
+	class StringAutoRef: public String<CP>::StringRef {
+	public:
+		StringAutoRef(const String<CP>::StringRef& str) {
+		}
+	};
+	*/
+
+
+#else 
+
+	typedef std::string String;
+
 
 	class StringRef {
 	public:
@@ -520,6 +560,8 @@ namespace Stamina {
 	inline bool operator == (const String& a, const StringRef& b) {
 		return stricmp(a.c_str(), b) == 0;
 	}
+
+#endif // TEST STRING
 
 }
 
