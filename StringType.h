@@ -45,7 +45,7 @@ namespace Stamina {
 
 		class ConstIterator {
 		public:
-			ConstIterator(const CHAR* ptr):_p(ptr),_char(0) {
+			ConstIterator(const CHAR* ptr):_p(const_cast<CHAR*>(ptr)),_char(0) {
 			}
 			ConstIterator():_p(0),_char(notFound) {
 			}
@@ -69,7 +69,7 @@ namespace Stamina {
 			}
 
 			inline ConstIterator& operator = (const CHAR* ptr) {
-				_p = ptr;
+				_p = const_cast<CHAR*>(ptr);
 				_char = ptr ? 0 : notFound;
 				return *this;
 			}
@@ -147,6 +147,15 @@ namespace Stamina {
 				return (CHAR*)&buff;
 			}
 
+			inline bool isLower() const {
+				return islower(*_p, locale());
+			}
+
+			inline bool isUpper() const {
+				return isupper(*_p, locale());
+			}
+
+
 			inline tCharacter getLower() const {
 				tCharacter ch = character();
 				if (canChangeCase()) {
@@ -215,6 +224,10 @@ namespace Stamina {
 				return 1;
 			}
 
+			inline static unsigned int charSize(tCharacter ch) {
+				return 1;
+			}
+
 			inline bool canChangeCase() const {
 				return true;
 			}
@@ -224,10 +237,59 @@ namespace Stamina {
 			}
 
 
-		private:
-			const CHAR* _p;
+		protected:
+			CHAR* _p;
 			unsigned int _char;
 		};
+
+
+		class Iterator: public ConstIterator {
+		public:
+			Iterator(CHAR* ptr):ConstIterator(ptr) {
+			}
+			Iterator() {
+			}
+			inline Iterator& operator = (const Iterator& b) {
+				*(ConstIterator*)this = b;
+				return *this;
+			}
+
+			inline Iterator& operator = (CHAR* ptr) {
+				*(ConstIterator*)this = ptr;
+				return *this;
+			}
+
+			inline void set(tCharacter ch) {
+				ConstIterator it = (CHAR*)&ch;
+				set(it);
+			}
+
+			inline void set(const ConstIterator& b) {
+				S_ASSERT(charSize() == b.charSize());
+				overwrite(b);
+			}
+			inline void overwrite(const ConstIterator& b) {
+				unsigned size = b.charSize();
+				CHAR* to = _p;
+				const CHAR* from = b();
+				while (size--) {
+					*to = *from;
+					++to;
+					++from;
+				}
+			}
+			inline void overwrite(tCharacter ch) {
+				ConstIterator it = (CHAR*)&ch;
+				overwrite(it);
+			}
+
+			inline CHAR& operator * () {
+				return *_p;
+			}
+
+
+		};
+
 
 		inline static bool isWide() {
 			return sizeof(CHAR) == sizeof(wchar_t);
@@ -330,37 +392,74 @@ namespace Stamina {
 			}
 
 		}
-            
-		static void replaceChars(const CHAR* str, const CHAR* end, const CHAR* fromBegin, const CHAR* fromEnd, const CHAR* toBegin, const CHAR* toEnd, unsigned int limit = -1, bool swap = false) {
-			unsigned length = end - str;
+         
+
+		static Iterator replaceChars(Iterator str, ConstIterator end, const CHAR* fromBegin, const CHAR* fromEnd, const CHAR* toBegin, const CHAR* toEnd, bool noCase = false, bool keepCase = false, bool swapMatch = false, unsigned int limit = -1) {
+			//unsigned length = end - str;
 			bool erase = (toBegin == toEnd);
-			while (str < end && limit > 0) {
-				const CHAR* from = fromBegin;
-				const CHAR* to = toBegin;
-				while (from < fromEnd) {
-					bool match = *str == *from;
-					if (match ^ swap) {
+			Iterator current = str;
+			ConstIterator from = fromBegin;
+			ConstIterator to = toBegin;
+			Iterator next = str;
+			while (str < end) {
+				from = fromBegin;
+				++next;
+				bool match = false;
+				if (swapMatch) { // ³apiemy wszystkie _spoza_ zakresu
+					match = limit > 0;
+					while (from < fromEnd && match) {
+						if (str.charEq(from, noCase)) {
+							match = false;
+							break;
+						}
+						++from;
+					}
+					if (match) {
 						limit --;
 						if (erase) {
-							--length;
-							CHAR* move = str;
-							while (move < str + length) {
-								*move = *(move+1);
-								++move;
-							}
-
 						} else {
-							*str = *to;
+							current.overwrite(to);
+							++current;
+							++to;
+							if (to >= toEnd) to = toBegin;
 						}
 					}
-					++from;
-					if (!erase && to + 1 < toEnd) {
-						++to;
+				} else { // wymieniamy znalezione
+					to = toBegin;
+					while (from < fromEnd && limit > 0) {
+						match = str.charEq(from, noCase);
+						if (str.charEq(from, noCase)) {
+							limit --;
+							if (erase) {
+							} else {
+								if (keepCase) {
+									if (str.isLower()) {
+										current.overwrite(to.getLower());
+									} else {
+										current.overwrite(to.getUpper());
+									}
+								} else {
+									current.overwrite(to);
+								}
+								++current;
+							}
+							break;
+						}
+						++from;
+						if (!erase && to() + 1 < toEnd) { // utrzymujemy ostatni to
+							++to;
+						}
 					}
 				}
-				++str;
+				if (!match) { // match juz sie zajal current
+					if (current != str) { // przesuwamy znaki
+						current.overwrite(str);
+					}
+					++current;
+				}
+				str = next;
 			}
-			return length;
+			return current;
 		}
 
 
@@ -391,6 +490,17 @@ namespace Stamina {
 		if ((*p & 0xC0) != 0x80) return 3; // 10xxxxxx
 		return 4;
 	}
+
+	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator::charSize(tCharacter ch) {
+		if ((ch & 0xFFFFFF00) == 0)
+			return 1;
+		if ((ch & 0xFFFF0000) == 0)
+			return 2;
+		if ((ch & 0xFF000000) == 0)
+			return 3;
+		return 4;
+	}
+
 
 	template<> inline bool StringType<char, cpUTF8>::ConstIterator::canChangeCase() const {
 		return charSize() == 1;

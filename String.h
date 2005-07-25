@@ -331,7 +331,7 @@ namespace Stamina {
 
 		// ------ more modification
 
-		inline unsigned int replace(const StringRef<CP>& find, const StringRef<CP>& replace,  int start, unsigned int count = lengthUnknown, unsigned int limit = lengthUnknown, bool ignoreCase = false) {
+		inline unsigned int replace(const StringRef<CP>& find, const StringRef<CP>& replace,  int start, bool ignoreCase = false, unsigned int limit = lengthUnknown, unsigned int count = lengthUnknown) {
 			matchTypes(replace);
 			unsigned c = 0;
 			while (limit--) {
@@ -348,19 +348,20 @@ namespace Stamina {
 
 		/** Replaces characters found in @a from with according characters in @to (or with last character @a to, or removes them) 
 
-		@return New length of the string
-
-		@warning You SHOULDN'T use characters in from/to values if their representation takes more than one character (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @to to use Wide type instead.
+		@warning You CAN'T use character pairs in from/to values if @a to representation takes more bytes per character than @a from (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @to to use Wide type instead.
+		
+		It's always safe to erase (when @a to is empty) multi byte characters.
+		It's always safe to replace characters into smaller types (ie. special language-specific characters into ANSI)
 		*/
-		inline unsigned int replaceChars(const StringRef<CP>& from, const StringRef<CP>& to, unsigned int count = lengthUnknown, unsigned int limit = -1, bool swap = false) {
+		inline void replaceChars(const StringRef<CP>& from, const StringRef<CP>& to, bool ignoreCase = false, bool keepCase = false, bool swapMatch = false, unsigned int limit = -1, unsigned int count = lengthUnknown) {
 			matchTypes(str);
 			if (isWide()) {
 				_w.setLength(
-					StringType<wchar_t, CP>::replaceChars(getData<wchar_t>(), getDataEnd<wchar_t>(count), from.getData<wchar_t>(), from.getDataEnd<wchar_t>(), to.getData<wchar_t>(), to.getDataEnd<wchar_t>(), limit, swap) );
+					StringType<wchar_t, CP>::replaceChars(getData<wchar_t>(), getDataEnd<wchar_t>(count), from.getData<wchar_t>(), from.getDataEnd<wchar_t>(), to.getData<wchar_t>(), to.getDataEnd<wchar_t>(), ignoreCase, swapMatch, keepCase, limit) );
 				_w.markValid();
 			} else {
 				_a.setLength(
-					StringType<char, CP>::replaceChars(getData<char>(), getDataEnd<char>(count), from.getData<char>(), from.getDataEnd<char>(), to.getData<char>(), to.getDataEnd<char>(), limit, swap) );
+					StringType<char, CP>::replaceChars(getData<char>(), getDataEnd<char>(count), from.getData<char>(), from.getDataEnd<char>(), to.getData<char>(), to.getDataEnd<char>(), ignoreCase, swapMatch, keepCase, limit) );
 				_a.markValid();
 			}
 			this->changed();

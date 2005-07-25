@@ -25,8 +25,7 @@ class TestStringType : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testEqual );
 	CPPUNIT_TEST( testCompare );
 	CPPUNIT_TEST( testFind );
-//	CPPUNIT_TEST(  );
-//	CPPUNIT_TEST(  );
+	CPPUNIT_TEST( testReplaceChars );
 
 	CPPUNIT_TEST_SUITE_END();
 
@@ -72,6 +71,23 @@ protected:
 
 		CPPUNIT_ASSERT( it.getPosition() == test.size() );
 		CPPUNIT_ASSERT( it.getFoundPosition(test.c_str() + test.size()) == StringType<char>::notFound );
+
+		{
+			tString toStr = testString(L"¥BC");
+			tString fromStr = testString(L"¹bc");
+			StringType<CHAR, cpACP>::Iterator to((CHAR*)toStr.c_str());
+			StringType<CHAR, cpACP>::ConstIterator from(fromStr.c_str());
+			// test przypisania
+			to = (CHAR*)from();
+			to = (CHAR*)toStr.c_str();
+			// podmianki
+            to.set(from);
+			++to; ++from;
+			to.set(from.character());
+			++to; ++from;
+			*to = *from;
+			CPPUNIT_ASSERT_EQUAL(fromStr, toStr);
+		}
 
 	}
 
@@ -154,6 +170,24 @@ protected:
 		buff = it.getLower();
 		result = toUnicode((char*)&buff, CP_UTF8);
 		CPPUNIT_ASSERT_EQUAL( std::wstring(L"d"), result );
+
+		{
+			std::string toStr = fromUnicode(L"¥BC", CP_UTF8);
+			std::string fromStr = fromUnicode(L"¹bc", CP_UTF8);
+			StringType<char, cpUTF8>::Iterator to((char*)toStr.c_str());
+			StringType<char, cpUTF8>::ConstIterator from(fromStr.c_str());
+			// test przypisania
+			to = (char*)from();
+			to = (char*)toStr.c_str();
+			// podmianki
+            to.set(from);
+			++to; ++from;
+			to.set(from.character());
+			++to; ++from;
+			*to = *from;
+			CPPUNIT_ASSERT_EQUAL(fromStr, toStr);
+		}
+
 
 	}
 
@@ -358,11 +392,117 @@ protected:
 		}
 	}
 
+	template<typename STR, class CP>
+	unsigned int testReplaceChars(STR& test, const STR& from, const STR& to, bool noCase, bool keepCase, bool swapMatch, int limit = -1) {
+		typedef STR::value_type CH;
+		StringType<CH, CP>::Iterator it = StringType<CH, CP>::replaceChars((CH*)test.c_str(), (CH*)test.c_str() + test.size(), from.c_str(), from.c_str() + from.size(), to.c_str(), to.c_str() + to.size(), noCase, keepCase, swapMatch, limit);
+		*it = 0;
+		stringRelease(test, it - test.c_str());
+		return it.getPosition();
+	}
+
+
 	void testReplaceChars() {
+		{ // replace
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"æ¹ba");
+			tString to =   testString(L"¿óyx");
+			testReplaceChars<tString, cpACP>(test, from, to, false, false, false, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"xycdABCDó¿¥Æ"), test);
+		}
+		{ // replace nocase
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"æ¹ba");
+			tString to =   testString(L"¿óyx");
+			testReplaceChars<tString, cpACP>(test, from, to, true, false, false, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"xycdxyCDó¿ó¿"), test);
+		}
+		{ // replace nocase keepcase
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"æ¹ba");
+			tString to =   testString(L"¿óyx");
+			testReplaceChars<tString, cpACP>(test, from, to, true, true, false, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"xycdXYCDó¿Ó¯"), test);
+		}
+		{ // replace swapMatch
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"abcd");
+			tString to =   testString(L"1234");
+			testReplaceChars<tString, cpACP>(test, from, to, false, false, true, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"abcd12341234"), test);
+		}
+		{ // replace swapMatch nocase
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"abcd");
+			tString to =   testString(L"1234");
+			testReplaceChars<tString, cpACP>(test, from, to, true, false, true, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"abcdABCD1234"), test);
+		}
+		{ // replace limit
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"cdab");
+			tString to =   testString(L"xyzw");
+			testReplaceChars<tString, cpACP>(test, from, to, false, false, false, 2);
+			CPPUNIT_ASSERT_EQUAL(testString(L"zwcdABCD¹æ¥Æ"), test);
+		}
+		{ // replace swapMatch limit
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"abcd");
+			tString to =   testString(L"1234");
+			testReplaceChars<tString, cpACP>(test, from, to, false, false, true, 2);
+			CPPUNIT_ASSERT_EQUAL(testString(L"abcd12CD¹æ¥Æ"), test);
+		}
+		{ // replace erase
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"aA¹¥");
+			tString to =   testString(L"");
+			testReplaceChars<tString, cpACP>(test, from, to, false, false, false, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"bcdBCDæÆ"), test);
+		}
+		{ // replace swapMatch erase
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"aA¹¥");
+			tString to =   testString(L"");
+			testReplaceChars<tString, cpACP>(test, from, to, false, false, true, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"aA¹¥"), test);
+		}
+
+		{ // replace last
+			tString test = testString(L"abcdABCD¹æ¥Æ");
+			tString from = testString(L"aA¹¥Æ");
+			tString to =   testString(L"eE ");
+			testReplaceChars<tString, cpACP>(test, from, to, false, false, false, -1);
+			CPPUNIT_ASSERT_EQUAL(testString(L"ebcdEBCD æ  "), test);
+		}
+
+		{ // replace UTF8 erase
+			std::string test = fromUnicode(L"B¥Kêd", CP_UTF8);
+			std::string from = fromUnicode(L"¹êæ¥ÊÆ", CP_UTF8);
+			std::string to =   fromUnicode(L"", CP_UTF8);
+			testReplaceChars<std::string, cpUTF8>(test, from, to, false, false, false, -1);
+			CPPUNIT_ASSERT_EQUAL(fromUnicode(L"BKd", CP_UTF8), test);
+		}
+
+		{ // replace UTF8
+			std::string test = fromUnicode(L"B¥Kêd", CP_UTF8);
+			std::string from = fromUnicode(L"¹êæ¥ÊÆ", CP_UTF8);
+			std::string to =   fromUnicode(L"¥ÊÆ¹êæ", CP_UTF8);
+			testReplaceChars<std::string, cpUTF8>(test, from, to, false, false, false, -1);
+			CPPUNIT_ASSERT_EQUAL(fromUnicode(L"B¹KÊd", CP_UTF8), test);
+		}
+
+		{ // replace UTF8 smaller
+			std::string test = fromUnicode(L"B¥Kêd", CP_UTF8);
+			std::string from = fromUnicode(L"¹êæ¥ÊÆ", CP_UTF8);
+			std::string to =   fromUnicode(L"aecAEC", CP_UTF8);
+			testReplaceChars<std::string, cpUTF8>(test, from, to, false, false, false, -1);
+			CPPUNIT_ASSERT_EQUAL(fromUnicode(L"BAKed", CP_UTF8), test);
+		}
+
 	}
 
 };
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStringType<char> );
-//CPPUNIT_TEST_SUITE_REGISTRATION( TestStringType<wchar_t> );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestStringType<wchar_t> );
