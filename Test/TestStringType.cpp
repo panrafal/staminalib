@@ -19,6 +19,14 @@ class TestStringType : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testIteratorCase );
 	CPPUNIT_TEST( testIteratorCompare );
 	CPPUNIT_TEST( testUTF8Iterator );
+	CPPUNIT_TEST( testGetLength );
+	CPPUNIT_TEST( testGetDataPos );
+	CPPUNIT_TEST( testGetCharPos );
+	CPPUNIT_TEST( testEqual );
+	CPPUNIT_TEST( testCompare );
+	CPPUNIT_TEST( testFind );
+//	CPPUNIT_TEST(  );
+//	CPPUNIT_TEST(  );
 
 	CPPUNIT_TEST_SUITE_END();
 
@@ -87,8 +95,8 @@ protected:
 		tString test3 = testString(L"B");
 		tString test4 = testString(L"b");
 
-		StringType<CHAR, cpACP>::ConstIterator a;
-		StringType<CHAR, cpACP>::ConstIterator b;
+		StringType<CHAR, cpUTF8>::ConstIterator a;
+		StringType<CHAR, cpUTF8>::ConstIterator b;
 
 		a = test1.c_str();
 		b = test2.c_str();
@@ -108,6 +116,7 @@ protected:
 		b = test3.c_str();
 		CPPUNIT_ASSERT( a.charEq(b, false) == false );
 		CPPUNIT_ASSERT( a.charEq(b, true) == false );
+		a.charCmp(b, false);
 		CPPUNIT_ASSERT_EQUAL( (signed)-1, a.charCmp(b, false) );
 		CPPUNIT_ASSERT( a.charCmp(b, true) == -1 );
 		CPPUNIT_ASSERT( b.charCmp(a, false) == 1 );
@@ -131,11 +140,229 @@ protected:
 		it += 2; // d
 		CPPUNIT_ASSERT( it.getPosition() == 2 );
 		CPPUNIT_ASSERT_EQUAL( 'd', *it );
+
+		std::string lower = fromUnicode(L"³", CP_UTF8);
+		it = test.c_str();
+		__int64 character = it.character();
+		__int64 buff = it.getLower();
+		std::wstring result = toUnicode((char*)&buff, CP_UTF8);
+		//CPPUNIT_ASSERT_EQUAL( std::wstring(L"³"), result );
+		//CPPUNIT_ASSERT_EQUAL( lower, std::string((char*)&buff) );
+		// Zmiana rozmiaru jest zabroniona dla UTF-8
+		CPPUNIT_ASSERT_EQUAL( std::wstring(L"£"), result );
+		it = "D";
+		buff = it.getLower();
+		result = toUnicode((char*)&buff, CP_UTF8);
+		CPPUNIT_ASSERT_EQUAL( std::wstring(L"d"), result );
+
 	}
 
+	void testGetLength() {
+		tString test = testString(L"abc¥ÊÆ");
+		CPPUNIT_ASSERT_EQUAL( (unsigned)6, StringType<CHAR>::getLength(test.c_str(), test.c_str() + test.size()) );
+
+		typedef StringType<char, cpUTF8> testType;
+		std::string utf8 = fromUnicode(L"abc¥ÊÆ", CP_UTF8);
+		CPPUNIT_ASSERT_EQUAL( (unsigned)6, testType::getLength(utf8.c_str(), utf8.c_str() + utf8.size()) );
+	}
+
+	void testGetDataPos() {
+		{
+		tString test = testString(L"abc¥ÊÆ");
+		const CHAR* from = test.c_str();
+		const CHAR* to = from + test.size();
+
+		typedef StringType<CHAR> testType;
+
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getDataPos(from, to, 0) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)4, testType::getDataPos(from, to, 4) );
+		// przesadzony
+		CPPUNIT_ASSERT_EQUAL( (unsigned)6, testType::getDataPos(from, to, 20) );
+		// przesadzony - zero
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getDataPos(from, from, 20) );
+		// ujemny
+		CPPUNIT_ASSERT_EQUAL( (unsigned)5, testType::getDataPos(from, to, -1) );
+		// ujemny - zero
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getDataPos(from, from, -2) );
+		// ujemny przesadzony
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getDataPos(from, to, -20) );		
+		}
+		{ // UTF8
+		std::string test = fromUnicode(L"abc¥ÊÆ", CP_UTF8);
+		const char* from = test.c_str();
+		const char* to = from + test.size();
+
+		typedef StringType<char, cpUTF8> testType;
+
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getDataPos(from, to, 0) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)5, testType::getDataPos(from, to, 4) );
+		// przesadzony
+		CPPUNIT_ASSERT_EQUAL( (unsigned)9, testType::getDataPos(from, to, 20) );
+		// ujemny
+		CPPUNIT_ASSERT_EQUAL( (unsigned)7, testType::getDataPos(from, to, -1) );
+		// ujemny przesadzony
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getDataPos(from, to, -20) );		
+
+		}
+	}
+
+	void testGetCharPos() {
+		{
+		tString test = testString(L"abc¥ÊÆ");
+		const CHAR* from = test.c_str();
+		const CHAR* to = from + test.size();
+
+		typedef StringType<CHAR> testType;
+
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getCharPos(from, to, 0) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)4, testType::getCharPos(from, to, 4) );
+		// przesadzony
+		CPPUNIT_ASSERT_EQUAL( (unsigned)6, testType::getCharPos(from, to, 20) );
+		}
+		{ // UTF8
+		std::string test = fromUnicode(L"abc¥ÊÆ", CP_UTF8);
+		const char* from = test.c_str();
+		const char* to = from + test.size();
+
+		typedef StringType<char, cpUTF8> testType;
+
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::getCharPos(from, to, 0) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)4, testType::getCharPos(from, to, 5) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)4, testType::getCharPos(from, to, 6) );
+		// przesadzony
+		CPPUNIT_ASSERT_EQUAL( (unsigned)6, testType::getCharPos(from, to, 20) );
+		}
+	}
+
+	void testEqual() {
+		{
+			tString a = testString(L"abc¥ÊÆ");
+			const CHAR* a1 = a.c_str();
+			const CHAR* a2 = a1 + a.size();
+			tString b = testString(L"ABC¹êæ");
+			const CHAR* b1 = b.c_str();
+			const CHAR* b2 = b1 + b.size();
+
+			typedef StringType<CHAR> testType;
+
+			CPPUNIT_ASSERT( testType::equal(a1, a2, b1, b2, false) == false );
+			CPPUNIT_ASSERT( testType::equal(a1, a2, b1, b2, true) == true );
+			CPPUNIT_ASSERT( testType::equal(a1, a2, a1, a2, false) == true );
+			CPPUNIT_ASSERT( testType::equal(a1, a2, a1, a2, true) == true );
+			CPPUNIT_ASSERT( testType::equal(a1, a1, a1, a1, false) == true );
+			CPPUNIT_ASSERT( testType::equal(a1, a1, b1, b1, false) == true );
+		}
+		{// UTF8
+			std::string a = fromUnicode(L"abc¥ÊÆ", CP_UTF8);
+			const char* a1 = a.c_str();
+			const char* a2 = a1 + a.size();
+			std::string b = fromUnicode(L"ABC¥ÊÆ", CP_UTF8);
+			const char* b1 = b.c_str();
+			const char* b2 = b1 + b.size();
+
+			typedef StringType<char, cpUTF8> testType;
+
+			CPPUNIT_ASSERT( testType::equal(a1, a2, b1, b2, false) == false );
+			CPPUNIT_ASSERT( testType::equal(a1, a2, b1, b2, true) == true );
+			CPPUNIT_ASSERT( testType::equal(a1, a2, a1, a2, false) == true );
+			CPPUNIT_ASSERT( testType::equal(a1, a2, a1, a2, true) == true );
+		}
+
+	}
+
+	void testCompare() {
+		{
+			tString a = testString(L"a¹¯¥Bc");
+			const CHAR* a1 = a.c_str();
+			const CHAR* a2 = a1 + a.size();
+			tString b = testString(L"abZ¹Bd");
+			const CHAR* b1 = b.c_str();
+			const CHAR* b2 = b1 + b.size();
+
+			typedef StringType<CHAR> testType;
+
+			CPPUNIT_ASSERT( testType::compare(a1, a2, b1, b2, false) == -1 );
+			CPPUNIT_ASSERT( testType::compare(a1+2, a2, b1+2, b2, false) == 1 ); // ¯ ~ Z
+			CPPUNIT_ASSERT( testType::compare(a1+3, a2, b1+3, b2, false) == 1 ); // ¥B ~ ¹B
+			CPPUNIT_ASSERT( testType::compare(a1+3, a2-1, b1+3, b2-1, true) == 0 ); // ¥B ~ ¹B
+			CPPUNIT_ASSERT( testType::compare(a1+3, a2, b1+3, b2, true) == -1 ); // ¥Bc ~ ¹Bd
+		}
+		{// UTF8
+			std::string a = fromUnicode(L"ab¹", CP_UTF8);
+			const char* a1 = a.c_str();
+			const char* a2 = a1 + a.size();
+			std::string b = fromUnicode(L"AB¹", CP_UTF8);
+			const char* b1 = b.c_str();
+			const char* b2 = b1 + b.size();
+
+			typedef StringType<char, cpUTF8> testType;
+
+			CPPUNIT_ASSERT( testType::compare(a1, a2, b1, b2, false) == -1 );
+			CPPUNIT_ASSERT( testType::compare(a1, a2, b1, b2, true) == 0 );
+		}
+	}
+
+	void testFind() {
+		{
+			//						 0 2 4 6 8 0 2 4
+			tString a = testString(L"¹b¹B¥B¹B¹B¹B¥Bqwerty");
+			const CHAR* a1 = a.c_str();
+			const CHAR* a2 = a1 + a.size();
+			tString b = testString(L"¹B");
+			const CHAR* b1 = b.c_str();
+			const CHAR* b2 = b1 + b.size();
+			typedef StringType<CHAR> testType;
+
+			// pierwszy
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::find(a1, a2, b1, b2, false, 0).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::find(a1, a2, b1, b2, true, 0).getFoundPosition(a2) );
+			// drugi
+			CPPUNIT_ASSERT_EQUAL( (unsigned)6, testType::find(a1, a2, b1, b2, false, 1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::find(a1, a2, b1, b2, true, 1).getFoundPosition(a2) );
+			// dziesiaty (za daleko)
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::find(a1, a2, b1, b2, false, 10).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::find(a1, a2, b1, b2, true, 10).getFoundPosition(a2) );
+			// ostatni
+			CPPUNIT_ASSERT_EQUAL( (unsigned)10, testType::find(a1, a2, b1, b2, false, -1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)12, testType::find(a1, a2, b1, b2, true, -1).getFoundPosition(a2) );
+
+			// nie istnieje
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::find(a1+14, a2, b1, b2, false, 0).getFoundPosition(a2) );
+			// tekst mniejszy ni¿ szukany
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::find(b1, b2, a1, a2, false, 0).getFoundPosition(b2) );
+		}
+		{// UTF8
+			// pozycja 	   		          0 2 4 6 8 0 2 4
+			// dane					      0 3 6 9 2 5 8 
+			std::string a = fromUnicode(L"¹b¹B¹b¹B¹B¹B¹b", CP_UTF8);
+			const char* a1 = a.c_str();
+			const char* a2 = a1 + a.size();
+			std::string b = fromUnicode(L"¹B", CP_UTF8);
+			const char* b1 = b.c_str();
+			const char* b2 = b1 + b.size();
+
+			typedef StringType<char, cpUTF8> testType;
+
+			// pierwszy
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::find(a1, a2, b1, b2, false, 0).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::find(a1, a2, b1, b2, true, 0).getFoundPosition(a2) );
+			// drugi
+			CPPUNIT_ASSERT_EQUAL( (unsigned)6, testType::find(a1, a2, b1, b2, false, 1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::find(a1, a2, b1, b2, true, 1).getFoundPosition(a2) );
+			// dziesiaty (za daleko)
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::find(a1, a2, b1, b2, false, 10).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::find(a1, a2, b1, b2, true, 10).getFoundPosition(a2) );
+			// ostatni
+			CPPUNIT_ASSERT_EQUAL( (unsigned)10, testType::find(a1, a2, b1, b2, false, -1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)12, testType::find(a1, a2, b1, b2, true, -1).getFoundPosition(a2) );
+		}
+	}
+
+	void testReplaceChars() {
+	}
 
 };
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStringType<char> );
-CPPUNIT_TEST_SUITE_REGISTRATION( TestStringType<wchar_t> );
+//CPPUNIT_TEST_SUITE_REGISTRATION( TestStringType<wchar_t> );

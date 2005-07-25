@@ -16,7 +16,7 @@
 #include <string>
 #include "WideChar.h"
 #include "StringBuffer.h"
-#include "StringType.h"
+//#include "StringType.h"
 
 namespace Stamina {
 
@@ -217,29 +217,29 @@ namespace Stamina {
 			/*TODO*/
 		}
 
-		inline int compare(const StringRef<CP>& str, unsigned int count = lengthUnknown, bool ignoreCase = false) const {
+		inline int compare(const StringRef<CP>& str, bool ignoreCase = false, unsigned int count = lengthUnknown) const {
 			matchConstTypes(str);
 			if (isWide()) {
-				return StringType<wchar_t, CP>::compare(getData<wchar_t>(), getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), count, ignoreCase);
+				return StringType<wchar_t, CP>::compare(getData<wchar_t>(), getDataEnd<wchar_t>(count), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(count), ignoreCase);
 			} else {
-				return StringType<char, CP>::compare(getData<char>(), getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), count, ignoreCase);
+				return StringType<char, CP>::compare(getData<char>(), getDataEnd<char>(count), str.getData<char>(), str.getDataEnd<char>(count), ignoreCase);
 			}
 		}
 
 		// ------ search
 
-		inline unsigned int find(const StringRef<CP>& find, int start, unsigned int count = lengthUnknown, unsigned int seq = 0, bool ignoreCase = false) const {
+		inline unsigned int find(const StringRef<CP>& find, int start, bool ignoreCase = false, int skip = 0, unsigned int count = lengthUnknown) const {
 			matchConstTypes(str);
 			start = getDataPos(start);
 			if (isWide()) {
-				return StringType<wchar_t, CP>::find(getData<wchar_t>() + start, getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), count, seq, ignoreCase);
+				return StringType<wchar_t, CP>::find(getData<wchar_t>() + start, getDataEnd<wchar_t>(count), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(count), ignoreCase, skip);
 			} else {
-				return StringType<char, CP>::find(getData<char>() + start, getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), count, seq, ignoreCase).getFoundPosition();
+				return StringType<char, CP>::find(getData<char>() + start, getDataEnd<char>(count), str.getData<char>(), str.getDataEnd<char>(count), ignoreCase, skip).getFoundPosition();
 			}
 		}
 
 		inline unsigned int findLast(const StringRef<CP>& find, int start, unsigned int count, bool ignoreCase = false) const {
-			return find(find, start, count, -1, ignoreCase);
+			return find(find, start, ignoreCase, -1, count);
 		}
 
 		// ------ basic modification
@@ -356,11 +356,11 @@ namespace Stamina {
 			matchTypes(str);
 			if (isWide()) {
 				_w.setLength(
-					StringType<wchar_t, CP>::replaceChars(getData<wchar_t>(), getDataEnd<wchar_t>(), from.getData<wchar_t>(), from.getDataEnd<wchar_t>(), to.getData<wchar_t>(), to.getDataEnd<wchar_t>(), count, limit, swap) );
+					StringType<wchar_t, CP>::replaceChars(getData<wchar_t>(), getDataEnd<wchar_t>(count), from.getData<wchar_t>(), from.getDataEnd<wchar_t>(), to.getData<wchar_t>(), to.getDataEnd<wchar_t>(), limit, swap) );
 				_w.markValid();
 			} else {
 				_a.setLength(
-					StringType<char, CP>::replaceChars(getData<char>(), getDataEnd<char>(), from.getData<char>(), from.getDataEnd<char>(), to.getData<char>(), to.getDataEnd<char>(), count, limit, swap) );
+					StringType<char, CP>::replaceChars(getData<char>(), getDataEnd<char>(count), from.getData<char>(), from.getDataEnd<char>(), to.getData<char>(), to.getDataEnd<char>(), limit, swap) );
 				_a.markValid();
 			}
 			this->changed();
@@ -469,8 +469,9 @@ namespace Stamina {
 		}
 
 		template <typename CHAR>
-		inline const CHAR* getDataEnd() const {
-			return getBuffer<CHAR>().getString() + getBuffer<CHAR>().getDataSize();
+		inline const CHAR* getDataEnd(unsigned int size = -1) const {
+			if (size > getBuffer<CHAR>().getDataSize()) size = getBuffer<CHAR>().getDataSize();
+			return getBuffer<CHAR>().getString() + size;
 		}
 
 		template <typename CHAR>

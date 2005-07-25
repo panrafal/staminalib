@@ -25,15 +25,21 @@ namespace Stamina {
 	typedef CodePage<CP_ACP> cpACP;
 	typedef CodePage<CP_UTF8> cpUTF8;
 
+	/** StringType provides static functions for operations on variable width text.
+	
+	@warning Currently UTF-8 characters > 0x7F can't change case (therefore all operations cannot be always case insensitive). 
+	@warning Codepages different than cpACP or cpUTF8 might be handled incorrectly. Only UTF-8 support is implemented. Collating and case of characters is currently handled by the globally selected locale.
+	*/
 	template<typename CHAR, class CP = cpACP>
 	class StringType {
 	public:
 
 		typedef unsigned tCharacter;
+		typedef unsigned tCharacterBuff;
 		const static unsigned notFound = -1;
 
 		static const std::locale& locale() {
-			static std::locale loc = std::locale("");
+			static std::locale loc = std::locale();
 			return loc;
 		}
 
@@ -95,6 +101,10 @@ namespace Stamina {
 				return *_p;
 			}
 
+			inline const CHAR* operator()() const {
+				return _p;
+			}
+
 			/*
 			inline operator const CHAR* () {
 				return _p;
@@ -118,6 +128,9 @@ namespace Stamina {
 				return _char;
 			}
 
+			/** Returns full character sequence (usually one byte).
+			@warning The sequence might not be null terinated! Use getCharacter() instead.
+			*/
 			inline tCharacter character() const {
 				tCharacter ch = 0;
 				for (unsigned int i = 0; i < charSize(); i++) {
@@ -126,15 +139,27 @@ namespace Stamina {
 				return ch;
 			}
 
+			/** Returns null terminated character sequence (usually one byte).
+			@param buff tCharacterBuff to act as a character buffer.
+			*/
+			inline CHAR* getCharacter(tCharacterBuff& buff) const {
+				buff = character();
+				return (CHAR*)&buff;
+			}
+
 			inline tCharacter getLower() const {
 				tCharacter ch = character();
-				std::use_facet<std::ctype<CHAR> >( locale() ).tolower( (CHAR*)&ch, (CHAR*)&ch + charSize() );
+				if (canChangeCase()) {
+					std::use_facet<std::ctype<CHAR> >( locale() ).tolower( (CHAR*)&ch, (CHAR*)&ch + charSize() );
+				}
 				return ch;
 			}
 
 			inline tCharacter getUpper() const {
 				tCharacter ch = character();
-				std::use_facet<std::ctype<CHAR> >( locale() ).toupper( (CHAR*)&ch, (CHAR*)&ch + charSize() );
+				if (canChangeCase()) {
+					std::use_facet<std::ctype<CHAR> >( locale() ).toupper( (CHAR*)&ch, (CHAR*)&ch + charSize() );
+				}
 				return ch;
 			}
 
@@ -174,7 +199,12 @@ namespace Stamina {
 					a = character();
 					b = test.character();
 				}
-				return std::use_facet<std::collate<CHAR> > ( locale() ).compare ( (CHAR*)&a, (CHAR*)&a + charSize(), (CHAR*)&b, (CHAR*)&b + charSize() );
+				if (isWide()) {
+					// inaczej specjalizacja by³aby problematyczna...
+					return _wcsncoll((wchar_t*)&a, (wchar_t*)&b, charSize());
+				} else {
+					return std::use_facet<std::collate<CHAR> > ( locale() ).compare ( (CHAR*)&a, (CHAR*)&a + charSize(), (CHAR*)&b, (CHAR*)&b + charSize() );
+				}
 			}
 
 			inline unsigned int charSize() const {
@@ -185,15 +215,26 @@ namespace Stamina {
 				return 1;
 			}
 
+			inline bool canChangeCase() const {
+				return true;
+			}
+
+			inline static bool isWide() {
+				return sizeof(CHAR) == sizeof(wchar_t);
+			}
+
 
 		private:
 			const CHAR* _p;
 			unsigned int _char;
 		};
 
+		inline static bool isWide() {
+			return sizeof(CHAR) == sizeof(wchar_t);
+		}
 
 		static unsigned int getLength(const CHAR* from, const CHAR* to) {
-			ConstIterator<CHAR, CP> it = from;
+			ConstIterator it = from;
 			for (; it < to; ++it) {
 			}
 			return it.getPosition();
@@ -202,20 +243,20 @@ namespace Stamina {
 		static unsigned int getDataPos(const CHAR* from, const CHAR* to, int charPos) {
 			if (charPos < 0) {
 				charPos = -charPos;
-				ConstIterator<CHAR, CP> it = to - 1;
-				for (; it >= from; --it) {
+				ConstIterator it = to;
+				for (; it > from && charPos > 0; --it, --charPos) {
 				}
 				return it - from;
 			} else {
-				ConstIterator<CHAR, CP> it = from;
-				for (; it < to; ++it) {
+				ConstIterator it = from;
+				for (; it < to && charPos > 0; ++it, --charPos) {
 				}
 				return it - from;
 			}
 		}
 		
 		static unsigned int getCharPos(const CHAR* from, const CHAR* to, unsigned int dataPos) {
-			ConstIterator<CHAR, CP> it = from;
+			ConstIterator it = from;
 			const CHAR* aim = from + dataPos;
 			for (; it < to; ++it) {
 				if (it == aim) break;
@@ -228,68 +269,72 @@ namespace Stamina {
 
 
 		static bool equal(const CHAR* abegin, const CHAR* aend, const CHAR* bbegin, const CHAR* bend, bool noCase) {
-			ConstIterator<CHAR, CP> a = abegin;
-			ConstIterator<CHAR, CP> b = bbegin;
-			for (; abegin < aend && bbegin < bend; ++a ++b) {
+			ConstIterator a = abegin;
+			ConstIterator b = bbegin;
+			for (; a < aend && b < bend; ++a, ++b) {
 				if (!a.charEq(b, noCase)) return false;
 			}
 			return true;
 		}
 
-		static int compare(const CHAR* abegin, const CHAR* aend, const CHAR* bbegin, const CHAR* bend, unsigned int count, bool noCase) {
-			ConstIterator<CHAR, CP> a = abegin;
-			ConstIterator<CHAR, CP> b = bbegin;
-			for (; abegin < aend && bbegin < bend && count > 0; ++a ++b --count) {
+		static int compare(const CHAR* abegin, const CHAR* aend, const CHAR* bbegin, const CHAR* bend, bool noCase) {
+			ConstIterator a = abegin;
+			ConstIterator b = bbegin;
+			for (; a < aend && b < bend; ++a, ++b) {
 				int res = a.charCmp(b, noCase);
 				if (res != 0) return res;
 			}
-			if (count == 0) return 0;
-			if (abegin >= aend) return -1; // a krótszy
-			if (bbegin >= bend) return 1;
-			return 0 //equal;
+			if (a == aend && b == bend) return 0;
+			if (a >= aend) return -1; // a krótszy
+			if (b >= bend) return 1;
+			return 0; //equal;
 		}
 
-		static ConstIterator find(const CHAR* begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, unsigned int count, unsigned int seq, bool noCase) {
-			if (seq > 0) {
-				ConstIterator<CHAR, CP> last;
-				bool findLast = (seq == -1);
-				while (seq--) {
-					ConstIterator<CHAR, CP> found = find(begin, end, findBegin, findEnd, count, 0, noCase);
+		static ConstIterator find(ConstIterator begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, bool noCase, int skip = 0) {
+			if (skip != 0) {
+				ConstIterator last;
+				ConstIterator current = begin;
+				bool findLast = (skip < 0);
+				unsigned pos = 0;
+				while (findLast || skip-- >= 0) {
+					ConstIterator found = find(current, end, findBegin, findEnd, noCase, 0);
 					if (found == end) { // koniec
 						if (findLast)
 							break;
 						else
 							return found; // i tak ju¿ wiêcej nie bêdzie...
 					}
-					unsigned pos = last.getPosition();
+					current = found;
+					++current;
+					//unsigned pos = last != 0 ? last.getPosition() : 0;
 					last = found;
-					last.setPosition( last.getPosition() + pos ); 
+					//last.setPosition( last.getPosition() + pos ); 
 				}
 				return last;
 			} else {
-				ConstIterator<CHAR, CP> found = findBegin;
-				ConstIterator<CHAR, CP> current = begin;
-				ConstIterator<CHAR, CP> last;
+				ConstIterator found = findBegin;
+				ConstIterator current = begin;
+				ConstIterator last;
 				while (current < end) {
 					if (current.charEq(found, noCase)) {
 						if (last == 0) last = current;
-						found ++;
-						if (found >= findBegin) return last;
+						++found;
+						if (found >= findEnd) return last;
 					} else if (found != findBegin) {
 						found = findBegin;
 						last = 0;
 					}
 					++current;
 				}
-				return ConstIterator<CHAR, CP>();
+				return current;
 			}
 
 		}
             
-		static void replaceChars(const CHAR* str, const CHAR* end, const CHAR* fromBegin, const CHAR* fromEnd, const CHAR* toBegin, const CHAR* toEnd, unsigned int count, unsigned int limit, bool swap) {
+		static void replaceChars(const CHAR* str, const CHAR* end, const CHAR* fromBegin, const CHAR* fromEnd, const CHAR* toBegin, const CHAR* toEnd, unsigned int limit = -1, bool swap = false) {
 			unsigned length = end - str;
 			bool erase = (toBegin == toEnd);
-			while (str < end && limit > 0 && count-- > 0) {
+			while (str < end && limit > 0) {
 				const CHAR* from = fromBegin;
 				const CHAR* to = toBegin;
 				while (from < fromEnd) {
@@ -322,6 +367,12 @@ namespace Stamina {
 	};
 
 
+	// ---------------------------   CodePage Specific
+
+
+	// ----- char / UTF-8
+
+
 	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator::charSize() const {
 		if ((*_p & 0x80) == 0) return 1;
 		if ((*_p & 0xF0) == 0xF0) return 4;
@@ -340,6 +391,11 @@ namespace Stamina {
 		if ((*p & 0xC0) != 0x80) return 3; // 10xxxxxx
 		return 4;
 	}
+
+	template<> inline bool StringType<char, cpUTF8>::ConstIterator::canChangeCase() const {
+		return charSize() == 1;
+	}
+
 
 
 }
