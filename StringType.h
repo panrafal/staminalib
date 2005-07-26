@@ -20,7 +20,7 @@ namespace Stamina {
 	template <unsigned CODEPAGE>
 	struct CodePage {
 		const static unsigned cp = CODEPAGE;
-		unsigned int codePage() {
+		static unsigned int codePage() {
 			return CODEPAGE;
 		}
 	};

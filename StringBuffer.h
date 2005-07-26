@@ -31,6 +31,18 @@ namespace Stamina {
 	*/
 	template <typename CHAR>
 	class StringBuffer {
+
+	protected: // na pocz¹tku, ¿eby by³y dobrze widoczne w debuggerze
+
+		CHAR* _buffer;
+		bool _flag : 1;
+		bool _active : 1;
+		bool _major : 1;
+		int _align1 : 1;
+		unsigned int _size : 28;
+		int _align2 : 4;
+		unsigned int _length : 28;
+
 	public:
 
 //		friend class String;
@@ -40,14 +52,14 @@ namespace Stamina {
 		const static unsigned int lengthUnknown = 0x0FFFFFFF;
 		const static unsigned int wholeData = 0xFFFFFFFF;
 	public:
-		inline StringBuffer(): _size(0), _buffer(0), _active(0), _length(0) {
+		inline StringBuffer(): _size(0), _buffer(0), _active(0), _major(0), _length(0), _flag(0) {
 		}
 
-		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _active(0), _length(0) {
+		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _active(0), _length(0),_flag(0), _major(0) {
 			resize(initialSize, 0);
 		}
 
-		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _active(0), _length(0) {
+		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _active(0), _length(0), _flag(0), _major(0) {
 			assignCheapReference(data, dataSize);
 		}
 
@@ -59,14 +71,14 @@ namespace Stamina {
 		inline void setActive(bool active) {
 			_active = active;
 		}
-		inline bool isActive() {
+		inline bool isActive() const {
 			return _active;
 		}
 
 		inline void setMajor(bool major) {
-			_active = major;
+			_major = major;
 		}
-		inline bool isMajor() {
+		inline bool isMajor() const {
 			return _major;
 		}
 
@@ -374,7 +386,7 @@ namespace Stamina {
 
 		// -- more internal
 
-		/** Resets the buffer completely (frees all allocated memory) */
+		/** Resets the buffer completely (frees all allocated memory). Leaves active and major flags intact */
 		inline void reset() {
 			freeBuffer();
 			_buffer = 0;
@@ -443,11 +455,11 @@ namespace Stamina {
 			return _size;
 		}
 
-		inline CHAR* getBuffer() {
+		inline CHAR* getBuffer() const {
 			return _buffer;
 		}
 
-		inline const CHAR* getString() {
+		inline const CHAR* getString() const {
 			return isValid() ? _buffer : (CHAR*)L"";
 		}
 
@@ -507,14 +519,6 @@ namespace Stamina {
 			Memory::freeBuffer<CHAR>(buff, size);
 		}
 
-		CHAR* _buffer;
-		bool _flag : 1;
-		bool _active : 1;
-		bool _major : 1;
-		int _align1 : 1;
-		unsigned int _size : 28;
-		int _align2 : 4;
-		unsigned int _length : 28;
 	};
 
 
