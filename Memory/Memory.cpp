@@ -44,7 +44,7 @@ void __stdcall sm_free(void* buff) {
 			buff = (TYPE*) malloc((size + 2) * GETBYTES(TYPE));\
 		}\
 		*buff = 0;\
-		buff += GETBYTES(TYPE);\
+		buff ++;\
 		return buff;\
 	}\
 	\

@@ -285,6 +285,7 @@ protected:
 			CPPUNIT_ASSERT( testType::equal(a1, a2, a1, a2, true) == true );
 			CPPUNIT_ASSERT( testType::equal(a1, a1, a1, a1, false) == true );
 			CPPUNIT_ASSERT( testType::equal(a1, a1, b1, b1, false) == true );
+			CPPUNIT_ASSERT( testType::equal(a1, a2, a1, a2 - 2, true) == false );
 		}
 		{// UTF8
 			std::string a = fromUnicode(L"abc¥ÊÆ", CP_UTF8);
@@ -319,6 +320,7 @@ protected:
 			CPPUNIT_ASSERT( testType::compare(a1+2, a2, b1+2, b2, false) == 1 ); // ¯ ~ Z
 			CPPUNIT_ASSERT( testType::compare(a1+3, a2, b1+3, b2, false) == 1 ); // ¥B ~ ¹B
 			CPPUNIT_ASSERT( testType::compare(a1+3, a2-1, b1+3, b2-1, true) == 0 ); // ¥B ~ ¹B
+			CPPUNIT_ASSERT( testType::compare(a1+3, a2-1, b1+3, b2-2, true) != 0 ); // ¥B ~ ¹B
 			CPPUNIT_ASSERT( testType::compare(a1+3, a2, b1+3, b2, true) == -1 ); // ¥Bc ~ ¹Bd
 		}
 		{// UTF8

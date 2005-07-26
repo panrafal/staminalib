@@ -34,9 +34,38 @@ namespace Stamina {
 	Default codepage is CP_ACP (default system codepage).
 
 	All positions refer to character positions - ie. in polish word "≥Ûdü" a letter 'd' is in UTF-8 stored at byte 4, however it's real character position is 2
+
+	@warning StringRefCP<> is a base class that provides all String functions. However it's constructors do not make copies of data - referencing it instead. StringRef should be used for quick passing of arguments to functions (without copying data). Use class StringCP<> in typical situations and in function returns!
+
+	Check the following example:
+
+	@code
+
+	String fun(const StringRef& ref, StringRef quick) {
+		// _both_ 'ref' and 'quick' are passed without copying data! It's almost as fast as using direct pointers to data, however leaves you with plenty of function to play with. Keep in mind, that conversion buffers are also referenced!
+		printf("Referenced const ref: %s", ref.a_str());
+		printf("Referenced quick: %s", quick.a_str());
+		// Here is where the magic goes. 'quick' holds an reference to data, as long as you don't try to modify it. If You modify do, a local copy is allocated - so the referenced string is still safe and left unchanged.
+		quick += ref;
+		printf("Local modified copy: %s", quick.a_str());
+
+		return StringPassRef(quick); // StringPassRef safely passes our local buffer outside of the function... Once again, _no copy is being made_ !
+	}
+
+	@endcode
+
+	The STL equivalent would be:
+	@code
+	std::string fun(const std::string& ref, std::string quick) {
+		...
+	}
+	@endcode
+
+	We have a copy of the return value, @a quick always makes a copy here, @ref is passing true references only if we are using std::string. In case of fun("bla", "ble") - we make _three_ redundant copies at every function call! When using StringRef and StringPassRef you don't make them at all!
+
 	*/
 	template <class CP = cpACP>
-	class StringCP: public iString {
+	class StringRefCP: public iString {
 	public:
 
 //		typedef StringIterator<CP> iterator;
@@ -48,83 +77,143 @@ namespace Stamina {
 		const static unsigned int npos = 0xFFFFFFFF;
 		const static unsigned int notFound = 0xFFFFFFFF;
 
-		class StringRef: public StringCP<CP> {
-		public:
-			StringRef() {}
-			StringRef(const StringRef& str) {
-				assignCheapReference(str);
-			}
-			StringRef(const char* ch, unsigned size = lengthUnknown) {
-				assignCheapReference(ch, size);
-			}
-			StringRef(const wchar_t* ch, unsigned size = lengthUnknown) {
-				assignCheapReference(ch, size);
-			}
-
-#ifdef _STRING_
-			StringRef(const std::string& ch) {
-				assignCheapReference(ch.c_str(), ch.size());
-			}
-			StringRef(const std::wstring& ch) {
-				assignCheapReference(ch.c_str(), ch.size());
-			}
-#endif
-#ifdef STDSTRING_H
-			StringRef(const CStdStringA& ch) {
-				assignCheapReference(ch.c_str(), ch.size());
-			}
-			StringRef(const CStdStringW& ch) {
-				assignCheapReference(ch.c_str(), ch.size());
-			}
-#endif
-
-			void makeUnique() {
-				if (_w.isReference()) {
-					_w.makeUnique();
-				}
-				if (_a.isReference()) {
-					_a.makeUnique();
-				}
-			}
-
-		};
-
-		typedef StringRef Ref;
+		typedef StringRefCP<CP> StringRef;
 
 
 	public:
-		StringCP() {
-		}
 
-		/*
-		String(const iString& b) {
-			if (b.getCodePage() == CP) {
-				assign();
-			} else {
-				b.prepareType(true);
-				assign(b.getData<wchar_t>(), b.getDataSize<wchar_t>());
+		class StringPassRef: public StringRef {
+		public:
+			StringPassRef() {
 			}
-		}*/
+			StringPassRef(const StringRef& str) {
+				this->swapBuffers(const_cast<StringRef&>(str));
+			}
+		};
 
-		StringCP(const StringCP<CP>& str) {
-			assign(str);
+		StringRefCP() {}
+
+		StringRefCP(const StringPassRef& pass) {
+			this->swapBuffers(const_cast<StringPassRef&>(pass));
 		}
-		StringCP(const StringRef& str) {
-			assign(str);
+
+		StringRefCP(const StringRef& str) {
+			assignCheapReference(str);
+		}
+		StringRefCP(const char* ch, unsigned size = lengthUnknown) {
+			assignCheapReference(ch, size);
+		}
+		StringRefCP(const wchar_t* ch, unsigned size = lengthUnknown) {
+			assignCheapReference(ch, size);
+		}
+
+#ifdef _STRING_
+		StringRefCP(const std::string& ch) {
+			assignCheapReference(ch.c_str(), ch.size());
+		}
+		StringRefCP(const std::wstring& ch) {
+			assignCheapReference(ch.c_str(), ch.size());
+		}
+#endif
+#ifdef STDSTRING_H
+		StringRefCP(const CStdStringA& ch) {
+			assignCheapReference(ch.c_str(), ch.size());
+		}
+		StringRefCP(const CStdStringW& ch) {
+			assignCheapReference(ch.c_str(), ch.size());
+		}
+#endif
+
+		void makeUnique() {
+			if (_w.isReference()) {
+				_w.makeUnique();
+			}
+			if (_a.isReference()) {
+				_a.makeUnique();
+			}
+		}
+
+		// ------ Operators
+
+		inline StringRef& operator = (const StringRef& b) {
+			this->assign(b);
+			return *this;
+		}
+
+		inline StringRef& operator = (const StringPassRef& pass) {
+			this->swapBuffers(const_cast<StringRef&>(str));
+		}
+
+
+		inline bool operator == (const StringRef& b) const {
+			return this->equal(b);
+		}
+		inline bool operator != (const StringRef& b) const {
+			return this->equal(b) == false;
+		}
+
+		inline bool operator > (const StringRef& b) const {
+			return this->compare(b) > 0;
+		}
+
+		inline bool operator < (const StringRef& b) const {
+			return this->compare(b) < 0;
+		}
+
+		inline bool operator >= (const StringRef& b) const {
+			return this->compare(b) >= 0;
+		}
+
+		inline bool operator <= (const StringRef& b) const {
+			return this->compare(b) <= 0;
+		}
+
+		inline StringRef operator + (const StringRef& b) const {
+			StringRef a (*this);
+			a.append(b);
+			return a;
+		}
+
+		inline StringRef& operator += (const StringRef& b) {
+			this->append(b);
+			return *this;
+		}
+
+		inline StringRef operator - (const StringRef& b) const {
+			StringRef a (*this);
+			a.replace(b, "");
+			return a;
+		}
+
+		inline StringRef& operator -= (const StringRef& b) const {
+			this->replace(b, "");
+			return *this;
+		}
+
+		inline bool operator & (const StringRef& b) const {
+			return this->find(b) != notFound;
 		}
 
 		// ------ Ansi Unicode buffers
 
+		inline const TCHAR* c_str() const {
+			return str<TCHAR>();
+		}
+
+		template <typename CHAR>
+		inline const CHAR* str() const {
+			prepareType<CHAR>();
+			return getData<CHAR>();
+		}
+
 		/** Returns the pointer to ANSI data. The buffer is always valid */
 		inline const char* a_str() const {
-			prepareType(false);
-			return _a.getString();
+			return str<char>();
 		}
 
 		/** Returns the pointer to UNICODE data. The buffer is always valid */
 		inline const wchar_t* w_str() const {
-			prepareType(true);
-			return _w.getString();
+			return str<wchar_t>();
 		}
 
 		template <typename CHAR>
@@ -138,10 +227,12 @@ namespace Stamina {
 			return _w;
 		}
 
+		/*
 		template <class CODEPAGE>
 		inline StringCP<CODEPAGE> getString() const {
 			return StringCP<CODEPAGE>(getData<wchar_t>(), getDataSize<wchar_t>());
 		}
+		*/
 
 		template <typename CHAR>
 		inline StringRef getRef() const {
@@ -221,16 +312,16 @@ namespace Stamina {
 		}
 
 		template <typename CHAR>
-		inline unsigned int getDataPos(int charPos) {
+		inline unsigned int getDataPos(int charPos) const {
 			return StringType<CHAR, CP>::getDataPos(getData<CHAR>(), getDataEnd<CHAR>(), charPos);
 		}
 		template <typename CHAR>
-		inline unsigned int getCharPos(unsigned int dataPos) {
+		inline unsigned int getCharPos(unsigned int dataPos) const {
 			return StringType<CHAR, CP>::getCharPos(getData<CHAR>(), getDataEnd<CHAR>(), dataPos);
 		}
 
 		/** Returns position of character in active data buffer */
-		inline unsigned int getDataPos(int charPos) {
+		inline unsigned int getDataPos(int charPos) const {
 			if (isWide()) {
 				return getDataPos<wchar_t>(charPos);
 			} else {
@@ -238,7 +329,7 @@ namespace Stamina {
 			}
 		}
 		/** Returns real character position in active data buffer */
-		inline unsigned int getCharPos(unsigned int dataPos) {
+		inline unsigned int getCharPos(unsigned int dataPos) const {
 			if (isWide()) {
 				return getCharPos<wchar_t>(dataPos);
 			} else {
@@ -249,8 +340,8 @@ namespace Stamina {
 		inline StringRef substr(int start) const {
 			unsigned int count = getDataSize();
 			start = getDataPos(start);
-			if (start > count) {
-				return StringRef<CP>();
+			if ((unsigned)start > count) {
+				return StringRef();
 			}
 			count -= start;
 			if (isWide())
@@ -259,14 +350,14 @@ namespace Stamina {
 				return StringRef(getData<char>() + start , count);
 		}
 
-		inline StringCP<CP> substr(int start, unsigned int count) const {
-			start = getDataPos(start);
+		inline StringRef substr(int start, unsigned int count) const {
 			count = getDataPos(start + count);
-			if (start > count) {
-				return StringRef<CP>();
+			start = getDataPos(start);
+			if ((unsigned)start > count) {
+				return StringRef();
 			}
 			count -= start;
-			StringCP<CP> str;
+			StringRef str;
 			str.forceType(isWide());
 			if (isWide()) {
 				str._w.assignCheapReference( getData<wchar_t>() + start , count );
@@ -275,14 +366,13 @@ namespace Stamina {
 				str._a.assignCheapReference( getData<char>() + start , count );
 				str._a.truncate(count);
 			}
-			return str;
+			return StringPassRef( str );
 		}
 
 		// ------ compare
 
 		inline bool equal(const StringRef& str, bool ignoreCase = false) const {
-			matchConstTypes(str);
-			if (isWide()) {
+			if (matchConstTypes(str)) {
 				return StringType<wchar_t, CP>::equal(getData<wchar_t>(), getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), ignoreCase);
 			} else {
 				return StringType<char, CP>::equal(getData<char>(), getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), ignoreCase);
@@ -291,8 +381,7 @@ namespace Stamina {
 		}
 
 		inline int compare(const StringRef& str, bool ignoreCase = false, unsigned int count = lengthUnknown) const {
-			matchConstTypes(str);
-			if (isWide()) {
+			if (matchConstTypes(str)) {
 				return StringType<wchar_t, CP>::compare(getData<wchar_t>(), getDataEnd<wchar_t>(count), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(count), ignoreCase);
 			} else {
 				return StringType<char, CP>::compare(getData<char>(), getDataEnd<char>(count), str.getData<char>(), str.getDataEnd<char>(count), ignoreCase);
@@ -301,18 +390,18 @@ namespace Stamina {
 
 		// ------ search
 
-		inline unsigned int find(const StringRef& find, int start, bool ignoreCase = false, int skip = 0, unsigned int count = lengthUnknown) const {
-			matchConstTypes(str);
-			start = getDataPos(start);
-			if (isWide()) {
-				return StringType<wchar_t, CP>::find(getData<wchar_t>() + start, getDataEnd<wchar_t>(count), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(count), ignoreCase, skip);
+		inline unsigned int find(const StringRef& find, int start = 0, bool ignoreCase = false, int skip = 0, unsigned int count = lengthUnknown) const {
+			if (matchConstTypes(find)) {
+				StringType<wchar_t, CP>::ConstIterator it (getData<wchar_t>() + getDataPos<wchar_t>(start), start);
+				return StringType<wchar_t, CP>::find(it, getDataEnd<wchar_t>(count), find.getData<wchar_t>(), find.getDataEnd<wchar_t>(count), ignoreCase, skip).getFoundPosition(getDataEnd<wchar_t>(count));
 			} else {
-				return StringType<char, CP>::find(getData<char>() + start, getDataEnd<char>(count), str.getData<char>(), str.getDataEnd<char>(count), ignoreCase, skip).getFoundPosition();
+				StringType<char, CP>::ConstIterator it (getData<char>() + getDataPos<char>(start), start);
+				return StringType<char, CP>::find(it, getDataEnd<char>(count), find.getData<char>(), find.getDataEnd<char>(count), ignoreCase, skip).getFoundPosition(getDataEnd<char>(count));
 			}
 		}
 
-		inline unsigned int findLast(const StringRef& find, int start, unsigned int count, bool ignoreCase = false) const {
-			return find(find, start, ignoreCase, -1, count);
+		inline unsigned int findLast(const StringRef& find, int start = 0, unsigned int count = lengthUnknown, bool ignoreCase = false) const {
+			return this->find(find, start, ignoreCase, -1, count);
 		}
 
 		// ------ basic modification
@@ -327,29 +416,36 @@ namespace Stamina {
 			this->changed();
 		}
 
-		inline void assignCheapReference(const StringRef& str) {
-			clear();
-			matchTypes(str);
-			if (isWide())
-				_w.assignCheapReference(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
-			else
-				_a.assignCheapReference(str.getData<char>(), str.getDataSize<char>());
-			this->changed();
-		}
-
-		template <typename CHAR>
-		inline void assignCheapReference(const CHAR* data, unsigned int size = lengthUnknown) {
-			StringRef ref;
-			ref.forceType( sizeof(CHAR) == sizeof(wchar_t) );
-			ref.getDataBuffer<CHAR>().assignCheapReference(data, lengthUnknown);
-			this->assignCheapReference(ref);
-		}
-
 		inline void assign(const wchar_t* data, unsigned int size = lengthUnknown) {
 			StringRef ref(data, size);
 			assign(ref);
 		}
 
+		inline void assignCheapReference(const StringRef& str) {
+			clear();
+			matchTypes(str);
+//			if (isWide())
+			if (str.getDataBuffer<wchar_t>().isValid())
+				_w.assignCheapReference(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
+//			else
+			if (str.getDataBuffer<char>().isValid())
+				_a.assignCheapReference(str.getData<char>(), str.getDataSize<char>());
+			// Wykorzystujemy przet≥umaczone bufory ze StringRef
+			//this->changed();
+		}
+
+		template <typename CHAR>
+		inline void assignCheapReference(const CHAR* data, unsigned int size = lengthUnknown) {
+			StringRef ref;
+			ref.forceType<CHAR>();
+			ref.getDataBuffer<CHAR>().assignCheapReference(data, lengthUnknown);
+			this->assignCheapReference(ref);
+		}
+
+		void swapBuffers(StringRef& str) {
+			_a.swap(str._a);
+			_w.swap(str._w);
+		}
 
 		inline void append(const StringRef& str) {
 			matchTypes(str);
@@ -403,9 +499,11 @@ namespace Stamina {
 
 
 		inline void clear() {
-			_w.reset();
-			_a.reset();
-			_w.setActive(false);
+			_w.discard();
+			_a.discard();
+			if (!isTypeLocked()) {
+				_w.setActive(false);
+			}
 		}
 
 		// ------ more modification
@@ -457,14 +555,17 @@ namespace Stamina {
 			return _w.isActive();
 		}
 
-		/** Returns true if String is locked to MultiByte characters */
-		inline bool isMBLocked() const {
-			return _a.isMajor();
+		/** Returns true if String is locked to current character type */
+		inline bool isTypeLocked() const {
+			return _w.isMajor() || _a.isMajor();
 		}
 
-		/** Sets lock on MultiByte characters */
-		inline void setMBLock(bool lock) {
-			_a.setMajor(lock);
+		/** Sets lock on character type. The string won't change it's type (ie. if it's Wide now - it'll be it still, even after assignment of MultiByte characters. */
+		inline void setTypeLock(bool lock) {
+			if (isWide())
+				_w.setMajor(lock);
+			else
+				_a.setMajor(lock);
 		}
 
 		template <typename CHAR>
@@ -474,13 +575,13 @@ namespace Stamina {
 
 		/** Switches internal buffer to UNICODE or ANSI. */
 		inline void forceType(bool wide) {
-			if (isMBLocked() && wide) return;
+			if (isTypeLocked()) return;
 			this->prepareType(wide);
 			_w.setActive(wide);
 		}
 
 		template <typename CHAR>
-		inline void prepareType() {
+		inline void prepareType() const {
 			prepareType(sizeof(CHAR) == sizeof(wchar_t));
 		}
 
@@ -489,7 +590,7 @@ namespace Stamina {
 		*/
 		void prepareType(bool wide) const {
 			if (wide == isWide()) return; // mamy juø ten typ na pewno
-			StringCP<CP>* noconst = const_cast<StringCP<CP>* >(this);
+			StringRef* noconst = const_cast<StringRef* >(this);
 			if (wide) {
 				if (_w.isValid() || _a.isValid() == false) return;
 				noconst->_w.makeRoom( MultiByteToWideChar(CP::codePage(), 0, noconst->_a.getString(), noconst->_a.getLength(), 0, 0), 0);
@@ -503,21 +604,29 @@ namespace Stamina {
 			}
 		}
 
-		inline void matchConstTypes(const StringRef& str) const {
-			if (str.isWide() == this->isWide()) return;
-			if (str.isWide()) this->prepareType(true);
-			if (this->isWide()) str.prepareType(true);
+		/** Matches this and string's type choosing the widest possible option. 
+		This function doesn't change active type, it only prepares conversion buffers and returns which type we should use (Wide or not).
+		*/
+		inline bool matchConstTypes(const StringRef& str) const {
+			if (str.isWide() == this->isWide()) return isWide();
+			if (str.isWide()) {
+				this->prepareType(true);
+			}
+			if (this->isWide()) {
+				str.prepareType(true);
+			}
+			return true;
 		}
 
-		/** Matches current and string's types choosing the best option.
-		If @a this uses MultiByte, and @a str uses Wide - @a this becomes Wide if it's not locked (major), or @a str prepares conversion otherwise.
+		/** Matches current and string's types choosing the widest possible option.
+		If @a this uses MultiByte, and @a str uses Wide - @a this becomes Wide if it's not type-locked, or @a str prepares conversion otherwise.
 		If @a this uses Wide, and @a str uses MultiByte - @a str prepares conversion buffer
 		If both use the same type, nothing happens
 		*/
 		inline void matchTypes(const StringRef& str) {
 			if (str.isWide() == this->isWide()) return;
 			if (str.isWide()) { 
-				if (isMBLocked()) { // wymuszamy u nas MB - przystosowujemy str
+				if (isTypeLocked()) { // wymuszamy u nas MB - przystosowujemy str
 					str.prepareType(false);
 					return;
 				} else {
@@ -565,6 +674,32 @@ namespace Stamina {
 	};
 
 
+	template <class CP>
+	class StringCP: public StringRefCP<CP> {
+	public:
+		StringCP() {}
+		/*
+		String(const iString& b) {
+			if (b.getCodePage() == CP) {
+				assign();
+			} else {
+				b.prepareType(true);
+				assign(b.getData<wchar_t>(), b.getDataSize<wchar_t>());
+			}
+		}*/
+
+		StringCP(const StringRefCP<CP>& str) {
+			assign(str);
+		}
+
+		inline StringCP(const StringPassRef& pass):StringRefCP<CP>(pass) {
+		}
+
+
+	};
+
+
+
 /*
 	template<typename CP = cpACP>
 	class StringCPRef: public StringCP<CP>::StringRef {
@@ -576,9 +711,10 @@ namespace Stamina {
 */
 
 	typedef StringCP<cpACP> String;
-	typedef String::Ref StringRef;
+	typedef StringRefCP<cpACP> StringRef;
+	typedef StringRefCP<cpACP>::StringPassRef StringPassRef;
 	typedef StringCP<cpUTF8> StringUTF;
-	typedef String::Ref StringUTFRef;
+	typedef StringRefCP<cpUTF8> StringUTFRef;
 
 	/*
 	template<typename CP = cpACP>

@@ -40,14 +40,14 @@ class TestString : public CPPUNIT_NS::TestFixture
   
 	CPPUNIT_TEST( testConstructor );
 	CPPUNIT_TEST( testType );
-	CPPUNIT_TEST( testMBLock );
+	CPPUNIT_TEST( testTypeLock );
 	CPPUNIT_TEST( testRef );
 //	CPPUNIT_TEST( testAutoRef );
 	CPPUNIT_TEST( testCharPos );
-//	CPPUNIT_TEST( testCompare );
-//	CPPUNIT_TEST( testEqual );
-//	CPPUNIT_TEST( testFind );
-//	CPPUNIT_TEST( testSubstr );
+	CPPUNIT_TEST( testEqual );
+	CPPUNIT_TEST( testCompare );
+	CPPUNIT_TEST( testFind );
+	CPPUNIT_TEST( testSubstr );
 //	CPPUNIT_TEST( testAssign );
 //	CPPUNIT_TEST( testAppend );
 //	CPPUNIT_TEST( testPrepend );
@@ -56,6 +56,7 @@ class TestString : public CPPUNIT_NS::TestFixture
 //	CPPUNIT_TEST( testReplace );
 //	CPPUNIT_TEST( testReplaceChars );
 //	CPPUNIT_TEST( testUseBuffer );
+//	CPPUNIT_TEST( testPassRef );
 
 
 	CPPUNIT_TEST_SUITE_END();
@@ -65,7 +66,8 @@ protected:
 public:
 
 	void setUp() {
-
+		setlocale(LC_ALL, "polish");
+		std::locale::global(std::locale("polish"));
 	}
 	void tearDown() {
 	}
@@ -145,26 +147,28 @@ public:
 
 	}
 
-	void testMBLock() {
+	void testTypeLock() {
 		{ // forceType
 			String s;
-			s.setMBLock(true);
-			s.forceType(true);
-			s.assign(testString(L"¹êæ"));
-			CPPUNIT_ASSERT( s.isWide() == false );
+			s.forceType(isWide()); // ustawiamy
+			s.setTypeLock(true); // blokujemy
+			s.forceType(!isWide());
+			s.assign(otherString(L"¹êæ"));
+			CPPUNIT_ASSERT( s.isWide() == isWide() );
 			CPPUNIT_ASSERT_EQUAL( std::string("¹êæ"), std::string(s.a_str()) );
 			CPPUNIT_ASSERT_EQUAL( std::wstring(L"¹êæ"), std::wstring(s.w_str()) );
 		}
 		{ // match
 			String s;
-			s.setMBLock(true);
-			s.assign(testString(L"¹êæ"));
+			s.forceType(isWide());
+			s.setTypeLock(true);
+			s.assign(otherString(L"¹êæ"));
 			s.matchTypes("A");
-			CPPUNIT_ASSERT( s.isWide() == false );
+			CPPUNIT_ASSERT( s.isWide() == isWide() );
 			s.matchTypes(L"W");
-			CPPUNIT_ASSERT( s.isWide() == false );
+			CPPUNIT_ASSERT( s.isWide() == isWide() );
 			s.matchTypes("A");
-			CPPUNIT_ASSERT( s.isWide() == false );
+			CPPUNIT_ASSERT( s.isWide() == isWide() );
 			CPPUNIT_ASSERT_EQUAL( std::string("¹êæ"), std::string(s.a_str()) );
 			CPPUNIT_ASSERT_EQUAL( std::wstring(L"¹êæ"), std::wstring(s.w_str()) );
 		}
@@ -172,18 +176,35 @@ public:
 
 	void testRef() {
 		{ // szybka konwersja
-			tString test = testString(L"¹êæ");
+			String test(testString(L"¹êæ"));
 			StringRef s(test);
 			CPPUNIT_ASSERT_EQUAL( std::string("¹êæ"), std::string(s.a_str()) );
 			CPPUNIT_ASSERT_EQUAL( std::wstring(L"¹êæ"), std::wstring(s.w_str()) );
 			CPPUNIT_ASSERT( s.isWide() == isWide() );
-			CPPUNIT_ASSERT( s.getData<CHAR>() == test.c_str() );
-			CPPUNIT_ASSERT( s.getData() == test.c_str() ); // active
+			CPPUNIT_ASSERT( s.getData<CHAR>() == test.getData<CHAR>() );
+			CPPUNIT_ASSERT( s.getData() == test.getData() ); // active
 			s.makeUnique();
 			CPPUNIT_ASSERT_EQUAL( std::string("¹êæ"), std::string(s.a_str()) );
 			CPPUNIT_ASSERT_EQUAL( std::wstring(L"¹êæ"), std::wstring(s.w_str()) );
-			CPPUNIT_ASSERT( s.getData<CHAR>() != test.c_str() );
-			CPPUNIT_ASSERT( s.getData() != test.c_str() ); // active
+			CPPUNIT_ASSERT( s.getData<CHAR>() != test.getData<CHAR>() );
+			CPPUNIT_ASSERT( s.getData() != test.getData() ); // active
+			CPPUNIT_ASSERT( s.isWide() == isWide() );
+		}
+		{ // wykorzystanie konwersji
+			String test(testString(L"¹êæ"));
+			test.prepareType<char>();
+			test.prepareType<wchar_t>();
+			StringRef s(test);
+			CPPUNIT_ASSERT_EQUAL( std::string("¹êæ"), std::string(s.a_str()) );
+			CPPUNIT_ASSERT_EQUAL( std::wstring(L"¹êæ"), std::wstring(s.w_str()) );
+			CPPUNIT_ASSERT( s.isWide() == isWide() );
+			CPPUNIT_ASSERT( s.getData<char>() == test.getData<char>() );
+			CPPUNIT_ASSERT( s.getData<wchar_t>() == test.getData<wchar_t>() );
+			s.makeUnique();
+			CPPUNIT_ASSERT_EQUAL( std::string("¹êæ"), std::string(s.a_str()) );
+			CPPUNIT_ASSERT_EQUAL( std::wstring(L"¹êæ"), std::wstring(s.w_str()) );
+			CPPUNIT_ASSERT( s.getData<char>() != test.getData<char>() );
+			CPPUNIT_ASSERT( s.getData<wchar_t>() != test.getData<wchar_t>() );
 			CPPUNIT_ASSERT( s.isWide() == isWide() );
 		}
 
@@ -207,16 +228,92 @@ public:
 		}
 	}
 
-	void testCompare() {
+	void testEqual() {
+		{
+			String a (testString(L"abcd¹êæ"));
+			String b (testString(L"ABCD¥ÊÆ"));
+			String c (otherString(L"ABCD¥ÊÆ"));
+			CPPUNIT_ASSERT( a.equal(b) == false );
+			CPPUNIT_ASSERT( a.equal(b, true) == true );
+			CPPUNIT_ASSERT( a.equal(c) == false );
+			CPPUNIT_ASSERT( a.equal(c, true) == true );
+			CPPUNIT_ASSERT( b.equal(c) == true );
+			CPPUNIT_ASSERT( b.equal(c, true) == true );
+
+			CPPUNIT_ASSERT( a.equal("ABCd¹êæ", true) == true );
+			CPPUNIT_ASSERT( a.equal(L"ABCd¹êæ", true) == true );
+
+			CPPUNIT_ASSERT( a != b );
+			CPPUNIT_ASSERT( c == c );
+			CPPUNIT_ASSERT( a == "abcd¹êæ" );
+			CPPUNIT_ASSERT( a != "abc" );
+
+			CPPUNIT_ASSERT( a.isWide() == isWide() );
+			CPPUNIT_ASSERT( b.isWide() == isWide() );
+			CPPUNIT_ASSERT( c.isWide() == !isWide() );
+		}
 	}
 
-	void testEqual() {
+	void testCompare() {
+		{
+			String a (testString(L"a¹cd"));
+			String b (testString(L"abcd"));
+			String c (otherString(L"A¥CD"));
+			String d (otherString(L"ABCD"));
+			CPPUNIT_ASSERT_EQUAL( (int)-1, a.compare(b) );
+			CPPUNIT_ASSERT_EQUAL( (int)-1, a.compare(d, true) );
+			CPPUNIT_ASSERT_EQUAL( (int)1, b.compare(c, true) );
+			CPPUNIT_ASSERT_EQUAL( (int)0, a.compare(c, true) );
+			CPPUNIT_ASSERT_EQUAL( (int)0, b.compare(d, true) );
+
+			CPPUNIT_ASSERT_EQUAL( (int)-1, a.compare("æææ") );
+			CPPUNIT_ASSERT_EQUAL( (int)-1, a.compare(L"æææ") );
+
+			CPPUNIT_ASSERT( a < b );
+			CPPUNIT_ASSERT( b > a );
+			CPPUNIT_ASSERT( d > b );
+			CPPUNIT_ASSERT( a <= a  );
+			CPPUNIT_ASSERT( a >= a  );
+			CPPUNIT_ASSERT( a < "zzz" );
+			CPPUNIT_ASSERT( a < L"zzz" );
+
+			CPPUNIT_ASSERT( a.isWide() == isWide() );
+			CPPUNIT_ASSERT( b.isWide() == isWide() );
+			CPPUNIT_ASSERT( c.isWide() == !isWide() );
+			CPPUNIT_ASSERT( d.isWide() == !isWide() );
+
+		}
 	}
 
 	void testFind() {
+		//						0123456789012345678901234567890123456789
+		String a ( testString(L"G¿eg¿ó³ka by³a bardzo mi³¹ g¿eg¿ó³k¹ :)"));
+		String b ( testString(L"¿eg¿"));
+		String c (otherString(L"G¯EG¯Ó£KA by³a bardzo mi³¹ g¿eg¿ó³k¹ :)"));
+		String d (otherString(L"¯EG¯"));
+
+		CPPUNIT_ASSERT_EQUAL( (unsigned)1, a.find(b) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)-1, a.find(d) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)1, a.find(d, 0, true) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)1, a.find(b, 1) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)28, a.find(b, 2) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)28, a.find(b, 0, false, 1) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)28, a.findLast(b) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)-1, a.find(b, 0, false, 1, 10) );
+
+		CPPUNIT_ASSERT( c & d );
+		CPPUNIT_ASSERT( a & "by³a" );
+		CPPUNIT_ASSERT( a & L"by³a" );
 	}
 
 	void testSubstr() {
+		String a ( testString(L"0123456789") );
+		CPPUNIT_ASSERT_EQUAL( testString(L"56789"), tString( a.substr(5).str<CHAR>() ) );
+		CPPUNIT_ASSERT_EQUAL( testString(L"56"), tString( a.substr(5, 2).str<CHAR>() ) );
+		CPPUNIT_ASSERT_EQUAL( tString(), tString( a.substr(20).str<CHAR>() ) );
+		CPPUNIT_ASSERT_EQUAL( tString(), tString( a.substr(0, 0).str<CHAR>() ) );
+		CPPUNIT_ASSERT_EQUAL( testString(L"0123456789"), tString( a.substr(0, 20).str<CHAR>() ) );
+		CPPUNIT_ASSERT_EQUAL( otherString(L"56"), tOther( a.substr(5, 2).str<OTHER>() ) );
 	}
 
 	void testAssign() {
@@ -248,4 +345,5 @@ public:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestString<CharType> );
+//CPPUNIT_TEST_SUITE_REGISTRATION( TestString<WCharType> );
 

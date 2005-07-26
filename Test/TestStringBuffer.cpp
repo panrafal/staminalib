@@ -35,6 +35,7 @@ class TestStringBuffer : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testMakeUnique );
 	CPPUNIT_TEST( testDiscard );
 	CPPUNIT_TEST( testReset );
+	CPPUNIT_TEST( testSwap );
 
 	CPPUNIT_TEST_SUITE_END();
 
@@ -914,6 +915,28 @@ protected:
 			CPPUNIT_ASSERT( b.hasOwnBuffer() == false );
 		}
 	}
+
+	void testSwap() {
+		tString t1 = shortString();
+		tString t2 = mediumString();
+		return;
+		{
+			StringBuffer<CHAR> a;
+			StringBuffer<CHAR> b;
+			a.assignCheapReference(t1.c_str(), t1.size());
+			b.assign(t2.c_str(), t2.size());
+			CHAR* b1 = a.getBuffer();
+			CHAR* b2 = b.getBuffer();
+			CPPUNIT_ASSERT( a.isReference() == true );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			a.swap(b);
+			CPPUNIT_ASSERT( b.isReference() == true );
+			CPPUNIT_ASSERT( a.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.getBuffer() == b1 );
+			CPPUNIT_ASSERT( a.getBuffer() == b2 );
+		}
+	}
+
 
 
 };

@@ -35,13 +35,18 @@ namespace Stamina {
 	protected: // na pocz¹tku, ¿eby by³y dobrze widoczne w debuggerze
 
 		CHAR* _buffer;
-		bool _flag : 1;
-		bool _active : 1;
-		bool _major : 1;
-		int _align1 : 1;
-		unsigned int _size : 28;
-		int _align2 : 4;
-		unsigned int _length : 28;
+		union {
+			struct {
+				unsigned _flag : 1;
+				unsigned _active : 1;
+				unsigned _major : 1;
+				unsigned _align1 : 1;
+				unsigned int _size : 28;
+				unsigned _align2 : 4;
+				unsigned int _length : 28;
+			};
+			__int64 __info;
+		};
 
 	public:
 
@@ -66,6 +71,17 @@ namespace Stamina {
 
 		inline ~StringBuffer() {
 			freeBuffer();
+		}
+
+		inline void swap(StringBuffer<CHAR>& b) {
+			CHAR* buffer = this->_buffer;
+			__int64 info = this->__info;
+			this->_buffer = b._buffer;
+			this->__info = b.__info;
+
+			b._buffer = buffer;
+			b.__info = info;
+			
 		}
 
 		inline void setActive(bool active) {

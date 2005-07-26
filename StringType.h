@@ -48,7 +48,7 @@ namespace Stamina {
 
 		class ConstIterator {
 		public:
-			ConstIterator(const CHAR* ptr):_p(const_cast<CHAR*>(ptr)),_char(0) {
+			ConstIterator(const CHAR* ptr, unsigned int position = 0):_p(const_cast<CHAR*>(ptr)),_char(position) {
 			}
 			ConstIterator():_p(0),_char(notFound) {
 			}
@@ -339,7 +339,7 @@ namespace Stamina {
 			for (; a < aend && b < bend; ++a, ++b) {
 				if (!a.charEq(b, noCase)) return false;
 			}
-			return true;
+			return a == aend && b == bend;
 		}
 
 		static int compare(const CHAR* abegin, const CHAR* aend, const CHAR* bbegin, const CHAR* bend, bool noCase) {
