@@ -18,6 +18,8 @@
 
 namespace Stamina {
 
+	/** Regular expressions.
+	*/
 	class RegEx {
 	public:
 
@@ -36,6 +38,8 @@ namespace Stamina {
 			int pos;
 		};
 
+		/** Compiled pattern.
+		*/
 		class Compiled {
 		public:
 			friend class RegEx;
@@ -108,24 +112,46 @@ namespace Stamina {
 		RegEx ();
 		~RegEx();
 
-
+		/** Returns results at index @a i.
+		*/
 		std::string operator [] (int i) const;
+		/** @todo Co to robi?
+		*/
 		std::string operator [] (const std::string& named) const;
 		//inline std::string operator () (int i) const {return (*this)[i];}
+
+		/** Returns results at index @a i.
+		*/
 		inline std::string getSub(int i) const {return (*this)[i];}
+
+		/** Checks if at index @a i is result.
+		*/
 		inline bool hasSub(int i) const {
 			if (_result <= i || _vector[i*2]<0 || _vector[i*2] == _vector[i*2+1]) return false;
 			return true;
 		}
+
+		/** @todo co to robi?
+		*/
 		inline int getNamedIndex(const std::string& named) const {
 			if (!_compiled) return -1;
             return _compiled->getNamedIndex(named);
 		}
 
+		/** @todo co to robi?
+		*/
 		const char* getByVector(int i);
 
+		/** Sets the regular expression's pattern.
+		*/
 		void setPattern (const std::string& v);
+
+		/** Sets compiled regular expression's pattern.
+		*/
 		void setCompiledPattern (const oCompiled& pattern);
+
+		/** Sets subject for a match or replace to the regular expression given in pattern.
+		*/
 		inline void setSubject (const std::string& v) {
 			this->_result = -1;
 			this->reset();
@@ -140,10 +166,15 @@ namespace Stamina {
 		std::string getSubject(size_t start , size_t end) {
 			return _subject.substr(start , end<start?end:end - start);
 		}
+
+		/** Returns refenrece to subject.
+		*/
 		const std::string& getSubjectRef() {
 			return _subject;
 		}
 
+		/** Returns number of results.
+		*/
 		inline int getResult() {
 			return _result;
 		}
@@ -164,9 +195,14 @@ namespace Stamina {
 		inline void reset() {
 			_start=0;
 		}
+		/** Returns index of start position in subject to perform next match or replace.
+		*/
 		inline int getStart() {
 			return _start;
 		}
+
+		/** Sets index of start position in subjecto to perform next match or replace.
+		*/
 		inline void setStart(unsigned int start) {
 			if (start < this->_subject.length())
 				_start = start;
@@ -181,40 +217,95 @@ namespace Stamina {
 				return 0;
 		}
 
-
+		/** Searches subject for a match to the regular expression given in pattern.
+		@param pat Compiled pattern.
+		@return Number of matches.
+		*/
 		int match(const oCompiled& pat) {
 			this->setCompiledPattern(pat); 
 			return this->match();
 		}
+
+		/** Searches subject for a match to the regular expression given in pattern.
+		@param pat Pattern.
+		@return Number of matches.
+		*/
 		int match(const char * pat) {
 			this->setPattern(pat); 
 			return this->match();
 		}
+
+		/** Searches subject for a match to the regular expression given in pattern.
+		@param pat Pattern.
+		@param sub Subject.
+		@return Number of matches.
+		*/
 		int match(const char * pat , const char * sub);
+
+		/** Searches subject for a match to the regular expression given in pattern.
+		*/
 		int match() {
 			this->process();
 			return this->getMatched();
 		}
+		/** Searches subject for all matches to the regular expression given in pattern.
+		@return Number of matches.
+		*/
 		int match_global();
+
+		/** Searches subject for all matches to the regular expression given in pattern.
+		@param pat Pattern.
+		@param sub Subject.
+		@return Number of matches.
+		*/
 		int match_global(const char * pat , const char * sub) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->match_global();
 		}
-
+		/** Perform a regular expression search and replace.
+		@param chg Replacement.
+		@param limit Limit of replacements.
+		@return Replaced string.
+		*/
 		std::string replace(const char * chg , int limit=0);
+
+		/** Perform a regular expression search and replace.
+		@param pat Pattern.
+		@param chg Replacement.
+		@param sub Subject.
+		@param limit Limit of replacements.
+		@return Replaced string.
+		*/
 		inline std::string replace(const char * pat , const char * chg , const char * sub , int limit=0) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->replace(chg , limit);
 		}
+
+		/** Perform a regular expression search and replace using callback function.
+		@param callback Callback function.
+		@param limit Limit of replacements.
+		@param param User defined param.
+		@return Replaced string.
+		*/
 		std::string replace(fReplace callback , int limit=0 , void * param=0);
+		/** Perform a regular expression search and replace using callback function.
+		@param pat Pattern.
+		@param callback Callback function.
+		@param sub Subject.
+		@param limit Limit of replacements.
+		@param param User defined param.
+		@return Replaced string.
+		*/
 		std::string replace(const char * pat , fReplace callback , const char * sub , int limit=0, void * param=0) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->replace(callback, limit, param);
 		}
 
+		/** @todo co to robi? Jakis replace bez matcha, ale sk¹d ma wype³niony _vector ?
+		*/
 		template <typename F>
 			std::string replace(F func, int limit=0) 
 		{
@@ -233,6 +324,13 @@ namespace Stamina {
 			return re;
 		}
 
+		/** Perform a regular expression search and replace using callback function.
+		@param pat Pattern.
+		@param func Callback function.
+		@param sub Subject.
+		@param limit Limit of replacements.
+		@return Replaced string.
+		*/
 		template <typename F>
 			std::string replace(const char * pat, F func, const char * sub , int limit=0) {
 			this->setPattern(pat);
@@ -302,33 +400,85 @@ namespace Stamina {
 
 	public:
 
+		/** Perform a regular expression match.
+		@param pat Pattern.
+		@param sub Subject.
+		@return Number of matches.
+		*/
 		inline static int doMatch(const char * pat , const char * sub) {
 			return doMatch(oCompiled(new Compiled(pat)), sub);
 		}
+		/** Perform a regular expression match.
+		@param pat Compiled pattern.
+		@param sub Subject.
+		@return Number of matches.
+		*/
 		inline static int doMatch(const oCompiled& pat , const char * sub) {
 			RegEx r;
 			r.setSubject(sub);
 			return r.match(pat);
 		}
+
+		/** Perform a regular expression search and replace.
+		@param pat Pattern.
+		@oaram chg Replacement.
+		@param sub Subject.
+		@param limit Limit of replacements.
+		@return Replaced string.
+		*/
 		inline static std::string doReplace(const char * pat , const char * chg , const char * sub , int limit=0) {
 			RegEx r;
 			return r.replace(pat, chg, sub, limit);
 		}
+
+		/** Perform a regular expression search and replace using callback function.
+		@param pat Pattern.
+		@oaram callback Callback function.
+		@param sub Subject.
+		@param limit Limit of replacements.
+		@param param User defined param.
+		@return Replaced string.
+		*/
 		inline static std::string doReplace(const char * pat , fReplace callback , const char * sub , int limit=0, void * param=0) {
 			RegEx r;
             return r.replace(pat, callback, sub, limit, param);
 		}
 
+		/** Perform a regular expression search and replace using callback function.
+		@param pat Pattern.
+		@oaram callback Callback function.
+		@param sub Subject.
+		@param limit Limit of replacements.
+		@return Replaced string.
+		*/
 		template <typename F> inline static  std::string doReplace(const char * pat, F func, const char * sub , int limit=0) 
 		{
 			RegEx r;
 			return r.replace(pat, func, sub, limit);
 		}
 
+		/** Returns result at index @a subPattern.
+
+		Perform a regular expression match and returns result at index @a subPattern if matched
+		or return @def if not matched.
+		@param pat Pattern.
+		@param sub Subject.
+		@param subPattern Index of result.
+		@param def Default value to return if not matched.
+		@return Matched result at index @subPattern.
+		*/
 		inline static std::string doGet(const char* pat, const char* sub, int subPattern = 0, const char* def = 0) {
 			return doGet(oCompiled(new Compiled(pat)), sub, subPattern, def);
 		}
 
+		/** Returns result at index @a subPattern.
+		@see doGet
+		@param pat Compiled pattern.
+		@param sub Subject.
+		@param subPattern Index of result.
+		@param def Default value to return if not matched.
+		@return Matched result at index @subPattern.
+		*/
 		inline static std::string doGet(const oCompiled& pat, const char* sub, int subPattern = 0, const char* def = 0) {
 			RegEx r;
 			r.setSubject(sub);
