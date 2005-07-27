@@ -49,7 +49,7 @@ namespace Stamina {
 		quick += ref;
 		printf("Local modified copy: %s", quick.a_str());
 
-		return StringPassRef(quick); // StringPassRef safely passes our local buffer outside of the function... Once again, _no copy is being made_ !
+		return PassStringRef(quick); // PassStringRef safely passes our local buffer outside of the function... Once again, _no copy is being made_ !
 	}
 
 	@endcode
@@ -61,7 +61,9 @@ namespace Stamina {
 	}
 	@endcode
 
-	We have a copy of the return value, @a quick always makes a copy here, @ref is passing true references only if we are using std::string. In case of fun("bla", "ble") - we make _three_ redundant copies at every function call! When using StringRef and StringPassRef you don't make them at all!
+	We have a copy of the return value, @a quick always makes a copy here, @ref is passing true references only if we are using std::string. In case of fun("bla", "ble") - we make _three_ redundant copies at every function call! When using StringRef and PassStringRef you don't make them at all!
+
+	Remember not to use StringRef as a return type from functions, unless you really know what You're doing! Use String instead, with PassStringRef where appropriate.
 
 	*/
 	template <class CP = cpACP>
@@ -82,22 +84,79 @@ namespace Stamina {
 
 	public:
 
-		class StringPassRef: public StringRef {
+		/** Proxy class for passing buffers without copying.
+
+		Passing of buffers is made by swapping them. Be aware, that after assigning a String to PassStringRef, the String won't hold the same value any more (it will contain the value of PassStringRef).
+
+		This technique can be used in two ways, always if you don't want to make a copy of the value. A typical example would be:
+		@code
+		String a;
+		...
+		a = PassStringRef(StringRef("Hello"));
+		@endcode
+		Assigning "Hello" directly to @a a would make a copy. As "Hello" is a const static buffer, it's more perfomance-wise to not make a copy of it.
+
+		Be aware however, that buffers are exchanged!:
+		@code
+		String a = "Hello";
+		String b = "Blah";
+		a = PassStringRef( b );
+		S_ASSERT( a == "Blah" ); // True
+		S_ASSERT( a == b ); // Not true!!!
+		S_ASSERT( b == "Hello" ); // True
+		@endcode
+
+		The another use of PassStringRef is returning String values:
+		@code
+		String fun(StringRef str) {
+			if (str == "Bye")
+				return PassStringRef(str);
+			else
+				return PassStringRef(StringRef("Hello"));
+		}
+		@endcode
+
+		Again, we are not making any copies here, however you'll have to preserve caution when using this. Two examples of dangerous code:
+		@code
+		String ex1(String& str) {
+			return PassStringRef(str);
+		}
+		String ex2() {
+			static String example = "Example";
+			return PassStringRef(example);
+		}
+
+		String a = "Hello";
+		S_ASSERT( ex1(a) == "Hello" ); // true
+		S_ASSERT( ex1(a) == "Hello" ); // FALSE!
+		S_ASSERT( ex2() == "Example" ); // true
+		S_ASSERT( ex2() == "Example" ); // FALSE!
+
+		@endcode
+		In both situations we are exchanging buffers with external Strings making them invalid!
+		The best way to use it safely is to declare static Strings and function arguments as const. Then it just won't compile.
+
+		@warning Don't use it as a variable type! It should be used only as a proxy!
+		*/
+		class PassStringRef {
 		public:
-			StringPassRef() {
+			friend class StringRef;
+
+			PassStringRef(StringRef& str):_str(str) {
+				//str->swapBuffers(const_cast<StringRef&>(str));
 			}
-			StringPassRef(const StringRef& str) {
-				this->swapBuffers(const_cast<StringRef&>(str));
-			}
+		private:
+			StringRef& _str;
 		};
 
 		StringRefCP() {}
 
-		StringRefCP(const StringPassRef& pass) {
-			this->swapBuffers(const_cast<StringPassRef&>(pass));
+		StringRefCP(PassStringRef& pass) {
+			this->swapBuffers(pass._str);
 		}
 
 		StringRefCP(const StringRef& str) {
+			copyType(str);
 			assignCheapReference(str);
 		}
 		StringRefCP(const char* ch, unsigned size = lengthUnknown) {
@@ -108,6 +167,12 @@ namespace Stamina {
 		}
 
 #ifdef _STRING_
+		/*
+		template <typename CHAR, typename TRAITS, typename ALLOCATOR>
+		StringRefCP(const std::basic_string<CHAR, TRAITS, ALLOCATOR>& ch) {
+			assignCheapReference(ch.c_str(), ch.size());
+		}
+		*/
 		StringRefCP(const std::string& ch) {
 			assignCheapReference(ch.c_str(), ch.size());
 		}
@@ -124,13 +189,14 @@ namespace Stamina {
 		}
 #endif
 
-		void makeUnique() {
+		StringRef& makeUnique() {
 			if (_w.isReference()) {
 				_w.makeUnique();
 			}
 			if (_a.isReference()) {
 				_a.makeUnique();
 			}
+			return *this;
 		}
 
 		// ------ Operators
@@ -140,9 +206,43 @@ namespace Stamina {
 			return *this;
 		}
 
-		inline StringRef& operator = (const StringPassRef& pass) {
-			this->swapBuffers(const_cast<StringRef&>(str));
+		inline StringRef& operator = (const PassStringRef& pass) {
+			//this->swapBuffers(const_cast<StringRef&>(str));
+			this->swapBuffers(pass._str);
+			return *this;
 		}
+/*
+		inline StringRef& operator = (const char* ch) {
+			assign(ch);
+			return *this;
+		}
+
+		inline StringRef& operator = (const wchar_t* ch) {
+			assign(ch);
+			return *this;
+		}
+
+#ifdef _STRING_
+		inline StringRef& operator = (const std::string& ch) {
+			assign(ch.c_str(), ch.size());
+			return *this;
+		}
+		inline StringRef& operator = (const std::wstring& ch) {
+			assign(ch.c_str(), ch.size());
+			return *this;
+		}
+#endif
+#ifdef STDSTRING_H
+		inline StringRef& operator = (const CStdStringA& ch) {
+			assign(ch.c_str(), ch.size());
+			return *this;
+		}
+		inline StringRef& operator = (const CStdStringW& ch) {
+			assign(ch.c_str(), ch.size());
+			return *this;
+		}
+#endif
+*/
 
 
 		inline bool operator == (const StringRef& b) const {
@@ -171,7 +271,7 @@ namespace Stamina {
 		inline StringRef operator + (const StringRef& b) const {
 			StringRef a (*this);
 			a.append(b);
-			return a;
+			return PassStringRef( a );
 		}
 
 		inline StringRef& operator += (const StringRef& b) {
@@ -182,7 +282,7 @@ namespace Stamina {
 		inline StringRef operator - (const StringRef& b) const {
 			StringRef a (*this);
 			a.replace(b, "");
-			return a;
+			return PassStringRef( a );
 		}
 
 		inline StringRef& operator -= (const StringRef& b) const {
@@ -236,7 +336,7 @@ namespace Stamina {
 
 		template <typename CHAR>
 		inline StringRef getRef() const {
-			return StringRef(getData<CHAR>(), getDataSize<CHAR>());
+			return StringRef(*this);
 		}
 
 
@@ -337,7 +437,7 @@ namespace Stamina {
 			}
 		}
 
-		inline StringRef substr(int start) const {
+		StringRef substr(int start) const {
 			unsigned int count = getDataSize();
 			start = getDataPos(start);
 			if ((unsigned)start > count) {
@@ -350,7 +450,7 @@ namespace Stamina {
 				return StringRef(getData<char>() + start , count);
 		}
 
-		inline StringRef substr(int start, unsigned int count) const {
+		StringRef substr(int start, unsigned int count) const {
 			count = getDataPos(start + count);
 			start = getDataPos(start);
 			if ((unsigned)start > count) {
@@ -358,7 +458,7 @@ namespace Stamina {
 			}
 			count -= start;
 			StringRef str;
-			str.forceType(isWide());
+			str.copyType(*this);
 			if (isWide()) {
 				str._w.assignCheapReference( getData<wchar_t>() + start , count );
 				str._w.truncate(count);
@@ -366,7 +466,7 @@ namespace Stamina {
 				str._a.assignCheapReference( getData<char>() + start , count );
 				str._a.truncate(count);
 			}
-			return StringPassRef( str );
+			return PassStringRef( str );
 		}
 
 		// ------ compare
@@ -573,6 +673,12 @@ namespace Stamina {
 			forceType(sizeof(CHAR) == sizeof(wchar_t));
 		}
 
+		inline void copyType(const StringRef& b) {
+			this->forceType(b.isWide());
+			this->setTypeLock(b.isTypeLocked());
+		}
+
+
 		/** Switches internal buffer to UNICODE or ANSI. */
 		inline void forceType(bool wide) {
 			if (isTypeLocked()) return;
@@ -692,7 +798,17 @@ namespace Stamina {
 			assign(str);
 		}
 
-		inline StringCP(const StringPassRef& pass):StringRefCP<CP>(pass) {
+		inline StringCP(PassStringRef& pass):StringRefCP<CP>(pass) {
+		}
+
+		inline StringCP& operator = (const StringRef& b) {
+			StringRefCP<CP>::operator = (b);
+			return *this;
+		}
+
+		inline StringCP& operator = (const PassStringRef& pass) {
+			StringRefCP<CP>::operator = (pass);
+			return *this;
 		}
 
 
@@ -712,7 +828,7 @@ namespace Stamina {
 
 	typedef StringCP<cpACP> String;
 	typedef StringRefCP<cpACP> StringRef;
-	typedef StringRefCP<cpACP>::StringPassRef StringPassRef;
+	typedef StringRefCP<cpACP>::PassStringRef PassStringRef;
 	typedef StringCP<cpUTF8> StringUTF;
 	typedef StringRefCP<cpUTF8> StringUTFRef;
 
@@ -724,6 +840,14 @@ namespace Stamina {
 		}
 	};
 	*/
+
+	template<class CharType, class Traits>
+	inline std::basic_ostream<CharType, Traits>& operator << (std::basic_ostream<CharType, Traits>& stream,const StringRef& str) {
+		str.prepareType<CharType>();
+		stream.write(str.getData<CharType>(), str.getDataSize<CharType>());
+		return stream;
+	}
+
 
 
 #else 
@@ -761,6 +885,7 @@ namespace Stamina {
 	inline bool operator == (const String& a, const StringRef& b) {
 		return stricmp(a.c_str(), b) == 0;
 	}
+
 
 #endif // TEST STRING
 

@@ -42,21 +42,22 @@ class TestString : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testType );
 	CPPUNIT_TEST( testTypeLock );
 	CPPUNIT_TEST( testRef );
-//	CPPUNIT_TEST( testAutoRef );
 	CPPUNIT_TEST( testCharPos );
 	CPPUNIT_TEST( testEqual );
 	CPPUNIT_TEST( testCompare );
 	CPPUNIT_TEST( testFind );
+	CPPUNIT_TEST( testAssign );
+	CPPUNIT_TEST( testAppend );
+	CPPUNIT_TEST( testPassRef );
 	CPPUNIT_TEST( testSubstr );
-//	CPPUNIT_TEST( testAssign );
-//	CPPUNIT_TEST( testAppend );
 //	CPPUNIT_TEST( testPrepend );
 //	CPPUNIT_TEST( testInsert );
 //	CPPUNIT_TEST( testErase );
 //	CPPUNIT_TEST( testReplace );
 //	CPPUNIT_TEST( testReplaceChars );
 //	CPPUNIT_TEST( testUseBuffer );
-//	CPPUNIT_TEST( testPassRef );
+//	CPPUNIT_TEST( testTyped );
+//	CPPUNIT_TEST( testCodePage );
 
 
 	CPPUNIT_TEST_SUITE_END();
@@ -210,7 +211,45 @@ public:
 
 	}
 
-	void testAutoRef() {
+	String testPassRef1(const StringRef& a, const StringRef& b) {
+		return PassStringRef( a + b );
+	}
+	String testPassRef2(StringRef a, int cut) {
+		if (cut) {
+			return PassStringRef(a.substr(cut, 1));
+		} else {
+			return PassStringRef(StringRef("Cut!"));
+		}
+	}
+
+	void testPassRef() {
+		{
+			String a = "AA";
+			String b = "BB";
+			a = PassStringRef(b);
+			CPPUNIT_ASSERT( a == "BB" );
+			CPPUNIT_ASSERT( b == "AA" );
+		}
+		{
+			char* c = "Hello";
+			String a = PassStringRef(StringRef(c));
+			CPPUNIT_ASSERT( a == c );
+			CPPUNIT_ASSERT( a.a_str() == c );
+		}
+		{
+			String a = "Hello";
+			String cpy = "Hello";
+			CPPUNIT_ASSERT_EQUAL( String("Cut!") , testPassRef2(a, 0) );
+			CPPUNIT_ASSERT_EQUAL( String("e") , testPassRef2(a, 1) );
+			CPPUNIT_ASSERT_EQUAL( String("Cut!") , testPassRef2(a, 0) );
+			CPPUNIT_ASSERT_EQUAL( cpy , a );
+		}
+		{
+			String a = "Hello";
+			String b = " world!";
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!") , testPassRef1(a, b) );
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!") , testPassRef1(a, b) );
+		}
 	}
 
 	void testCharPos() {
@@ -317,9 +356,62 @@ public:
 	}
 
 	void testAssign() {
+		{ // kasowanie konwersji
+			String a ( testString(L"Blah") );
+			a.prepareType<OTHER>();
+			CPPUNIT_ASSERT( a.isWide() == isWide() );
+			a = otherString(L"Hello");
+			CPPUNIT_ASSERT( a.isWide() != isWide() );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) == "" );
+			a.prepareType<CHAR>();
+			a = StringRef( otherString(L"Blah") );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) == "" );
+			String b ( testString(L"Hello") );
+			a = b;
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) == "" );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			String a( testString(L"Blah") );
+			a = StringRef(test.c_str());
+			CPPUNIT_ASSERT( a.getData<CHAR>() != test.c_str() );
+			CPPUNIT_ASSERT_EQUAL( String(test), a );
+			a.clear();
+			a = test;
+			CPPUNIT_ASSERT( a.getData<CHAR>() != test.c_str() );
+			CPPUNIT_ASSERT_EQUAL( String(test), a );
+		}
+		{ // przypisania
+			String a;
+			a = testString(L"A");
+			CPPUNIT_ASSERT_EQUAL( String("A"), a );
+			a = otherString(L"B");
+			CPPUNIT_ASSERT_EQUAL( String("B"), a );
+			a = "C";
+			CPPUNIT_ASSERT_EQUAL( String("C"), a );
+			a = L"D";
+			CPPUNIT_ASSERT_EQUAL( String("D"), a );
+
+		}
 	}
 
 	void testAppend() {
+		{
+			String a ("Hello ");
+			String b ("world!");
+			a.append(b);
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
+		}
+		{
+			String a ("Hello ");
+			a += "world!";
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
+		}
+		{
+			String a ("Hello ");
+			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), a + "world!" );
+			CPPUNIT_ASSERT_EQUAL( String("Hello "), a );
+		}
 	}
 
 	void testPrepend() {
@@ -340,6 +432,11 @@ public:
 	void testUseBuffer() {
 	}
 
+	void testTyped() {
+	}
+
+	void testCodePage() {
+	}
 
 
 };
