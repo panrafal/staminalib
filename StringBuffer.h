@@ -246,33 +246,42 @@ namespace Stamina {
 		inline void replace(unsigned int pos, unsigned int count, const CHAR* data, unsigned int dataSize) {
 			if (dataSize == 0) {
 				this->erase(pos, count);
+				return;
 			}
 			if (pos > getLength()) {
 				this->append(data, dataSize);
+				return;
 			}
 			if (count == 0) {
 				this->insert(pos, data, dataSize);
+				return;
 			}
 			S_ASSERT(data);
 			if (isReference()) {
 				CHAR* from = _buffer;
 				unsigned int currentLength = getLength();
+				if (count > getLength() || pos + count > getLength()) count = getLength() - pos;
 				makeRoom(currentLength - count + dataSize, pos);
 				S_ASSERT(_buffer);
-				if (dataSize + currentLength - count > 0) {
+				if (pos + count < currentLength) { // je¿eli zostaje coœ po...
 					S_ASSERT(getBufferSize() >= dataSize + currentLength - count);
 					// kopiujemy dane po zmienianym...
 					copy(_buffer + pos + dataSize, from + pos + count, currentLength - pos - count);
 				}
-			} else {
+				setLength(currentLength - count + dataSize);
+			} else if (pos + count < getLength()) {
 				if (dataSize > count) {
 					moveRight(pos + count, dataSize - count);
 				} else if (dataSize < count) {
 					moveLeft(pos + count, count - dataSize);
 				}
+			} else {
+				makeRoom(pos + dataSize, pos);
+				setLength(pos + dataSize);
 			}
 			S_ASSERT(getBufferSize() >= pos + dataSize);
 			copy(_buffer + pos, data, dataSize);
+			markValid();
 		}
 
 		inline void erase(unsigned int pos, unsigned int count = wholeData) {
@@ -474,6 +483,12 @@ namespace Stamina {
 		inline CHAR* getBuffer() const {
 			return _buffer;
 		}
+
+		inline CHAR* getBufferEnd(unsigned size = lengthUnknown) const {
+			if (size > getLength()) size = getLength();
+			return _buffer + size;
+		}
+
 
 		inline const CHAR* getString() const {
 			return isValid() ? _buffer : (CHAR*)L"";

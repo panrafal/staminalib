@@ -46,19 +46,23 @@ class TestString : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testEqual );
 	CPPUNIT_TEST( testCompare );
 	CPPUNIT_TEST( testFind );
+	CPPUNIT_TEST( testFindChars );
 	CPPUNIT_TEST( testAssign );
 	CPPUNIT_TEST( testAppend );
 	CPPUNIT_TEST( testPassRef );
 	CPPUNIT_TEST( testSubstr );
-//	CPPUNIT_TEST( testPrepend );
-//	CPPUNIT_TEST( testInsert );
-//	CPPUNIT_TEST( testErase );
-//	CPPUNIT_TEST( testReplace );
-//	CPPUNIT_TEST( testReplaceChars );
+	CPPUNIT_TEST( testPrepend );
+	CPPUNIT_TEST( testInsert );
+	CPPUNIT_TEST( testErase );
+	CPPUNIT_TEST( testReplace );
+	CPPUNIT_TEST( testReplaceChars );
+	CPPUNIT_TEST( testMakeLower );
+	CPPUNIT_TEST( testMakeUpper );
 //	CPPUNIT_TEST( testUseBuffer );
 //	CPPUNIT_TEST( testTyped );
 //	CPPUNIT_TEST( testCodePage );
 
+	/*TODO: zrobic testy ze StringRef!!!*/
 
 	CPPUNIT_TEST_SUITE_END();
 
@@ -339,20 +343,52 @@ public:
 		CPPUNIT_ASSERT_EQUAL( (unsigned)28, a.find(b, 0, false, 1) );
 		CPPUNIT_ASSERT_EQUAL( (unsigned)28, a.findLast(b) );
 		CPPUNIT_ASSERT_EQUAL( (unsigned)-1, a.find(b, 0, false, 1, 10) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)28, a.find(b, 27, false, 0, 6) );
 
 		CPPUNIT_ASSERT( c & d );
 		CPPUNIT_ASSERT( a & "by³a" );
 		CPPUNIT_ASSERT( a & L"by³a" );
 	}
 
+	void testFindChars() {
+		//						0123456789012345678901234567890123456789
+		String a ( testString(L"g¿eg¿ó³ka by³a bardzo mi³¹ g¿eg¿ó³k¹ :)"));
+		String b ( testString(L"¿eg"));
+		String c (otherString(L"G¯EG¯Ó£KA by³a bardzo mi³¹ g¿eg¿ó³k¹ :)"));
+		String d (otherString(L"¯EG"));
+
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, a.findChars(b) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)-1, a.findChars(d) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)0, a.findChars(d, 0, true) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)1, a.findChars(b, 1) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)27, a.findChars(b, 10) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)4, a.findChars(b, 0, false, 4) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)31, a.findLastChars(b) );
+		CPPUNIT_ASSERT_EQUAL( (unsigned)-1, a.findChars(b, 0, false, 6, 10) );
+
+		CPPUNIT_ASSERT( c ^ d );
+		CPPUNIT_ASSERT( a ^ "ó" );
+		CPPUNIT_ASSERT( a ^ L"¹" );
+	}
+
+
 	void testSubstr() {
 		String a ( testString(L"0123456789") );
-		CPPUNIT_ASSERT_EQUAL( testString(L"56789"), tString( a.substr(5).str<CHAR>() ) );
-		CPPUNIT_ASSERT_EQUAL( testString(L"56"), tString( a.substr(5, 2).str<CHAR>() ) );
-		CPPUNIT_ASSERT_EQUAL( tString(), tString( a.substr(20).str<CHAR>() ) );
-		CPPUNIT_ASSERT_EQUAL( tString(), tString( a.substr(0, 0).str<CHAR>() ) );
-		CPPUNIT_ASSERT_EQUAL( testString(L"0123456789"), tString( a.substr(0, 20).str<CHAR>() ) );
-		CPPUNIT_ASSERT_EQUAL( otherString(L"56"), tOther( a.substr(5, 2).str<OTHER>() ) );
+		String cpy = a;
+		{
+			CPPUNIT_ASSERT_EQUAL( testString(L"56789"), tString( a.substr(5).str<CHAR>() ) );
+			CPPUNIT_ASSERT_EQUAL( testString(L"56"), tString( a.substr(5, 2).str<CHAR>() ) );
+			CPPUNIT_ASSERT_EQUAL( tString(), tString( a.substr(20).str<CHAR>() ) );
+			CPPUNIT_ASSERT_EQUAL( tString(), tString( a.substr(0, 0).str<CHAR>() ) );
+			CPPUNIT_ASSERT_EQUAL( testString(L"0123456789"), tString( a.substr(0, 20).str<CHAR>() ) );
+			CPPUNIT_ASSERT_EQUAL( otherString(L"56"), tOther( a.substr(5, 2).str<OTHER>() ) );
+			CPPUNIT_ASSERT_EQUAL( cpy, a );
+		}
+		{
+			StringRef b ( a );
+			CPPUNIT_ASSERT_EQUAL( testString(L"56789"), tString( b.substr(5).str<CHAR>() ) );
+			CPPUNIT_ASSERT_EQUAL( StringRef(cpy), b );
+		}
 	}
 
 	void testAssign() {
@@ -391,20 +427,29 @@ public:
 			CPPUNIT_ASSERT_EQUAL( String("C"), a );
 			a = L"D";
 			CPPUNIT_ASSERT_EQUAL( String("D"), a );
-
+		}
+		{ // przypisania do StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a = testString(L"Aaa");
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
 		}
 	}
 
 	void testAppend() {
 		{
-			String a ("Hello ");
-			String b ("world!");
+			String a (testString(L"Hello "));
+			String b (otherString(L"world!"));
+			a.prepareType<OTHER>();
 			a.append(b);
 			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "Hello " );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "Hello " );
 		}
 		{
 			String a ("Hello ");
-			a += "world!";
+			a += L"world!";
 			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
 		}
 		{
@@ -412,21 +457,269 @@ public:
 			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), a + "world!" );
 			CPPUNIT_ASSERT_EQUAL( String("Hello "), a );
 		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.append( testString(L"Aaa") );
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
 	}
 
 	void testPrepend() {
+		{
+			String a (testString(L"world!"));
+			String b (otherString(L"Hello "));
+			a.prepareType<OTHER>();
+			a.prepend(b);
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "world!" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "world!" );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.prepend( testString(L"Aaa") );
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
 	}
 
 	void testInsert() {
+		{
+			String a (testString(L"AbbA"));
+			String b (otherString(L"li"));
+			a.prepareType<OTHER>();
+			a.insert(2, b);
+			CPPUNIT_ASSERT_EQUAL( String("AblibA"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "AbbA" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "AbbA" );
+		}
+		{
+			String a (testString(L"AbbA"));
+			String b (otherString(L"li"));
+			a.insert(0, b);
+			CPPUNIT_ASSERT_EQUAL( String("liAbbA"), a );
+		}
+		{
+			String a (testString(L"AbbA"));
+			String b (otherString(L"li"));
+			a.insert(50, b);
+			CPPUNIT_ASSERT_EQUAL( String("AbbAli"), a );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.insert( 2, testString(L"Aaa") );
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+
 	}
 
 	void testErase() {
+		{
+			String a (testString(L"0123456"));
+			a.prepareType<OTHER>();
+			a.erase(2, 4);
+			CPPUNIT_ASSERT_EQUAL( String("016"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "0123456" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "0123456" );
+		}
+		{
+			String a (testString(L"0123456"));
+			a.erase(0, 2);
+			CPPUNIT_ASSERT_EQUAL( String("23456"), a );
+		}
+		{
+			String a (testString(L"0123456"));
+			a.erase(20, 2);
+			CPPUNIT_ASSERT_EQUAL( String("0123456"), a );
+		}
+		{
+			String a (testString(L"0123456"));
+			a.erase(4, 2);
+			CPPUNIT_ASSERT_EQUAL( String("01236"), a );
+		}
+		{
+			String a (testString(L"0123456"));
+			a.erase(0, 200);
+			CPPUNIT_ASSERT_EQUAL( String(""), a );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.erase( 1, 3 );
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+
 	}
 
 	void testReplace() {
+		{
+			String a (testString(L"0123456"));
+			a.prepareType<OTHER>();
+			a.replace(3, "abc", 0);
+			CPPUNIT_ASSERT_EQUAL( String("012abc3456"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "0123456" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "0123456" );
+			a.replace(3, "ABC", 3);
+			CPPUNIT_ASSERT_EQUAL( String("012ABC3456"), a );
+			a.replace(3, "xyz");
+			CPPUNIT_ASSERT_EQUAL( String("012xyz"), a );
+			a.replace(0, "XYZ");
+			CPPUNIT_ASSERT_EQUAL( String("XYZ"), a );
+		}
+		{
+			String a (testString(L"012__5_7_"));
+			a.prepareType<OTHER>();
+			a.replace("_", "abc");
+			CPPUNIT_ASSERT_EQUAL( String("012abcabc5abc7abc"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "012__5_7_" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "012__5_7_" );
+			a.replace("abc", "ABC", 9, false, 0, -1, 6);
+			CPPUNIT_ASSERT_EQUAL( String("012abcabc5ABC7abc"), a );
+			a.replace("abc", "ABC", 9, false, 0, -1, 8);
+			CPPUNIT_ASSERT_EQUAL( String("012abcabc5ABC7ABC"), a );
+			a.replace("abc", "xyz", 0, true);
+			CPPUNIT_ASSERT_EQUAL( String("012xyzxyz5xyz7xyz"), a );
+		}
+		{
+			String a (testString(L"abc123abc123abc123"));
+			a.replace("abc", "");
+			CPPUNIT_ASSERT_EQUAL( String("123123123"), a );
+		}
+		{
+			String a (testString(L"abc123abc123abc123"));
+			a.replace("abc", "abcdef");
+			CPPUNIT_ASSERT_EQUAL( String("abcdef123abcdef123abcdef123"), a );
+		}
+		{
+			String a (testString(L"abc123abc123abc123"));
+			a.replace("abc", "A", 3, false, 1, String::lengthUnknown, 15);
+			CPPUNIT_ASSERT_EQUAL( String("abc123abc123A123"), a );
+		}
+		{
+			String a (testString(L"abc123abc123abc123"));
+			a.replace("abc", "A", 0, false, -1, String::lengthUnknown, 9);
+			CPPUNIT_ASSERT_EQUAL( String("abc123A123abc123"), a );
+		}
+		{
+			String a (testString(L"abc123abc123abc123"));
+			a.replace("abc", "A", 0, false, 0, 2);
+			CPPUNIT_ASSERT_EQUAL( String("A123A123abc123"), a );
+		}
+		{
+			String a (testString(L"abc123abc123abc123"));
+			a.replace("abc", "A", 0, false, 0, -1, 13);
+			CPPUNIT_ASSERT_EQUAL( String("A123A123abc123"), a );
+		}
+		{
+			String a (testString(L"0123456"));
+			a -= "123";
+			CPPUNIT_ASSERT_EQUAL( String("0456"), a );
+		}
+		{
+			String a (testString(L"0123444"));
+			CPPUNIT_ASSERT_EQUAL( StringRef("0444"), a - "123" );
+			CPPUNIT_ASSERT_EQUAL( StringRef("0123444"), a - "123." );
+			CPPUNIT_ASSERT_EQUAL( StringRef("0123"), a - "4" );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.replace( "l", "L" );
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
 	}
 
 	void testReplaceChars() {
+		{
+			String a (testString(L"abcdefghABCDEFGH"));
+			a.prepareType<OTHER>();
+			a.replaceChars("ace", "xyz");
+			CPPUNIT_ASSERT_EQUAL( String("xbydzfghABCDEFGH"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghABCDEFGH" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghABCDEFGH" );
+			a.replaceChars("bdf", "xyz", true, true);
+			CPPUNIT_ASSERT_EQUAL( String("xxyyzzghAXCYEZGH"), a );
+			a.replaceChars("xyz", "", true, false, true, 2);
+			CPPUNIT_ASSERT_EQUAL( String("xxyyzzAXCYEZGH"), a );
+			a.replaceChars("xyz", "_", true, true, false, 8);
+			CPPUNIT_ASSERT_EQUAL( String("______A_C_EZGH"), a );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.replaceChars( "l", "L" );
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+
+	}
+
+	void testMakeLower() {
+		{
+			String a (testString(L"abcdefghABCDEFGH"));
+			a.prepareType<OTHER>();
+			a.makeLower();
+			CPPUNIT_ASSERT_EQUAL( String("abcdefghabcdefgh"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghABCDEFGH" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghABCDEFGH" );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.makeLower();
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+		{
+			String a (testString(L"abcdefghABCDEFGH"));
+			a.prepareType<OTHER>();
+			CPPUNIT_ASSERT_EQUAL( StringRef("abcdefghabcdefgh"), a.getLower() );
+			CPPUNIT_ASSERT_EQUAL( String("abcdefghABCDEFGH"), a );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			CPPUNIT_ASSERT_EQUAL( StringRef("hello"), a.getLower() );
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+		}
+	}
+
+	void testMakeUpper() {
+		{
+			String a (testString(L"abcdefghABCDEFGH"));
+			a.prepareType<OTHER>();
+			a.makeUpper();
+			CPPUNIT_ASSERT_EQUAL( String("ABCDEFGHABCDEFGH"), a );
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghABCDEFGH" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghABCDEFGH" );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			a.makeUpper();
+			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+		{
+			String a (testString(L"abcdefghABCDEFGH"));
+			a.prepareType<OTHER>();
+			CPPUNIT_ASSERT_EQUAL( StringRef("ABCDEFGHABCDEFGH"), a.getUpper() );
+			CPPUNIT_ASSERT_EQUAL( String("abcdefghABCDEFGH"), a );
+		}
+		{ // StringRef
+			tString test = testString(L"Hello");
+			StringRef a ( test ); 
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+			CPPUNIT_ASSERT_EQUAL( StringRef("HELLO"), a.getUpper() );
+			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
+		}
 	}
 
 	void testUseBuffer() {
@@ -442,5 +735,5 @@ public:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestString<CharType> );
-//CPPUNIT_TEST_SUITE_REGISTRATION( TestString<WCharType> );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestString<WCharType> );
 

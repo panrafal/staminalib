@@ -131,6 +131,11 @@ namespace Stamina {
 				return _char;
 			}
 
+			inline unsigned int getDataPosition(const CHAR* start) const {
+				return this->_p - start;
+			}
+
+
 			/** Returns full character sequence (usually one byte).
 			@warning The sequence might not be null terinated! Use getCharacter() instead.
 			*/
@@ -262,14 +267,16 @@ namespace Stamina {
 				return *this;
 			}
 
-			inline void set(tCharacter ch) {
+			inline bool set(tCharacter ch) {
 				ConstIterator it = (CHAR*)&ch;
-				set(it);
+				return set(it);
 			}
 
-			inline void set(const ConstIterator& b) {
-				S_ASSERT(charSize() == b.charSize());
+			inline bool set(const ConstIterator& b) {
+				//S_ASSERT(charSize() == b.charSize());
+				if (charSize() != b.charSize()) return false;
 				overwrite(b);
+				return true;
 			}
 			inline void overwrite(const ConstIterator& b) {
 				unsigned size = b.charSize();
@@ -356,27 +363,7 @@ namespace Stamina {
 		}
 
 		static ConstIterator find(ConstIterator begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, bool noCase, int skip = 0) {
-			if (skip != 0) {
-				ConstIterator last;
-				ConstIterator current = begin;
-				bool findLast = (skip < 0);
-				unsigned pos = 0;
-				while (findLast || skip-- >= 0) {
-					ConstIterator found = find(current, end, findBegin, findEnd, noCase, 0);
-					if (found == end) { // koniec
-						if (findLast)
-							break;
-						else
-							return found; // i tak ju¿ wiêcej nie bêdzie...
-					}
-					current = found;
-					++current;
-					//unsigned pos = last != 0 ? last.getPosition() : 0;
-					last = found;
-					//last.setPosition( last.getPosition() + pos ); 
-				}
-				return last;
-			} else {
+			if (skip == 0) {
 				ConstIterator found = findBegin;
 				ConstIterator current = begin;
 				ConstIterator last;
@@ -392,10 +379,72 @@ namespace Stamina {
 					++current;
 				}
 				return current;
+			} else {
+				return findSkip(begin, end, findBegin, findEnd, noCase, skip, true);
 			}
+		}
 
+		static ConstIterator findChars(ConstIterator begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, bool noCase, int skip = 0) {
+			if (skip == 0) {
+				ConstIterator current = begin;
+				ConstIterator last;
+				while (current < end) {
+					ConstIterator found = findBegin;
+					while (found < findEnd) {
+						if (current.charEq(found, noCase)) {
+							return current;
+						}
+						++found;
+					}
+					++current;
+				}
+				return current;
+			} else {
+				return findSkip(begin, end, findBegin, findEnd, noCase, skip, false);
+			}
+		}
+
+		static ConstIterator findSkip(ConstIterator begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, bool noCase, int skip, bool findString) {
+			ConstIterator last;
+			ConstIterator current = begin;
+			bool findLast = (skip < 0);
+			unsigned pos = 0;
+			while (findLast || skip-- >= 0) {
+				ConstIterator found;
+				if (findString) {
+					found = find(current, end, findBegin, findEnd, noCase, 0);
+				} else {
+					found = findChars(current, end, findBegin, findEnd, noCase, 0);
+				}
+				if (found == end) { // koniec
+					if (findLast)
+						break;
+					else
+						return found; // i tak ju¿ wiêcej nie bêdzie...
+				}
+				current = found;
+				++current;
+				//unsigned pos = last != 0 ? last.getPosition() : 0;
+				last = found;
+				//last.setPosition( last.getPosition() + pos ); 
+			}
+			return last;
 		}
          
+		static void makeLower(Iterator from, const CHAR* end) {
+			while (from < end) {
+				from.set(from.getLower());
+				++from;
+			}
+		}
+
+		static void makeUpper(Iterator from, const CHAR* end) {
+			while (from < end) {
+				from.set(from.getUpper());
+				++from;
+			}
+		}
+
 
 		static Iterator replaceChars(Iterator str, ConstIterator end, const CHAR* fromBegin, const CHAR* fromEnd, const CHAR* toBegin, const CHAR* toEnd, bool noCase = false, bool keepCase = false, bool swapMatch = false, unsigned int limit = -1) {
 			//unsigned length = end - str;

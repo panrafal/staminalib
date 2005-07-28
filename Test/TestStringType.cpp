@@ -25,7 +25,10 @@ class TestStringType : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testEqual );
 	CPPUNIT_TEST( testCompare );
 	CPPUNIT_TEST( testFind );
+	CPPUNIT_TEST( testFindChars );
 	CPPUNIT_TEST( testReplaceChars );
+	CPPUNIT_TEST( testMakeLower );
+	CPPUNIT_TEST( testMakeUpper );
 
 	CPPUNIT_TEST_SUITE_END();
 
@@ -394,6 +397,65 @@ protected:
 		}
 	}
 
+
+	void testFindChars() {
+		{
+			//						 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+			tString a = testString(L"abcdefπÍÊ≥ABCDEF• ∆£abcdefπÍÊ≥");
+			const CHAR* a1 = a.c_str();
+			const CHAR* a2 = a1 + a.size();
+			tString b = testString(L"AcE•Ê£");
+			const CHAR* b1 = b.c_str();
+			const CHAR* b2 = b1 + b.size();
+			typedef StringType<CHAR> testType;
+
+			// pierwszy
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::findChars(a1, a2, b1, b2, false, 0).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::findChars(a1, a2, b1, b2, true, 0).getFoundPosition(a2) );
+			// drugi
+			CPPUNIT_ASSERT_EQUAL( (unsigned)8, testType::findChars(a1, a2, b1, b2, false, 1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::findChars(a1, a2, b1, b2, true, 1).getFoundPosition(a2) );
+			// dziesiaty (za daleko)
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::findChars(a1, a2, b1, b2, false, 20).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::findChars(a1, a2, b1, b2, true, 20).getFoundPosition(a2) );
+			// ostatni
+			CPPUNIT_ASSERT_EQUAL( (unsigned)28, testType::findChars(a1, a2, b1, b2, false, -1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)29, testType::findChars(a1, a2, b1, b2, true, -1).getFoundPosition(a2) );
+
+			// nie istnieje
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::findChars(a1, a1+4, b1+3, b2, false, 0).getFoundPosition(a1+4) );
+			// tekst mniejszy niø szukany
+			CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::findChars(b1, b2, a1, a2, false, 0).getFoundPosition(b2) );
+		}
+		{// UTF8
+			//						      0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+			std::string a = fromUnicode(L"abcdefπÍÊ≥ABCDEF• ∆£abcdefπÍÊ≥", CP_UTF8);
+			const char* a1 = a.c_str();
+			const char* a2 = a1 + a.size();
+			std::string b = fromUnicode(L"AcE•Ê£", CP_UTF8);
+			const char* b1 = b.c_str();
+			const char* b2 = b1 + b.size();
+
+			typedef StringType<char, cpUTF8> testType;
+
+			// pierwszy
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::findChars(a1, a2, b1, b2, false, 0).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)0, testType::findChars(a1, a2, b1, b2, true, 0).getFoundPosition(a2) );
+			// drugi
+			CPPUNIT_ASSERT_EQUAL( (unsigned)8, testType::findChars(a1, a2, b1, b2, false, 1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)2, testType::findChars(a1, a2, b1, b2, true, 1).getFoundPosition(a2) );
+			// dziesiaty (za daleko)
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::findChars(a1, a2, b1, b2, false, 20).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)-1, testType::findChars(a1, a2, b1, b2, true, 20).getFoundPosition(a2) );
+			// ostatni
+			CPPUNIT_ASSERT_EQUAL( (unsigned)28, testType::findChars(a1, a2, b1, b2, false, -1).getFoundPosition(a2) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)28, testType::findChars(a1, a2, b1, b2, true, -1).getFoundPosition(a2) );
+		}
+	}
+
+
+
+
 	template<typename STR, class CP>
 	unsigned int testReplaceChars(STR& test, const STR& from, const STR& to, bool noCase, bool keepCase, bool swapMatch, int limit = -1) {
 		typedef STR::value_type CH;
@@ -502,6 +564,35 @@ protected:
 		}
 
 	}
+
+	void testMakeUpper() {
+		typedef StringType<CHAR> testType;
+		{
+			tString test = testString(L"abCDπÍ∆£");
+			testType::makeUpper((CHAR*)test.c_str(), (CHAR*)test.c_str() + test.size());
+			CPPUNIT_ASSERT_EQUAL(testString(L"ABCD• ∆£"), test);
+		}
+		{ // UTF8
+			std::string test = fromUnicode(L"abCDπÍ∆£", CP_UTF8);
+			StringType<char, cpUTF8>::makeUpper((char*)test.c_str(), (char*)test.c_str() + test.size());
+			CPPUNIT_ASSERT_EQUAL(fromUnicode(L"ABCDπÍ∆£", CP_UTF8), test);
+		}
+	}
+
+	void testMakeLower() {
+		typedef StringType<CHAR> testType;
+		{
+			tString test = testString(L"abCDπÍ∆£");
+			testType::makeLower((CHAR*)test.c_str(), (CHAR*)test.c_str() + test.size());
+			CPPUNIT_ASSERT_EQUAL(testString(L"abcdπÍÊ≥"), test);
+		}
+		{ // UTF8
+			std::string test = fromUnicode(L"abCDπÍ∆£", CP_UTF8);
+			StringType<char, cpUTF8>::makeLower((char*)test.c_str(), (char*)test.c_str() + test.size());
+			CPPUNIT_ASSERT_EQUAL(fromUnicode(L"abcdπÍ∆£", CP_UTF8), test);
+		}
+	}
+
 
 };
 
