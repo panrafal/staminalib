@@ -115,7 +115,7 @@ namespace Stamina {
 		/** Returns results at index @a i.
 		*/
 		std::string operator [] (int i) const;
-		/** @todo Co to robi?
+		/** Returns results with name @a named.
 		*/
 		std::string operator [] (const std::string& named) const;
 		//inline std::string operator () (int i) const {return (*this)[i];}
@@ -131,7 +131,7 @@ namespace Stamina {
 			return true;
 		}
 
-		/** @todo co to robi?
+		/** Return index of results with name @a named.
 		*/
 		inline int getNamedIndex(const std::string& named) const {
 			if (!_compiled) return -1;
@@ -304,7 +304,10 @@ namespace Stamina {
 			return this->replace(callback, limit, param);
 		}
 
-		/** @todo co to robi? Jakis replace bez matcha, ale sk¹d ma wype³niony _vector ?
+		/** Replaces using callback function.
+		@param func Callback function.
+		@param limit Limit of replacements.
+		@return Replaced string.
 		*/
 		template <typename F>
 			std::string replace(F func, int limit=0) 
