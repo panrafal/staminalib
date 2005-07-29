@@ -347,18 +347,11 @@ namespace Stamina {
 
 		template <typename CHAR>
 		CHAR* useBuffer(unsigned int size = lengthUnknown) {
-			if (sizeof(CHAR) == sizeof(wchar_t)) {
-				if (isMBLocked()) {
-					S_DEBUG_ERROR( "stringIsMBLocked" );
-					return 0;
-				}
-				_w.setActive(true);
-			} else {
-				_w.setActive(false);
-			}
-			if (size < lengthUnknown) {
-				getDataBuffer<CHAR>().makeRoom(size, 0);
-			}
+			clear();
+			forceType<CHAR>();
+			if (size >= lengthUnknown) 
+				size = getDataBuffer<CHAR>().getBufferSize();
+			getDataBuffer<CHAR>().makeRoom(size, 0); // wywola makeUnique w razie potrzeby
 			return getDataBuffer<CHAR>().getBuffer();
 		}
 
@@ -366,7 +359,14 @@ namespace Stamina {
 		void releaseBuffer(unsigned int length = lengthUnknown) {
 			getDataBuffer<CHAR>().setLength(length);
 			getDataBuffer<CHAR>().markValid();
-			changed();
+
+			// sprawdzamy czy bufor tego typu jest aktywny. Je¿eli nie konwertujemy/przenosimy dane do aktywnego...
+			if (! this->isActive<CHAR>()) {
+				this->convertBuffers(this->isWide());
+			} else {
+				this->changed();
+			}
+
 		}
 
 		// ------ character access
@@ -730,6 +730,10 @@ namespace Stamina {
 			return _w.isActive();
 		}
 
+		template<typename CHAR> inline bool isActive() {
+			return isWide() == (sizeof(CHAR) == sizeof(wchar_t));
+		}
+
 		/** Returns true if String is locked to current character type */
 		inline bool isTypeLocked() const {
 			return _w.isMajor() || _a.isMajor();
@@ -773,17 +777,14 @@ namespace Stamina {
 			if (wide == isWide()) return; // mamy ju¿ ten typ na pewno
 			StringRef* noconst = const_cast<StringRef* >(this);
 			if (wide) {
-				if (_w.isValid() || _a.isValid() == false) return;
-				noconst->_w.makeRoom( MultiByteToWideChar(CP::codePage(), 0, noconst->_a.getString(), noconst->_a.getLength(), 0, 0), 0);
-				noconst->_w.setLength( MultiByteToWideChar(CP::codePage(), 0, noconst->_a.getString(), noconst->_a.getLength(), noconst->_w.getBuffer(), noconst->_w.getBufferSize()));
-				noconst->_w.markValid();
+				if (_w.isValid()) return;
+				noconst->convertBuffers(true);
 			} else {
-				if (_a.isValid() || _w.isValid() == false) return;
-				noconst->_a.makeRoom( WideCharToMultiByte(CP::codePage(), 0, noconst->_w.getString(), noconst->_w.getLength(), 0, 0, 0, 0), 0);
-				noconst->_a.setLength( WideCharToMultiByte(CP::codePage(), 0, noconst->_w.getString(), noconst->_w.getLength(), noconst->_a.getBuffer(), noconst->_a.getBufferSize(), 0, 0));
-				noconst->_a.markValid();
+				if (_a.isValid()) return;
+				noconst->convertBuffers(false);
 			}
 		}
+
 
 		/** Matches this and string's type choosing the widest possible option. 
 		This function doesn't change active type, it only prepares conversion buffers and returns which type we should use (Wide or not).
@@ -819,6 +820,28 @@ namespace Stamina {
 		}
 
 	protected:
+
+		void convertBuffers(bool toUnicode) {
+			if (toUnicode) {
+				if (_a.isValid() == false) {
+					_w.discard();
+					return;
+				}
+				_w.makeRoom( MultiByteToWideChar(CP::codePage(), 0, _a.getString(), _a.getLength(), 0, 0), 0);
+				_w.setLength( MultiByteToWideChar(CP::codePage(), 0, _a.getString(), _a.getLength(), _w.getBuffer(), _w.getBufferSize()));
+				_w.markValid();
+			} else {
+				if (_w.isValid() == false) {
+					_a.discard();
+					return;
+				}
+				_a.makeRoom( WideCharToMultiByte(CP::codePage(), 0, _w.getString(), _w.getLength(), 0, 0, 0, 0), 0);
+				_a.setLength( WideCharToMultiByte(CP::codePage(), 0, _w.getString(), _w.getLength(), _a.getBuffer(), _a.getBufferSize(), 0, 0));
+				_a.markValid();
+			}
+
+		}
+
 
 		/** Marks that active buffer has changed. The conversion buffer is then discarded */
 		inline void changed() {

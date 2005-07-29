@@ -164,7 +164,8 @@ namespace Stamina {
 				const_cast<StringBuffer<CHAR> * >(this)->_length = 0;
 				if (!isEmpty() && isValid()) {
 					CHAR* ch = _buffer;
-					while (*(ch++)) const_cast<StringBuffer<CHAR>* >(this)->_length++;
+					CHAR* end = isReference() ? (CHAR*)-1 : _buffer + _size;
+					while (ch < end && *(ch++)) const_cast<StringBuffer<CHAR>* >(this)->_length++;
 				}
 			}
 			return _length;

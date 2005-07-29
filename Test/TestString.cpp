@@ -58,9 +58,9 @@ class TestString : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testReplaceChars );
 	CPPUNIT_TEST( testMakeLower );
 	CPPUNIT_TEST( testMakeUpper );
-//	CPPUNIT_TEST( testUseBuffer );
-//	CPPUNIT_TEST( testTyped );
-//	CPPUNIT_TEST( testCodePage );
+	CPPUNIT_TEST( testUseBuffer );
+	CPPUNIT_TEST( testTyped );
+	CPPUNIT_TEST( testCodePage );
 
 	/*TODO: zrobic testy ze StringRef!!!*/
 
@@ -443,9 +443,9 @@ public:
 			String b (otherString(L"world!"));
 			a.prepareType<OTHER>();
 			a.append(b);
-			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "Hello " );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "Hello " );
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
 		}
 		{
 			String a ("Hello ");
@@ -472,9 +472,9 @@ public:
 			String b (otherString(L"Hello "));
 			a.prepareType<OTHER>();
 			a.prepend(b);
-			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "world!" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "world!" );
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!"), a );
 		}
 		{ // StringRef
 			tString test = testString(L"Hello");
@@ -491,9 +491,9 @@ public:
 			String b (otherString(L"li"));
 			a.prepareType<OTHER>();
 			a.insert(2, b);
-			CPPUNIT_ASSERT_EQUAL( String("AblibA"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "AbbA" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "AbbA" );
+			CPPUNIT_ASSERT_EQUAL( String("AblibA"), a );
 		}
 		{
 			String a (testString(L"AbbA"));
@@ -522,9 +522,9 @@ public:
 			String a (testString(L"0123456"));
 			a.prepareType<OTHER>();
 			a.erase(2, 4);
-			CPPUNIT_ASSERT_EQUAL( String("016"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "0123456" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "0123456" );
+			CPPUNIT_ASSERT_EQUAL( String("016"), a );
 		}
 		{
 			String a (testString(L"0123456"));
@@ -561,9 +561,9 @@ public:
 			String a (testString(L"0123456"));
 			a.prepareType<OTHER>();
 			a.replace(3, "abc", 0);
-			CPPUNIT_ASSERT_EQUAL( String("012abc3456"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "0123456" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "0123456" );
+			CPPUNIT_ASSERT_EQUAL( String("012abc3456"), a );
 			a.replace(3, "ABC", 3);
 			CPPUNIT_ASSERT_EQUAL( String("012ABC3456"), a );
 			a.replace(3, "xyz");
@@ -575,9 +575,9 @@ public:
 			String a (testString(L"012__5_7_"));
 			a.prepareType<OTHER>();
 			a.replace("_", "abc");
-			CPPUNIT_ASSERT_EQUAL( String("012abcabc5abc7abc"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "012__5_7_" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "012__5_7_" );
+			CPPUNIT_ASSERT_EQUAL( String("012abcabc5abc7abc"), a );
 			a.replace("abc", "ABC", 9, false, 0, -1, 6);
 			CPPUNIT_ASSERT_EQUAL( String("012abcabc5ABC7abc"), a );
 			a.replace("abc", "ABC", 9, false, 0, -1, 8);
@@ -640,9 +640,9 @@ public:
 			String a (testString(L"abcdefghABCDEFGH"));
 			a.prepareType<OTHER>();
 			a.replaceChars("ace", "xyz");
-			CPPUNIT_ASSERT_EQUAL( String("xbydzfghABCDEFGH"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghABCDEFGH" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghABCDEFGH" );
+			CPPUNIT_ASSERT_EQUAL( String("xbydzfghABCDEFGH"), a );
 			a.replaceChars("bdf", "xyz", true, true);
 			CPPUNIT_ASSERT_EQUAL( String("xxyyzzghAXCYEZGH"), a );
 			a.replaceChars("xyz", "", true, false, true, 2);
@@ -665,9 +665,9 @@ public:
 			String a (testString(L"abcdefghABCDEFGH"));
 			a.prepareType<OTHER>();
 			a.makeLower();
-			CPPUNIT_ASSERT_EQUAL( String("abcdefghabcdefgh"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghABCDEFGH" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghABCDEFGH" );
+			CPPUNIT_ASSERT_EQUAL( String("abcdefghabcdefgh"), a );
 		}
 		{ // StringRef
 			tString test = testString(L"Hello");
@@ -696,9 +696,9 @@ public:
 			String a (testString(L"abcdefghABCDEFGH"));
 			a.prepareType<OTHER>();
 			a.makeUpper();
-			CPPUNIT_ASSERT_EQUAL( String("ABCDEFGHABCDEFGH"), a );
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghABCDEFGH" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghABCDEFGH" );
+			CPPUNIT_ASSERT_EQUAL( String("ABCDEFGHABCDEFGH"), a );
 		}
 		{ // StringRef
 			tString test = testString(L"Hello");
@@ -723,6 +723,56 @@ public:
 	}
 
 	void testUseBuffer() {
+		{
+			String a;
+			CHAR * ch = a.useBuffer<CHAR>(10);
+			StringBuffer<CHAR>::copy(ch, testString(L"01234").c_str(), 6);
+			a.releaseBuffer<CHAR>();
+			CPPUNIT_ASSERT_EQUAL( String("01234"), a );
+		}
+		{
+			String a;
+			CHAR * ch = a.useBuffer<CHAR>(10);
+			StringBuffer<CHAR>::copy(ch, testString(L"01234").c_str(), 5);
+			a.releaseBuffer<CHAR>(5);
+			CPPUNIT_ASSERT_EQUAL( String("01234"), a );
+		}
+		{ // dlugosc rowna buforowi
+			String a;
+			CHAR * ch = a.useBuffer<CHAR>(10);
+			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			a.releaseBuffer<CHAR>();
+			CPPUNIT_ASSERT_EQUAL( String("0123456789"), a );
+		}
+		{ // stary bufor
+			String a (testString(L"abcdefghij"));
+			const CHAR * old = a.getData<CHAR>();
+			CHAR * ch = a.useBuffer<CHAR>(10);
+			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			a.releaseBuffer<CHAR>();
+			CPPUNIT_ASSERT_EQUAL( String("0123456789"), a );
+			CPPUNIT_ASSERT( ch == old );
+		}
+		{ // zmiana typu
+			String a (otherString(L"abcdefghijklmno"));
+			CHAR * ch = a.useBuffer<CHAR>(10);
+			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			a.releaseBuffer<CHAR>();
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghijklmno" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghijklmno" );
+			CPPUNIT_ASSERT_EQUAL( String("0123456789"), a );
+		}
+		{ // zmiana typu w zablokowanym
+			String a (otherString(L"abcdefghijklmno"));
+			a.setTypeLock(true); // blokujemy na OTHER
+			CHAR * ch = a.useBuffer<CHAR>(10);
+			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			a.releaseBuffer<CHAR>(); // konwersja do OTHER
+			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghijklmno" );
+			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghijklmno" );
+			CPPUNIT_ASSERT_EQUAL( String("0123456789"), a );
+			CPPUNIT_ASSERT( a.isActive<CHAR>() == false );
+		}
 	}
 
 	void testTyped() {
