@@ -81,6 +81,8 @@ namespace Stamina {
 
 		typedef StringRefCP<CP> StringRef;
 
+		STAMINA_OBJECT_CLASS(Stamina::StringRefCP<CP>, iString);
+
 
 	public:
 
@@ -298,17 +300,10 @@ namespace Stamina {
 			return this->findChars(b) != notFound;
 		}
 
-
-		// ------ Ansi Unicode buffers
+		// STL like functions
 
 		inline const TCHAR* c_str() const {
 			return str<TCHAR>();
-		}
-
-		template <typename CHAR>
-		inline const CHAR* str() const {
-			prepareType<CHAR>();
-			return getData<CHAR>();
 		}
 
 		/** Returns the pointer to ANSI data. The buffer is always valid */
@@ -319,6 +314,21 @@ namespace Stamina {
 		/** Returns the pointer to UNICODE data. The buffer is always valid */
 		inline const wchar_t* w_str() const {
 			return str<wchar_t>();
+		}
+
+		inline bool empty() const {
+			return getDataSize() == 0;
+		}
+
+
+
+		// ------ Ansi Unicode buffers
+
+
+		template <typename CHAR>
+		inline const CHAR* str() const {
+			prepareType<CHAR>();
+			return getData<CHAR>();
 		}
 
 		template <typename CHAR>
@@ -411,10 +421,6 @@ namespace Stamina {
 				return StringType<char, CP>::getLength(getData<char>(), getDataEnd<char>());
 			}
 			/*TODO*/
-		}
-
-		inline bool empty() const {
-			return getDataSize() == 0;
 		}
 
 		template <typename CHAR>
@@ -752,9 +758,11 @@ namespace Stamina {
 			forceType(sizeof(CHAR) == sizeof(wchar_t));
 		}
 
-		inline void copyType(const StringRef& b) {
+		inline void copyType(const StringRef& b, bool copyLock = false) {
 			this->forceType(b.isWide());
-			this->setTypeLock(b.isTypeLocked());
+			if (copyLock) {
+				this->setTypeLock(b.isTypeLocked());
+			}
 		}
 
 
@@ -875,12 +883,17 @@ namespace Stamina {
 		StringBuffer<char> _a;
 		StringBuffer<wchar_t> _w;
 
+
+
 	};
 
 
 	template <class CP>
 	class StringCP: public StringRefCP<CP> {
 	public:
+
+		STAMINA_OBJECT_CLASS(Stamina::StringCP<CP>, StringRefCP<CP>);
+
 		StringCP() {}
 		/*
 		String(const iString& b) {
