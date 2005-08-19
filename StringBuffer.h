@@ -40,7 +40,7 @@ namespace Stamina {
 				unsigned _flag : 1;
 				unsigned _active : 1;
 				unsigned _major : 1;
-				unsigned _align1 : 1;
+				unsigned _varbyte : 1;
 				unsigned int _size : 28;
 				unsigned _align2 : 4;
 				unsigned int _length : 28;
@@ -57,14 +57,14 @@ namespace Stamina {
 		const static unsigned int lengthUnknown = 0x0FFFFFFF;
 		const static unsigned int wholeData = 0xFFFFFFFF;
 	public:
-		inline StringBuffer(): _size(0), _buffer(0), _active(0), _major(0), _length(0), _flag(0) {
+		inline StringBuffer(): _size(0), _buffer(0), _active(0), _major(0), _length(0), _flag(0), _varbyte(1) {
 		}
 
-		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _active(0), _length(0),_flag(0), _major(0) {
+		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _active(0), _length(0),_flag(0), _major(0), _varbyte(1) {
 			resize(initialSize, 0);
 		}
 
-		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _active(0), _length(0), _flag(0), _major(0) {
+		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _active(0), _length(0), _flag(0), _major(0), _varbyte(1) {
 			assignCheapReference(data, dataSize);
 		}
 
@@ -96,6 +96,14 @@ namespace Stamina {
 		}
 		inline bool isMajor() const {
 			return _major;
+		}
+
+		inline void setVarbyte(bool mbyte) {
+			_varbyte = mbyte;
+		}
+ 
+		inline bool isVarbyte() const {
+			return _varbyte;
 		}
 
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
@@ -163,14 +171,15 @@ namespace Stamina {
 			if (_length == lengthUnknown) {
 				const_cast<StringBuffer<CHAR> * >(this)->_length = 0;
 				if (!isEmpty() && isValid()) {
-					CHAR* ch = _buffer;
-					CHAR* end = isReference() ? (CHAR*)-1 : _buffer + _size;
-					while (ch < end && *(ch++)) const_cast<StringBuffer<CHAR>* >(this)->_length++;
+					const_cast<StringBuffer<CHAR>* >(this)->_length = len(_buffer);
+					//CHAR* ch = _buffer;
+					//CHAR* end = isReference() ? (CHAR*)-1 : _buffer + _size;
+					//while (ch < end && *(ch++)) const_cast<StringBuffer<CHAR>* >(this)->_length++;
 				}
 			}
 			return _length;
 		}
-		inline unsigned int getKnownLength() {
+		inline unsigned int getKnownLength() const {
 			return _length;
 		}
 
@@ -360,11 +369,12 @@ namespace Stamina {
 			S_ASSERT(_size >= start + length);
 			from += start;
 			to += start - offset;
-			while (length--) {
+			move(to, from, length);
+/*			while (length--) {
 				*to = *from;
 				++to;
 				++from;
-			}
+			}*/
 			markValid();
 		}
 
@@ -398,14 +408,20 @@ namespace Stamina {
 			S_ASSERT(to != 0);
 			S_ASSERT(_size > start + length);
 
-            from += start + length;
-			to += start + length + offset;
+            //from += start + length;
+			//to += start + length + offset;
 
+            from += start;
+			to += start + offset;
+
+			move(to, from, length);
+
+			/*
 			while (length--) {
 				--to;
 				--from;
 				*to = *from;
-			}
+			}*/
 			markValid();
 
 		}
@@ -419,6 +435,7 @@ namespace Stamina {
 			_size = 0;
 			_length = 0;
 			_flag = false;
+			_varbyte = 1;
 		}
 
 		void resize(unsigned int newSize, unsigned int keepData = wholeData) {
@@ -463,13 +480,12 @@ namespace Stamina {
 
 		// -- static helpers
 
-		static inline void copy(CHAR* to, const CHAR* from, unsigned int count) {
-			while (count--) {
-				*to = *from;
-				++to;
-				++from;
-			}
-		}
+		static inline void copy(CHAR* to, const CHAR* from, unsigned int count);
+
+		static inline void move(CHAR* to, const CHAR* from, unsigned int count);
+
+		static inline unsigned int len(const CHAR* str);
+
 
 		// getters
 
@@ -552,6 +568,31 @@ namespace Stamina {
 		}
 
 	};
+
+	inline void StringBuffer<char>::copy(char* to, const char* from, unsigned int count) {
+		::memcpy(to, from, count);
+	}
+
+	inline void StringBuffer<char>::move(char* to, const char* from, unsigned int count) {
+		::memmove(to, from, count);
+	}
+
+	inline unsigned int StringBuffer<char>::len(const char* str) {
+		return strlen(str);
+	}
+
+	inline void StringBuffer<wchar_t>::copy(wchar_t* to, const wchar_t* from, unsigned int count) {
+		::wmemcpy(to, from, count);
+	}
+
+	inline void StringBuffer<wchar_t>::move(wchar_t* to, const wchar_t* from, unsigned int count) {
+		::wmemmove(to, from, count);
+	}
+
+
+	inline unsigned int StringBuffer<wchar_t>::len(const wchar_t* str) {
+		return wcslen(str);
+	}
 
 
 	template StringBuffer<char>;

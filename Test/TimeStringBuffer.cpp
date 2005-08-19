@@ -14,9 +14,6 @@
 
 using namespace Stamina;
 
-__declspec(noinline) int testCall(int a) {
-	return max(a, 0);
-}
 
 
 class TimeStringBuffer : public CPPUNIT_NS::TestFixture

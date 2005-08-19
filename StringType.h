@@ -305,14 +305,14 @@ namespace Stamina {
 			return sizeof(CHAR) == sizeof(wchar_t);
 		}
 
-		static unsigned int getLength(const CHAR* from, const CHAR* to) {
+		inline static unsigned int getLength(const CHAR* from, const CHAR* to) {
 			ConstIterator it = from;
 			for (; it < to; ++it) {
 			}
 			return it.getPosition();
 		}
 
-		static unsigned int getDataPos(const CHAR* from, const CHAR* to, int charPos) {
+		inline static unsigned int getDataPos(const CHAR* from, const CHAR* to, int charPos) {
 			if (charPos < 0) {
 				charPos = -charPos;
 				ConstIterator it = to;
@@ -327,7 +327,7 @@ namespace Stamina {
 			}
 		}
 		
-		static unsigned int getCharPos(const CHAR* from, const CHAR* to, unsigned int dataPos) {
+		inline static unsigned int getCharPos(const CHAR* from, const CHAR* to, unsigned int dataPos) {
 			ConstIterator it = from;
 			const CHAR* aim = from + dataPos;
 			for (; it < to; ++it) {
@@ -516,7 +516,6 @@ namespace Stamina {
 
 
 	};
-
 
 	// ---------------------------   CodePage Specific
 

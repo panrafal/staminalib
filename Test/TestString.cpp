@@ -43,6 +43,8 @@ class TestString : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testTypeLock );
 	CPPUNIT_TEST( testRef );
 	CPPUNIT_TEST( testCharPos );
+	CPPUNIT_TEST( testLength );
+	CPPUNIT_TEST( testVarbyte );
 	CPPUNIT_TEST( testEqual );
 	CPPUNIT_TEST( testCompare );
 	CPPUNIT_TEST( testFind );
@@ -270,6 +272,31 @@ public:
 			CPPUNIT_ASSERT_EQUAL( (unsigned)0, s.getCharPos(0) );
 		}
 	}
+
+	void testLength() {
+		{ // UTF8
+			StringUTF s (fromUnicode( L"¹êæ", CP_UTF8));
+			CPPUNIT_ASSERT_EQUAL( (unsigned)3, s.getLength() );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)3, s.getLength() );
+			s.forceType<wchar_t>();
+			CPPUNIT_ASSERT_EQUAL( (unsigned)3, s.getLength() );
+		}
+	}
+
+	void testVarbyte() {
+		{ // UTF8
+			StringUTF s (fromUnicode( L"¹êæ", CP_UTF8));
+			CPPUNIT_ASSERT( s.getCDataBuffer<char>().isVarbyte() == true );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)3, s.getLength() );
+			CPPUNIT_ASSERT( s.getCDataBuffer<char>().isVarbyte() == true );
+			s.forceType<wchar_t>();
+			s = L"¹êæ";
+			CPPUNIT_ASSERT( s.getCDataBuffer<wchar_t>().isVarbyte() == true );
+			CPPUNIT_ASSERT_EQUAL( (unsigned)3, s.getLength() );
+			CPPUNIT_ASSERT( s.getCDataBuffer<wchar_t>().isVarbyte() == false );
+		}
+	}
+
 
 	void testEqual() {
 		{
@@ -679,14 +706,14 @@ public:
 		{
 			String a (testString(L"abcdefghABCDEFGH"));
 			a.prepareType<OTHER>();
-			CPPUNIT_ASSERT_EQUAL( StringRef("abcdefghabcdefgh"), a.getLower() );
+			CPPUNIT_ASSERT_EQUAL( StringRef("abcdefghabcdefgh"), a.toLower() );
 			CPPUNIT_ASSERT_EQUAL( String("abcdefghABCDEFGH"), a );
 		}
 		{ // StringRef
 			tString test = testString(L"Hello");
 			StringRef a ( test ); 
 			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
-			CPPUNIT_ASSERT_EQUAL( StringRef("hello"), a.getLower() );
+			CPPUNIT_ASSERT_EQUAL( StringRef("hello"), a.toLower() );
 			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
 		}
 	}

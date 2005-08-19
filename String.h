@@ -45,7 +45,7 @@ namespace Stamina {
 		// _both_ 'ref' and 'quick' are passed without copying data! It's almost as fast as using direct pointers to data, however leaves you with plenty of function to play with. Keep in mind, that conversion buffers are also referenced!
 		printf("Referenced const ref: %s", ref.a_str());
 		printf("Referenced quick: %s", quick.a_str());
-		// Here is where the magic goes. 'quick' holds an reference to data, as long as you don't try to modify it. If You modify do, a local copy is allocated - so the referenced string is still safe and left unchanged.
+		// Here is where the magic goes. 'quick' holds an reference to data, as long as you don't try to modify it. If You do modify, a local copy is allocated - so the referenced string is still safe and left unchanged.
 		quick += ref;
 		printf("Local modified copy: %s", quick.a_str());
 
@@ -151,20 +151,22 @@ namespace Stamina {
 			StringRef& _str;
 		};
 
-		StringRefCP() {}
+		inline StringRefCP() {
+			_length = lengthUnknown;
+		}
 
-		StringRefCP(PassStringRef& pass) {
+		inline StringRefCP(PassStringRef& pass) {
 			this->swapBuffers(pass._str);
 		}
 
-		StringRefCP(const StringRef& str) {
+		inline StringRefCP(const StringRef& str) {
 			copyType(str);
 			assignCheapReference(str);
 		}
-		StringRefCP(const char* ch, unsigned size = lengthUnknown) {
+		inline StringRefCP(const char* ch, unsigned size = lengthUnknown) {
 			assignCheapReference(ch, size);
 		}
-		StringRefCP(const wchar_t* ch, unsigned size = lengthUnknown) {
+		inline StringRefCP(const wchar_t* ch, unsigned size = lengthUnknown) {
 			assignCheapReference(ch, size);
 		}
 
@@ -175,18 +177,18 @@ namespace Stamina {
 			assignCheapReference(ch.c_str(), ch.size());
 		}
 		*/
-		StringRefCP(const std::string& ch) {
+		inline StringRefCP(const std::string& ch) {
 			assignCheapReference(ch.c_str(), ch.size());
 		}
-		StringRefCP(const std::wstring& ch) {
+		inline StringRefCP(const std::wstring& ch) {
 			assignCheapReference(ch.c_str(), ch.size());
 		}
 #endif
 #ifdef STDSTRING_H
-		StringRefCP(const CStdStringA& ch) {
+		inline StringRefCP(const CStdStringA& ch) {
 			assignCheapReference(ch.c_str(), ch.size());
 		}
-		StringRefCP(const CStdStringW& ch) {
+		inline StringRefCP(const CStdStringW& ch) {
 			assignCheapReference(ch.c_str(), ch.size());
 		}
 #endif
@@ -320,6 +322,10 @@ namespace Stamina {
 			return getDataSize() == 0;
 		}
 
+		inline unsigned int length() const {
+			return getLength();
+		}
+
 
 
 		// ------ Ansi Unicode buffers
@@ -333,6 +339,11 @@ namespace Stamina {
 
 		template <typename CHAR>
 		const StringBuffer<CHAR>& getDataBuffer() const;
+
+		template <typename CHAR>
+		const StringBuffer<CHAR>& getCDataBuffer() const {
+			return getDataBuffer<CHAR>();
+		}
 
 		template <> inline const StringBuffer<char>& getDataBuffer<char>() const {
 			return _a;
@@ -362,6 +373,7 @@ namespace Stamina {
 			if (size >= lengthUnknown) 
 				size = getDataBuffer<CHAR>().getBufferSize();
 			getDataBuffer<CHAR>().makeRoom(size, 0); // wywola makeUnique w razie potrzeby
+			resetKnownLength();
 			return getDataBuffer<CHAR>().getBuffer();
 		}
 
@@ -384,6 +396,11 @@ namespace Stamina {
 		template <typename CHAR>
 		inline unsigned int getDataSize() const {
 			return getDataBuffer<CHAR>().getLength();
+		}
+
+		template <typename CHAR>
+		inline unsigned int getKnownDataSize() const {
+			return getDataBuffer<CHAR>().getKnownLength();
 		}
 
 		inline unsigned int getDataSize() const {
@@ -413,23 +430,54 @@ namespace Stamina {
 		}
 
 
+		protected:
+		template <typename CHAR>
+		inline unsigned int getLength() {
+			if (getDataBuffer<CHAR>().isVarbyte()) {
+				_length = StringType<CHAR, CP>::getLength(getData<CHAR>(), getDataEnd<CHAR>());
+				getDataBuffer<CHAR>().setVarbyte( _length != this->getDataSize<CHAR>() );
+			} else {
+				_length = this->getDataSize<CHAR>();
+			}
+			return _length;
+		}
+
+		public:
 		inline unsigned int getLength() const {
 			if (empty()) return 0;
-			if (isWide()) {
-				return StringType<wchar_t, CP>::getLength(getData<wchar_t>(), getDataEnd<wchar_t>());
-			} else {
-				return StringType<char, CP>::getLength(getData<char>(), getDataEnd<char>());
+			if (_length == lengthUnknown) {
+				StringRef* noconst = const_cast<StringRef*>(this);
+				if (isWide()) {
+					return noconst->getLength<wchar_t>();
+				} else {
+					return noconst->getLength<char>();
+				}
 			}
-			/*TODO*/
+			return _length;
 		}
 
 		template <typename CHAR>
 		inline unsigned int getDataPos(int charPos) const {
-			return StringType<CHAR, CP>::getDataPos(getData<CHAR>(), getDataEnd<CHAR>(), charPos);
+			if (getDataBuffer<CHAR>().isVarbyte()) {
+				return StringType<CHAR, CP>::getDataPos(getData<CHAR>(), getDataEnd<CHAR>(), charPos);
+			} else {
+				if (charPos >= 0) {
+					return charPos;
+				} else {
+					if (-(signed)charPos > (signed)getLength())
+						return 0;
+					else
+						return getLength() + charPos;
+				}
+			}
 		}
 		template <typename CHAR>
 		inline unsigned int getCharPos(unsigned int dataPos) const {
-			return StringType<CHAR, CP>::getCharPos(getData<CHAR>(), getDataEnd<CHAR>(), dataPos);
+			if (getDataBuffer<CHAR>().isVarbyte()) {
+				return StringType<CHAR, CP>::getCharPos(getData<CHAR>(), getDataEnd<CHAR>(), dataPos);
+			} else {
+				return dataPos;
+			}
 		}
 
 		/** Returns position of character in active data buffer */
@@ -535,10 +583,14 @@ namespace Stamina {
 		inline void assign(const StringRef& str) {
 			clear();
 			matchTypes(str);
-			if (isWide())
+			this->_length = str.getKnownLength() ;
+			if (isWide()) {
 				_w.assign(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
-			else
+				_w.setVarbyte( str.getDataBuffer<wchar_t>().isVarbyte() );
+			} else {
 				_a.assign(str.getData<char>(), str.getDataSize<char>());
+				_a.setVarbyte( str.getDataBuffer<char>().isVarbyte() );
+			}
 			this->changed();
 		}
 
@@ -551,11 +603,20 @@ namespace Stamina {
 			clear();
 			matchTypes(str);
 //			if (isWide())
-			if (str.getDataBuffer<wchar_t>().isValid())
-				_w.assignCheapReference(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
+			this->_length = str.getKnownLength();
+			if (str.getDataBuffer<wchar_t>().isValid()) {
+				_w.assignCheapReference(str.getData<wchar_t>(), str.getKnownDataSize<wchar_t>());
+				_w.setVarbyte( str.getDataBuffer<wchar_t>().isVarbyte() );
+			} else {
+				//_w.reset();
+			}
 //			else
-			if (str.getDataBuffer<char>().isValid())
-				_a.assignCheapReference(str.getData<char>(), str.getDataSize<char>());
+			if (str.getDataBuffer<char>().isValid()) {
+				_a.assignCheapReference(str.getData<char>(), str.getKnownDataSize<char>());
+				_a.setVarbyte( str.getDataBuffer<char>().isVarbyte() );
+			} else {
+				//_a.reset();
+			}
 			// Wykorzystujemy przet³umaczone bufory ze StringRef
 			//this->changed();
 		}
@@ -569,6 +630,7 @@ namespace Stamina {
 		}
 
 		void swapBuffers(StringRef& str) {
+			this->_length = str.getKnownLength();
 			_a.swap(str._a);
 			_w.swap(str._w);
 		}
@@ -579,6 +641,7 @@ namespace Stamina {
 				_w.append(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
 				_a.append(str.getData<char>(), str.getDataSize<char>());
+			this->offsetKnownLength(str, 1);
 			this->changed();
 		}
 
@@ -588,6 +651,7 @@ namespace Stamina {
 				_w.prepend(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
 				_a.prepend(str.getData<char>(), str.getDataSize<char>());
+			this->offsetKnownLength(str, 1);
 			this->changed();
 		}
 
@@ -597,30 +661,34 @@ namespace Stamina {
 				_w.insertInRange(getDataPos<wchar_t>(pos), str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
 				_a.insertInRange(getDataPos<char>(pos), str.getData<char>(), str.getDataSize<char>());
+			this->offsetKnownLength(str, 1);
 			this->changed();
 		}
 
-		inline void erase(unsigned int pos, unsigned int count = lengthUnknown) {
-			pos = getDataPos(pos);
-			if (count > getLength() || count + pos > getLength()) count = getLength() - pos;
+		inline void erase(unsigned int charPos, unsigned int count = lengthUnknown) {
+			unsigned int pos = getDataPos(charPos);
+			if (count > getLength() || count + charPos > getLength()) count = getLength() - charPos;
 			if (isWide()) {
-				_w.erase(pos, getDataPos<wchar_t>(pos + count) - pos);
+				_w.erase(pos, getDataPos<wchar_t>(charPos + count) - pos);
 			} else {
-				_a.erase(pos, getDataPos<char>(pos + count) - pos);
+				_a.erase(pos, getDataPos<char>(charPos + count) - pos);
 			}
+			this->offsetKnownLength(- (signed) count);
 			this->changed();
 		}
 
-		inline void replace(unsigned int pos, const StringRef& str, unsigned int count = lengthUnknown) {
+		inline void replace(unsigned int charPos, const StringRef& str, unsigned int count = lengthUnknown) {
 			matchTypes(str);
-			if (count > this->getLength() || pos + count > this->getLength()) count = this->getLength() - pos;
+			if (count > this->getLength() || charPos + count > this->getLength()) count = this->getLength() - charPos;
 			if (isWide()) {
-				pos = getDataPos<wchar_t>(pos);
-				_w.replace(pos, getDataPos<wchar_t>(pos + count) - pos, str.getData<wchar_t>(), str.getDataSize<wchar_t>());
+				unsigned int pos = getDataPos<wchar_t>(charPos);
+				_w.replace(pos, getDataPos<wchar_t>(charPos + count) - pos, str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			} else {
-				pos = getDataPos<char>(pos);
-				_a.replace(pos, getDataPos<char>(pos + count) - pos, str.getData<char>(), str.getDataSize<char>());
+				unsigned int pos = getDataPos<char>(charPos);
+				_a.replace(pos, getDataPos<char>(charPos + count) - pos, str.getData<char>(), str.getDataSize<char>());
 			}
+			this->offsetKnownLength(str, 1);
+			this->offsetKnownLength(-(signed)count);
 			this->changed();
 		}
 
@@ -628,6 +696,7 @@ namespace Stamina {
 		inline void clear() {
 			_w.discard();
 			_a.discard();
+			this->resetKnownLength();
 			if (!isTypeLocked()) {
 				_w.setActive(false);
 			}
@@ -659,13 +728,13 @@ namespace Stamina {
 			this->changed();
 		}
 
-		inline StringRef getLower() const {
+		inline StringRef toLower() const {
 			StringRef str(*this);
 			str.makeLower();
 			return PassStringRef(str);
 		}
 
-		inline StringRef getUpper() const {
+		inline StringRef toUpper() const {
 			StringRef str(*this);
 			str.makeUpper();
 			return PassStringRef(str);
@@ -673,6 +742,7 @@ namespace Stamina {
 
 		inline unsigned int replace(const StringRef& find, const StringRef& replace,  int start = 0, bool ignoreCase = false, int skip = 0, unsigned int limit = lengthUnknown, unsigned int count = lengthUnknown) {
 			if (empty()) return 0;
+			resetKnownLength();
 			matchTypes(replace);
 			unsigned c = 0;
 
@@ -706,6 +776,7 @@ namespace Stamina {
 		*/
 		inline void replaceChars(const StringRef& from, const StringRef& to, bool ignoreCase = false, bool keepCase = false, bool swapMatch = false, unsigned int limit = -1) {
 			if (getLength() == 0) return;
+			resetKnownLength();
 			matchTypes(from);
 			if (isWide()) {
 				from.prepareType<wchar_t>();
@@ -814,17 +885,32 @@ namespace Stamina {
 		If both use the same type, nothing happens
 		*/
 		inline void matchTypes(const StringRef& str) {
-			if (str.isWide() == this->isWide()) return;
+			if (str.isWide() == this->isWide()) {
+				matchBytes(_w, str._w);
+				return;
+			}
 			if (str.isWide()) { 
 				if (isTypeLocked()) { // wymuszamy u nas MB - przystosowujemy str
-					str.prepareType(false);
+ 					str.prepareType(false);
+					matchBytes(_a, str._a);
 					return;
 				} else {
 					this->forceType(true);
+					matchBytes(_w, str._w);
 					return;
 				}
 			}
-			if (this->isWide()) str.prepareType(true);
+			if (this->isWide()) {
+				str.prepareType(true);
+				matchBytes(_w, str._w);
+			} else {
+				matchBytes(_a, str._a);
+			}
+		}
+
+		template <typename A, typename B>
+		inline void matchBytes(StringBuffer<A>& a, const StringBuffer<B>& b) {
+			if (b.isVarbyte()) a.setVarbyte(true);
 		}
 
 	protected:
@@ -838,6 +924,7 @@ namespace Stamina {
 				_w.makeRoom( MultiByteToWideChar(CP::codePage(), 0, _a.getString(), _a.getLength(), 0, 0), 0);
 				_w.setLength( MultiByteToWideChar(CP::codePage(), 0, _a.getString(), _a.getLength(), _w.getBuffer(), _w.getBufferSize()));
 				_w.markValid();
+				_w.setVarbyte(true);
 			} else {
 				if (_w.isValid() == false) {
 					_a.discard();
@@ -846,6 +933,7 @@ namespace Stamina {
 				_a.makeRoom( WideCharToMultiByte(CP::codePage(), 0, _w.getString(), _w.getLength(), 0, 0, 0, 0), 0);
 				_a.setLength( WideCharToMultiByte(CP::codePage(), 0, _w.getString(), _w.getLength(), _a.getBuffer(), _a.getBufferSize(), 0, 0));
 				_a.markValid();
+				_a.setVarbyte(true);
 			}
 
 		}
@@ -858,6 +946,29 @@ namespace Stamina {
 			} else {
 				_w.discard();
 			}
+		}
+
+		inline void resetKnownLength() {
+			this->_length = lengthUnknown;
+			_a.setVarbyte(true);
+			_w.setVarbyte(true);
+		}
+
+		inline unsigned int getKnownLength() const {
+			return this->_length;
+		}
+
+		inline void offsetKnownLength(const StringRef& str, int sign) {
+			if (str._length == lengthUnknown) {
+				_length = lengthUnknown;
+				return;
+			}
+			offsetKnownLength(sign * str._length);
+		}
+
+		inline void offsetKnownLength(int offset) {
+			if (this->_length == lengthUnknown) return;
+			this->_length += offset;
 		}
 
 		// ------ buffer handling
@@ -873,17 +984,19 @@ namespace Stamina {
 			return _w;
 		}
 
+		/*
 		template <typename CHAR>
 		inline unsigned int getKnownLength() const {
 			return getDataBuffer<CHAR>().getKnownLength();
 		}
+		*/
 
 	protected:
 
 		StringBuffer<char> _a;
 		StringBuffer<wchar_t> _w;
 
-
+		unsigned int _length;
 
 	};
 
