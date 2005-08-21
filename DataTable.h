@@ -278,7 +278,7 @@ namespace Stamina { namespace DT {
 			vChar = 0 buffSize = 0   - size of the string is returned in buffSize
 			vChar = * buffSize = 0   - if the column is of the type string, the @a vChar is replaced with the internal value pointer (it's READ ONLY and it's not thread-safe! you MUST lock the row first!). Otherwise, the small buffer * (at least 32 bytes) that is provided in @a vChar is used for conversion
 			vChar = * buffSize = #   - the value is copied into the @a vChar
-		- When retrieving ctypeBin there won't be any conversion! There are several ways of settin input buffer in Value::vBin :
+		- When retrieving ctypeBin there won't be any conversion! There are several ways of setting input buffer in Value::vBin :
 			buffer = 0 size = -1     - a duplicate is returned in @a buffer
 			buffer = 0 size = 0		 - size of the data is returned in @a size
 			buffer = -1 size = 0		 - the @a buffer is replaced with the internal data pointer (it's READ ONLY and it's not thread-safe! you MUST lock the row first!). size is also being returned.
