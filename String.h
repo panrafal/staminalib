@@ -14,13 +14,12 @@
 #pragma once
 
 #include <string>
-#include "WideChar.h"
+#include "Object.h"
+//#include "WideChar.h"
 #include "StringBuffer.h"
 #include "StringType.h"
 
 namespace Stamina {
-
-#ifdef TEST_STRING
 
 	class iString: public iObject {
 	public:
@@ -175,6 +174,9 @@ namespace Stamina {
 			copyType(str);
 			assignCheapReference(str);
 		}
+
+		StringRefT(const iString& str);
+
 		inline StringRefT(const char* ch, unsigned size = lengthUnknown) {
 			_flags = 0;
 			assignCheapReference(ch, size);
@@ -319,6 +321,10 @@ namespace Stamina {
 		inline bool operator ^ (const StringRef& b) const {
 			return this->findChars(b) != notFound;
 		}
+
+		//
+
+		virtual String toString() const;
 
 		// STL like functions
 
@@ -1104,15 +1110,6 @@ namespace Stamina {
 		STAMINA_OBJECT_CLASS(Stamina::StringT<TYPE>, StringRefT<TYPE>);
 
 		StringT() {}
-		/*
-		String(const iString& b) {
-			if (b.getCodePage() == CP) {
-				assign();
-			} else {
-				b.prepareType(true);
-				assign(b.getData<wchar_t>(), b.getDataSize<wchar_t>());
-			}
-		}*/
 
 		StringT(const StringRefT<TYPE>& str) {
 			assign(str);
@@ -1130,10 +1127,33 @@ namespace Stamina {
 			StringRefT<TYPE>::operator = (pass);
 			return *this;
 		}
-
-
 	};
 
+
+	class String: public StringRefT<stACP> {
+	public:
+
+		STAMINA_OBJECT_CLASS(Stamina::String, StringRef);
+
+		String() {}
+
+		String(const StringRef& str) {
+			assign(str);
+		}
+
+		inline String(PassStringRef& pass):StringRef(pass) {
+		}
+
+		inline String& operator = (const StringRef& b) {
+			StringRef::operator=(b);
+			return *this;
+		}
+
+		inline String& operator = (const PassStringRef& pass) {
+			StringRef::operator = (pass);
+			return *this;
+		}
+	};
 
 
 /*
@@ -1146,11 +1166,29 @@ namespace Stamina {
 	};
 */
 
-	typedef StringT<stACP> String;
 	typedef StringRefT<stACP> StringRef;
 	typedef StringRefT<stACP>::PassStringRef PassStringRef;
 	typedef StringT<stUTF8> StringUTF;
 	typedef StringRefT<stUTF8> StringUTFRef;
+
+	inline PassStringRef strRet(StringRef str) {
+		return str;
+	}
+
+	template<class TYPE>
+	inline String StringRefT<TYPE>::toString() const {
+		this->prepareType<wchar_t>();
+		return String::PassStringRef( String::StringRef( this->str<wchar_t>(), this->getKnownDataSize<wchar_t>() ) );
+	}
+
+	template<class TYPE>
+	inline StringRefT<TYPE>::StringRefT(const iString& str) {
+		_flags = 0;
+		String tmp = String::PassStringRef( str.toString() );
+		tmp.prepareType<wchar_t>();
+		assignCheapReference(tmp.str<wchar_t>(), tmp.getKnownDataSize<wchar_t>());
+	}
+
 
 	/*
 	template<typename CP = cpACP>
@@ -1168,47 +1206,6 @@ namespace Stamina {
 		return stream;
 	}
 
-
-
-
-#else 
-
-	typedef std::string String;
-
-
-	class StringRef {
-	public:
-		StringRef(const char* ch):_ch(ch) {}
-#ifdef _STRING_
-		StringRef(const std::string& ch):_ch(ch.c_str()) {}
-#endif
-#ifdef STDSTRING_H
-		StringRef(const CStdString& ch):_ch(ch.c_str()) {}
-#endif
-
-		operator const char*() const {
-			return _ch;
-		}
-
-		const char* c_str() const {
-			return _ch;
-		}
-
-		operator const String() const {
-			return String(_ch);
-		}
-
-	private:
-		const char* _ch;
-	};
-
-
-	inline bool operator == (const String& a, const StringRef& b) {
-		return stricmp(a.c_str(), b) == 0;
-	}
-
-
-#endif // TEST STRING
 
 }
 

@@ -98,10 +98,10 @@ namespace Stamina { namespace Unique {
 
 
 		virtual tDomainId __stdcall getDomainId() const =0;
-		virtual String __stdcall getDomainName() const =0;
+		virtual StringRef __stdcall getDomainName() const =0;
 
 		virtual tId __stdcall getId(const StringRef& name) const =0;
-		virtual String __stdcall getName(tId id) const =0;
+		virtual StringRef __stdcall getName(tId id) const =0;
 		virtual oRange __stdcall inRange(tId id, iRange::enType check = iRange::typeBoth) const =0;
 		bool idExists(tId id) const {
 			return getName(id).empty() == false;
@@ -172,7 +172,7 @@ namespace Stamina { namespace Unique {
 		if (!domain) return idNotFound;
 		return domain->getId(name);
 	}
-	inline String getName(tDomainId domainId, tId id) {
+	inline StringRef getName(tDomainId domainId, tId id) {
 		oDomain domain = instance()->getDomain(domainId);
 		if (!domain) return "";
 		return domain->getName(id);

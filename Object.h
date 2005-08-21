@@ -19,11 +19,8 @@
 
 
 #include "Assert.h"
-
 #include "LibInstance.h"
-
 #include "ObjectPtr.h"
-
 #include "Version.h"
 
 #ifdef STAMINA_DEBUG
@@ -121,6 +118,8 @@ namespace Stamina {
 	
 #define STAMINA_OBJECT_CLASS_VERSION(TYPE, BASE, VERSION) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, VERSION)
 
+	class String; // forward declaration
+
 	/** Basic object interface */
 	class iObject {
 	public:
@@ -151,6 +150,9 @@ namespace Stamina {
 		virtual ObjectClassInfo& getClass() const {
 			return staticClassInfo();
 		}
+
+		virtual String toString() const = 0;
+
 		/** Static class information */
 		static ObjectClassInfo& staticClassInfo() {
 			static ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), 0, Version(0,1,0,0));
@@ -202,9 +204,9 @@ namespace Stamina {
 	class iLockableObject: public iObject {
 	public:
 	    /** Blokuje dostêp do obiektu */
-		virtual void __stdcall lock()=0;
+		virtual void __stdcall lock() const =0;
 		/** Odblokowuje dostêp do obiektu */
-		virtual void __stdcall unlock()=0;
+		virtual void __stdcall unlock() const =0;
 
 		virtual ~iLockableObject() {};
 

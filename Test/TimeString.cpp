@@ -15,6 +15,7 @@
 #include <Stamina/Mutex.h>
 #include "..\String.h"
 #include "..\StringSTL.h"
+#include "..\WideChar.h"
 
 #include <ConvertUTF.h>
 

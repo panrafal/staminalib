@@ -12,6 +12,7 @@
 #define TEST_STRING
 
 #include "..\String.h"
+#include "..\WideChar.h"
 
 #include <ConvertUTF.h>
 
@@ -74,7 +75,7 @@ class TestString : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testMakeUpper );
 	CPPUNIT_TEST( testUseBuffer );
 	CPPUNIT_TEST( testTyped );
-	CPPUNIT_TEST( testCodePage );
+	CPPUNIT_TEST( testConversion );
 
 	/*TODO: zrobic testy ze StringRef!!!*/
 
@@ -821,7 +822,20 @@ public:
 	void testTyped() {
 	}
 
-	void testCodePage() {
+	void testConversion() {
+
+		String a = testString(L"abc¹êæABC¥ÊÆ");
+		StringUTF b = fromUnicode(L"abc¹êæABC¥ÊÆ", CP_UTF8);
+
+		String c = b;
+		
+		c == b;
+		c == StringUTF("abc");
+
+		CPPUNIT_ASSERT( a == b );
+		CPPUNIT_ASSERT( a == c );
+		CPPUNIT_ASSERT( b == c );
+
 	}
 
 

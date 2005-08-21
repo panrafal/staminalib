@@ -54,16 +54,22 @@ namespace Stamina { namespace Unique {
 // DOMAIN --------------------------------------------------------------
 
 	tId Domain::getId(const StringRef& name) const {
+		ObjLocker lock(this);
 		tIdMap::const_iterator it = this->findId(name);
 		return it != this->_idMap.end() ? it->second : idNotFound;
 	}
 
-	String Domain::getName(tId id) const {
+	StringRef Domain::getName(tId id) const {
+		ObjLocker lock(this);
 		tIdMap::const_iterator it = this->findId(id);
-		return it != this->_idMap.end() ? it->first : "";
+		if (it != this->_idMap.end())
+			return it->first;
+		else
+			return "";
 	}
 
 	oRange Domain::inRange(tId id, Range::enType check) const {
+		ObjLocker lock(this);
 		oRange found;
 		for (tRanges::const_iterator it = _ranges.begin(); it != _ranges.end(); it++) {
 			if ((it->second->getType() & check) && (!found || found->getPriority() < it->second->getPriority())
@@ -76,6 +82,7 @@ namespace Stamina { namespace Unique {
 	}
 
 	Domain::tIdMap::iterator Domain::findId(tId id) {
+		ObjLocker lock(this);
 		tIdMap::iterator it;
 		for (it = _idMap.begin(); it != _idMap.end(); it++) {
 			if (it->second == id) break;
@@ -84,10 +91,12 @@ namespace Stamina { namespace Unique {
 	}
 
 	Domain::tIdMap::iterator Domain::findId(const StringRef& name) {
+		ObjLocker lock(this);
 		return this->_idMap.find(name);
 	}
 
 	Domain::tIdMap::const_iterator Domain::findId(tId id) const {
+		ObjLocker lock(this);
 		tIdMap::const_iterator it;
 		for (it = _idMap.begin(); it != _idMap.end(); it++) {
 			if (it->second == id) break;
@@ -100,6 +109,7 @@ namespace Stamina { namespace Unique {
 	}
 
 	bool Domain::registerId(tId id, const StringRef& name) {
+		ObjLocker lock(this);
 		if (id == idNotFound || this->idExists(id) || this->nameExists(name))
 			return false;
 		this->_idMap[name] = id;
@@ -107,6 +117,7 @@ namespace Stamina { namespace Unique {
 	}
 
 	tId Domain::registerName(const StringRef& name, const oRange& range) {
+		ObjLocker lock(this);
 		tId id = 0;
 		if ((id = this->getId(name)) != idNotFound) return id;
 		if (!range || !range->canRegisterName()) return idNotFound;
@@ -120,12 +131,14 @@ namespace Stamina { namespace Unique {
 	}
 
 	bool Domain::unregister(const StringRef& name) {
+		ObjLocker lock(this);
 		if (!this->nameExists(name)) return false;
 		this->_idMap.erase(name);
 		return true;
 	}
 
 	bool Domain::addRange(const oRange& range, bool setAsDefault) {
+		ObjLocker lock(this);
 		if (range->getRangeId()==rangeNotFound || this->rangeExists(range)) return false;
 		this->_ranges[range->getRangeId()] = range;
 		if (setAsDefault && range->getType() != Range::typeStatic)
@@ -134,6 +147,7 @@ namespace Stamina { namespace Unique {
 	}
 
 	oRange Domain::getRange(tRangeId rangeId) {
+		ObjLocker lock(this);
 		if (rangeId == rangeDefault)
 			return this->_defaultRange;
 		tRanges::iterator it = this->_ranges.find(rangeId);
@@ -141,6 +155,7 @@ namespace Stamina { namespace Unique {
 	}
 
 	bool Domain::removeRange(const oRange& range) {
+		ObjLocker lock(this);
 		if (!this->rangeExists(range)) 
 			return false;
 		this->_ranges.erase(range->getRangeId());
