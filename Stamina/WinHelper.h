@@ -144,7 +144,7 @@ namespace Stamina {
 
 	inline String getEnvironmentVariable(const StringRef& name) {
 		TCHAR buff [1024];
-		GetEnvironmentVariable(name, buff, 1024);
+		GetEnvironmentVariable(name.c_str(), buff, 1024);
 		return buff;
 	}
 

@@ -28,23 +28,28 @@ void __stdcall sm_free(void* buff) {
 
 #define DECLARE_POOLED_BUFFER(TYPE, SIZE, SMALL, MEDIUM)\
 	class BufferSmallTag##SIZE {};\
-	typedef boost::singleton_pool<BufferSmallTag##SIZE, (SMALL + 1) * GETBYTES(TYPE)> poolSmall##SIZE; \
+	typedef boost::singleton_pool<BufferSmallTag##SIZE, (SMALL + 2) * GETBYTES(TYPE)> poolSmall##SIZE; \
 	class BufferMediumTag##SIZE {};\
-	typedef boost::singleton_pool<BufferMediumTag##SIZE, (MEDIUM + 1) * GETBYTES(TYPE)> poolMedium##SIZE; \
+	typedef boost::singleton_pool<BufferMediumTag##SIZE, (MEDIUM + 2) * GETBYTES(TYPE)> poolMedium##SIZE; \
 	\
 	TYPE* __stdcall sm_allocBuffer##SIZE(unsigned int& size) {\
+		TYPE* buff;\
 		if (size <= SMALL) {\
 			size = SMALL;\
-			return (TYPE*) poolSmall##SIZE::malloc();\
+			buff = (TYPE*) poolSmall##SIZE::malloc();\
 		} else if (size <= MEDIUM) {\
 			size = MEDIUM;\
-			return (TYPE*) poolMedium##SIZE::malloc();\
+			buff = (TYPE*) poolMedium##SIZE::malloc();\
 		} else {\
-			return (TYPE*) malloc((size + 1) * GETBYTES(TYPE));\
+			buff = (TYPE*) malloc((size + 2) * GETBYTES(TYPE));\
 		}\
+		*buff = 0;\
+		buff ++;\
+		return buff;\
 	}\
 	\
 	void __stdcall sm_freeBuffer##SIZE(TYPE* buff, unsigned int size) {\
+		buff--;\
 		if (size <= SMALL) {\
 			poolSmall##SIZE::free(buff);\
 		} else if (size <= MEDIUM) {\

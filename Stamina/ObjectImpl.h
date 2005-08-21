@@ -16,6 +16,7 @@
 
 #include "Object.h"
 #include "CriticalSection.h"
+#include "String.h"
 
 
 
@@ -23,6 +24,11 @@ namespace Stamina {
 
 	/** Basic object implementation */
 	template <class OI /**Object interface*/> class Object: public OI {
+	public:
+
+		virtual String toString() const {
+			return strRet("<null>");
+		}
 
 	};
 
@@ -34,12 +40,12 @@ namespace Stamina {
 	*/
 	template <class OI, class OIMP = Object<OI> , class TCS = Stamina::CriticalSection> class LockableObject: public OIMP {
 	public:
-		void __stdcall lock() {
-			_cs.lock();
+		void __stdcall lock() const {
+			const_cast<LockableObject*>(this)->_cs.lock();
 		}
 		/** Odblokowuje dostêp do obiektu */
-		void __stdcall unlock() {
-			_cs.unlock();
+		void __stdcall unlock() const {
+			const_cast<LockableObject*>(this)->_cs.unlock();
 		}
 		TCS & CS() {return _cs;}
 	private:
@@ -47,7 +53,7 @@ namespace Stamina {
 	};
 
 
-	typedef LockerTmpl<iLockableObject> ObjLocker;
+	typedef LockerTmpl<const iLockableObject> ObjLocker;
 
 	/** iSharedObj implementation
 	@param IO - object's interface

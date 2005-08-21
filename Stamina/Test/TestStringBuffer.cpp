@@ -6,7 +6,7 @@
 #include <Stamina/VersionControl.h>
 #include <Stamina/WideChar.h>
 #include <Stamina/StringBuffer.h>
-#include <Stamina/String.h>
+//#include <Stamina/String.h>
 #include <ConvertUTF.h>
 
 using namespace Stamina;
@@ -20,7 +20,6 @@ class TestStringBuffer : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE( TestStringBuffer<CHAR> );
   
 	CPPUNIT_TEST( testConstruction );
-	CPPUNIT_TEST( testActive );
 	CPPUNIT_TEST( testCheapReference );
 	CPPUNIT_TEST( testAssign );
 	CPPUNIT_TEST( testResize );
@@ -35,6 +34,8 @@ class TestStringBuffer : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testMakeUnique );
 	CPPUNIT_TEST( testDiscard );
 	CPPUNIT_TEST( testReset );
+	CPPUNIT_TEST( testSwap );
+	CPPUNIT_TEST( testReplace );
 
 	CPPUNIT_TEST_SUITE_END();
 
@@ -95,7 +96,6 @@ protected:
 		StringBuffer<CHAR> b1;
 		CPPUNIT_ASSERT( b1.isEmpty() == true );
 		CPPUNIT_ASSERT( b1.isValid() == false );
-		CPPUNIT_ASSERT( b1.isActive() == false );
 		CPPUNIT_ASSERT( b1.isReference() == false );
 		CPPUNIT_ASSERT( b1.hasOwnBuffer() == false );
 		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );
@@ -105,7 +105,6 @@ protected:
 		StringBuffer<CHAR> b2(10);
 		CPPUNIT_ASSERT( b2.isEmpty() == false );
 		CPPUNIT_ASSERT( b2.isValid() == false );
-		CPPUNIT_ASSERT( b2.isActive() == false );
 		CPPUNIT_ASSERT( b2.isReference() == false );
 		CPPUNIT_ASSERT( b2.hasOwnBuffer() == true );
 		CPPUNIT_ASSERT( b2.getBufferSize() == 32 );
@@ -115,7 +114,6 @@ protected:
 		StringBuffer<CHAR> b3(60);
 		CPPUNIT_ASSERT( b3.isEmpty() == false );
 		CPPUNIT_ASSERT( b3.isValid() == false );
-		CPPUNIT_ASSERT( b3.isActive() == false );
 		CPPUNIT_ASSERT( b3.isReference() == false );
 		CPPUNIT_ASSERT( b3.hasOwnBuffer() == true );
 		CPPUNIT_ASSERT( b3.getBufferSize() == 128 );
@@ -125,23 +123,11 @@ protected:
 		StringBuffer<CHAR> b4(1025);
 		CPPUNIT_ASSERT( b4.isEmpty() == false );
 		CPPUNIT_ASSERT( b4.isValid() == false );
-		CPPUNIT_ASSERT( b4.isActive() == false );
 		CPPUNIT_ASSERT( b4.isReference() == false );
 		CPPUNIT_ASSERT( b4.hasOwnBuffer() == true );
 		CPPUNIT_ASSERT( b4.getBufferSize() == 1025 );
 		CPPUNIT_ASSERT( b4.getLength() == 0 );
 		}
-	}
-
-	void testActive() {
-		StringBuffer<CHAR> b1;
-		CPPUNIT_ASSERT( b1.isActive() == false );
-		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );
-		CPPUNIT_ASSERT( b1.getLength() == 0 );
-		b1.setActive(true);
-		CPPUNIT_ASSERT( b1.isActive() == true );
-		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );
-		CPPUNIT_ASSERT( b1.getLength() == 0 );
 	}
 
 	void testCheapReference() {
@@ -154,7 +140,6 @@ protected:
 		b1.assignCheapReference(ref);
 		CPPUNIT_ASSERT( b1.isEmpty() == false );
 		CPPUNIT_ASSERT( b1.isValid() == true );
-		CPPUNIT_ASSERT( b1.isActive() == false );
 		CPPUNIT_ASSERT( b1.isReference() == true );
 		CPPUNIT_ASSERT( b1.hasOwnBuffer() == false );
 		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );
@@ -685,6 +670,108 @@ protected:
 		}
 	}
 
+	void testReplace() {
+		tString test1 = mediumString();
+		tString test2 = shortString();
+		{ // na pocz¹tku - zerowy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(0, 0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2 + test1, tString(b.getString()) );
+		}
+		{ // na pocz¹tku
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(0, 5, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test2 + test1.substr(5), tString(b.getString()) );
+		}
+		{ // w œrodek - krótszy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 5);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2.substr(0,5) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // w œrodek - równy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 10);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2.substr(0,10) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // w œrodek - d³u¿szy
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 15);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2.substr(0, 15) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // na œrodek - zerowa wstawka
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2 + test1.substr(10), tString(b.getString()) );
+		}
+		{ // na œrodek - zerowa podmianka
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 10, test2.c_str(), 0);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test1.substr(20), tString(b.getString()) );
+		}
+		{ // na œrodek - zerowo generalnie
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, 0, test2.c_str(), 0);
+			CPPUNIT_ASSERT_EQUAL( test1, tString(b.getString()) );
+		}
+		{ // na koñcu
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(test1.size(), 10, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1 + test2, tString(b.getString()) );
+		}
+		{ // na koñcu - za daleko
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(200, 0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1 + test2, tString(b.getString()) );
+		}
+		{ // na œrodku - za d³ugi
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, StringBuffer<CHAR>::lengthUnknown, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2, tString(b.getString()) );
+		}
+		{ // pos + count == length
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(10, test1.size() - 10, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 10) + test2, tString(b.getString()) );
+		}
+		{ // pos + count == length
+			StringBuffer<CHAR> b;
+			b.assign(test1.c_str(), test1.size());
+			b.replace(5, 5, test2.c_str(), 5);
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 5) + test2.substr(0, 5) + test1.substr(10), tString(b.getString()) );
+		}
+		{ // referencja
+			StringBuffer<CHAR> b;
+			b.assignCheapReference(test1.c_str(), test1.size());
+			b.replace(5, 5, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 5) + test2 + test1.substr(10), tString(b.getString()) );
+			CPPUNIT_ASSERT( b.getBuffer() != test1.c_str() );
+		}
+		{ // referencja - bez danych po
+			StringBuffer<CHAR> b;
+			b.assignCheapReference(test1.c_str(), test1.size());
+			b.replace(5, -1, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 5) + test2, tString(b.getString()) );
+		}
+		{ // referencja - 0 count
+			StringBuffer<CHAR> b;
+			b.assignCheapReference(test1.c_str(), test1.size());
+			b.replace(5, 0, test2.c_str(), test2.size());
+			CPPUNIT_ASSERT_EQUAL( test1.substr(0, 5) + test2 + test1.substr(5), tString(b.getString()) );
+		}
+	}
+
 	void testErase() {
 		tString test = shortString();
 		{
@@ -849,6 +936,28 @@ protected:
 			CPPUNIT_ASSERT( b.hasOwnBuffer() == false );
 		}
 	}
+
+	void testSwap() {
+		tString t1 = shortString();
+		tString t2 = mediumString();
+		return;
+		{
+			StringBuffer<CHAR> a;
+			StringBuffer<CHAR> b;
+			a.assignCheapReference(t1.c_str(), t1.size());
+			b.assign(t2.c_str(), t2.size());
+			CHAR* b1 = a.getBuffer();
+			CHAR* b2 = b.getBuffer();
+			CPPUNIT_ASSERT( a.isReference() == true );
+			CPPUNIT_ASSERT( b.hasOwnBuffer() == true );
+			a.swap(b);
+			CPPUNIT_ASSERT( b.isReference() == true );
+			CPPUNIT_ASSERT( a.hasOwnBuffer() == true );
+			CPPUNIT_ASSERT( b.getBuffer() == b1 );
+			CPPUNIT_ASSERT( a.getBuffer() == b2 );
+		}
+	}
+
 
 
 };

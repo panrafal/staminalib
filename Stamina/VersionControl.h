@@ -16,6 +16,7 @@
 #include <list>
 #include <algorithm>
 #include "Object.h"
+#include "String.h"
 #include "Version.h"
 #include "Lib.h"
 
@@ -28,6 +29,10 @@ namespace Stamina {
 	public:
 
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::VersionControl, iObject, Version(1,0,0,0));
+
+		virtual String toString() const {
+			return "";
+		}
 
 		static VersionControl* instance() {
 			static VersionControl vcInstance;
