@@ -20,7 +20,6 @@ class TestStringBuffer : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE( TestStringBuffer<CHAR> );
   
 	CPPUNIT_TEST( testConstruction );
-	CPPUNIT_TEST( testActive );
 	CPPUNIT_TEST( testCheapReference );
 	CPPUNIT_TEST( testAssign );
 	CPPUNIT_TEST( testResize );
@@ -97,7 +96,6 @@ protected:
 		StringBuffer<CHAR> b1;
 		CPPUNIT_ASSERT( b1.isEmpty() == true );
 		CPPUNIT_ASSERT( b1.isValid() == false );
-		CPPUNIT_ASSERT( b1.isActive() == false );
 		CPPUNIT_ASSERT( b1.isReference() == false );
 		CPPUNIT_ASSERT( b1.hasOwnBuffer() == false );
 		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );
@@ -107,7 +105,6 @@ protected:
 		StringBuffer<CHAR> b2(10);
 		CPPUNIT_ASSERT( b2.isEmpty() == false );
 		CPPUNIT_ASSERT( b2.isValid() == false );
-		CPPUNIT_ASSERT( b2.isActive() == false );
 		CPPUNIT_ASSERT( b2.isReference() == false );
 		CPPUNIT_ASSERT( b2.hasOwnBuffer() == true );
 		CPPUNIT_ASSERT( b2.getBufferSize() == 32 );
@@ -117,7 +114,6 @@ protected:
 		StringBuffer<CHAR> b3(60);
 		CPPUNIT_ASSERT( b3.isEmpty() == false );
 		CPPUNIT_ASSERT( b3.isValid() == false );
-		CPPUNIT_ASSERT( b3.isActive() == false );
 		CPPUNIT_ASSERT( b3.isReference() == false );
 		CPPUNIT_ASSERT( b3.hasOwnBuffer() == true );
 		CPPUNIT_ASSERT( b3.getBufferSize() == 128 );
@@ -127,23 +123,11 @@ protected:
 		StringBuffer<CHAR> b4(1025);
 		CPPUNIT_ASSERT( b4.isEmpty() == false );
 		CPPUNIT_ASSERT( b4.isValid() == false );
-		CPPUNIT_ASSERT( b4.isActive() == false );
 		CPPUNIT_ASSERT( b4.isReference() == false );
 		CPPUNIT_ASSERT( b4.hasOwnBuffer() == true );
 		CPPUNIT_ASSERT( b4.getBufferSize() == 1025 );
 		CPPUNIT_ASSERT( b4.getLength() == 0 );
 		}
-	}
-
-	void testActive() {
-		StringBuffer<CHAR> b1;
-		CPPUNIT_ASSERT( b1.isActive() == false );
-		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );
-		CPPUNIT_ASSERT( b1.getLength() == 0 );
-		b1.setActive(true);
-		CPPUNIT_ASSERT( b1.isActive() == true );
-		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );
-		CPPUNIT_ASSERT( b1.getLength() == 0 );
 	}
 
 	void testCheapReference() {
@@ -156,7 +140,6 @@ protected:
 		b1.assignCheapReference(ref);
 		CPPUNIT_ASSERT( b1.isEmpty() == false );
 		CPPUNIT_ASSERT( b1.isValid() == true );
-		CPPUNIT_ASSERT( b1.isActive() == false );
 		CPPUNIT_ASSERT( b1.isReference() == true );
 		CPPUNIT_ASSERT( b1.hasOwnBuffer() == false );
 		CPPUNIT_ASSERT( b1.getBufferSize() == 0 );

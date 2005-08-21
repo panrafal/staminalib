@@ -8,7 +8,7 @@
 #include <Stamina/Helpers.h>
 #include <Stamina/Lock.h>
 #include <Stamina/Mutex.h>
-#include "..\String.h"
+//#include "..\String.h"
 
 #include <ConvertUTF.h>
 
@@ -42,6 +42,8 @@ class TimeStringBuffer : public CPPUNIT_NS::TestFixture
 	//CPPUNIT_TEST( timeCharToUTF8Conv2 );
 	//CPPUNIT_TEST( timeUTF8ToCharConv2 );
 
+	CPPUNIT_TEST( timeUTF8ToUTF16Conv );
+	CPPUNIT_TEST( timeUTF8ToUTF16Conv2 );
 
 	CPPUNIT_TEST_SUITE_END();
 
@@ -297,6 +299,22 @@ protected:
 		}
 	}
 
+
+	void timeUTF8ToUTF16Conv() {
+		wchar_t buff16 [4];
+		for (int i = 0; i < timingLoops * 4; ++i) {
+			UTF16 * _buff16 = buff16;
+			const UTF8 * _buff8 = (UTF8*)txtU;
+			ConvertUTF8toUTF16(&_buff8, _buff8 + 2, &_buff16, _buff16 + 4, strictConversion);
+		}
+	}
+
+	void timeUTF8ToUTF16Conv2() {
+		wchar_t buff16 [4];
+		for (int i = 0; i < timingLoops * 4; ++i) {
+			MultiByteToWideChar(CP_UTF8, 0, txtU, 2, buff16, 4);
+		}
+	}
 
 
 };

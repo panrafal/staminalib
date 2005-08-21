@@ -13,38 +13,25 @@
 
 #pragma once
 
-#include <locale>
+#include "StringCharTraits.h"
 
 namespace Stamina {
 
-	template <unsigned CODEPAGE>
-	struct CodePage {
-		const static unsigned cp = CODEPAGE;
-		static unsigned int codePage() {
-			return CODEPAGE;
-		}
-	};
-
-	typedef CodePage<CP_ACP> cpACP;
-	typedef CodePage<CP_UTF8> cpUTF8;
 
 	/** StringType provides static functions for operations on variable width text.
 	
 	@warning Currently UTF-8 characters > 0x7F can't change case (therefore all operations cannot be always case insensitive). 
 	@warning Codepages different than cpACP or cpUTF8 might be handled incorrectly. Only UTF-8 support is implemented. Collating and case of characters is currently handled by the globally selected locale.
 	*/
-	template<typename CHAR, class CP = cpACP>
-	class StringType {
+	template<class CT>
+	class StringType: public CT {
 	public:
 
-		typedef unsigned tCharacter;
-		typedef unsigned tCharacterBuff;
+		typedef typename CT::tChar tChar;
+		typedef tChar CHAR;
+		typedef typename CT::tCharacter tCharacter;
+		typedef typename CT::tCharacterBuffer tCharacterBuffer;
 		const static unsigned notFound = -1;
-
-		static const std::locale& locale() {
-			static std::locale loc = std::locale();
-			return loc;
-		}
 
 		class ConstIterator {
 		public:
@@ -54,14 +41,22 @@ namespace Stamina {
 			}
 			inline void add(unsigned int offset) {
 				_char += offset;
-				while (offset--) {
-					_p += charSize();
+				if (CT::constWidth) {
+					_p += offset;
+				} else {
+					while (offset--) {
+						_p += charSize();
+					}
 				}
 			}
 			inline void sub(unsigned int offset) {
 				_char -= offset;
-				while (offset--) {
-					_p -= prevCharSize();
+				if (CT::constWidth) {
+					_p -= offset;
+				} else {
+					while (offset--) {
+						_p -= prevCharSize();
+					}
 				}
 			}
 
@@ -98,6 +93,16 @@ namespace Stamina {
 			}
 			inline int operator + (const ConstIterator& b) {
 				return _p + b._p;
+			}
+			inline ConstIterator operator + (unsigned int offset) {
+				ConstIterator it (*this);
+				it.add(offset);
+				return it;
+			}
+			inline ConstIterator operator - (unsigned int offset) {
+				ConstIterator it (*this);
+				it.sub(offset);
+				return it;
 			}
 
 			inline CHAR operator * () const {
@@ -140,44 +145,32 @@ namespace Stamina {
 			@warning The sequence might not be null terinated! Use getCharacter() instead.
 			*/
 			inline tCharacter character() const {
-				tCharacter ch = 0;
-				for (unsigned int i = 0; i < charSize(); i++) {
-					((CHAR*)&ch)[i] = _p[i];
-				}
-				return ch;
+				return CT::getCharacter(_p);
 			}
 
 			/** Returns null terminated character sequence (usually one byte).
 			@param buff tCharacterBuff to act as a character buffer.
 			*/
-			inline CHAR* getCharacter(tCharacterBuff& buff) const {
+			inline CHAR* getCharacter(tCharacterBuffer& buff) const {
 				buff = character();
 				return (CHAR*)&buff;
 			}
 
 			inline bool isLower() const {
-				return islower(*_p, locale());
+				return CT::isLower(_p);
 			}
 
 			inline bool isUpper() const {
-				return isupper(*_p, locale());
+				return CT::isUpper(_p);
 			}
 
 
 			inline tCharacter getLower() const {
-				tCharacter ch = character();
-				if (canChangeCase()) {
-					std::use_facet<std::ctype<CHAR> >( locale() ).tolower( (CHAR*)&ch, (CHAR*)&ch + charSize() );
-				}
-				return ch;
+				return CT::getLower(_p);
 			}
 
 			inline tCharacter getUpper() const {
-				tCharacter ch = character();
-				if (canChangeCase()) {
-					std::use_facet<std::ctype<CHAR> >( locale() ).toupper( (CHAR*)&ch, (CHAR*)&ch + charSize() );
-				}
-				return ch;
+				return CT::getUpper(_p);
 			}
 
 			inline bool operator == (const ConstIterator& b) const {
@@ -200,48 +193,31 @@ namespace Stamina {
 			}
 
 			inline bool charEq(const ConstIterator&b, bool noCase = false) const {
-				if (noCase) {
-					return getLower() == b.getLower();
-				} else {
-					return character() == b.character();
-				}
+				return CT::charEq(_p, b._p, noCase);
 			}
 
 			inline int charCmp(const ConstIterator& test, bool noCase = false) const {
-				tCharacter a, b;
-				if (noCase) {
-					a = getLower();
-					b = test.getLower();
-				} else {
-					a = character();
-					b = test.character();
-				}
-				if (isWide()) {
-					// inaczej specjalizacja by³aby problematyczna...
-					return _wcsncoll((wchar_t*)&a, (wchar_t*)&b, charSize());
-				} else {
-					return std::use_facet<std::collate<CHAR> > ( locale() ).compare ( (CHAR*)&a, (CHAR*)&a + charSize(), (CHAR*)&b, (CHAR*)&b + charSize() );
-				}
+ 				return CT::charCmp(_p, test._p, noCase);
 			}
 
 			inline unsigned int charSize() const {
-				return 1;
+				return CT::charSize(_p);
 			}
 
 			inline unsigned int prevCharSize() const {
-				return 1;
+				return CT::prevCharSize(_p);
 			}
 
 			inline static unsigned int charSize(tCharacter ch) {
-				return 1;
+				return CT::charSize((CHAR*)&ch);
 			}
 
 			inline bool canChangeCase() const {
-				return true;
+				return CT::canChangeCase(_p);
 			}
 
 			inline static bool isWide() {
-				return sizeof(CHAR) == sizeof(wchar_t);
+				return CT::isWide;
 			}
 
 
@@ -279,14 +255,7 @@ namespace Stamina {
 				return true;
 			}
 			inline void overwrite(const ConstIterator& b) {
-				unsigned size = b.charSize();
-				CHAR* to = _p;
-				const CHAR* from = b();
-				while (size--) {
-					*to = *from;
-					++to;
-					++from;
-				}
+				memcpy( _p, b(), b.charSize() * sizeof(CHAR) );
 			}
 			inline void overwrite(tCharacter ch) {
 				ConstIterator it = (CHAR*)&ch;
@@ -300,10 +269,6 @@ namespace Stamina {
 
 		};
 
-
-		inline static bool isWide() {
-			return sizeof(CHAR) == sizeof(wchar_t);
-		}
 
 		inline static unsigned int getLength(const CHAR* from, const CHAR* to) {
 			ConstIterator it = from;
@@ -341,12 +306,18 @@ namespace Stamina {
 
 
 		static bool equal(const CHAR* abegin, const CHAR* aend, const CHAR* bbegin, const CHAR* bend, bool noCase) {
-			ConstIterator a = abegin;
-			ConstIterator b = bbegin;
-			for (; a < aend && b < bend; ++a, ++b) {
-				if (!a.charEq(b, noCase)) return false;
+			if (noCase) {
+				ConstIterator a = abegin;
+				ConstIterator b = bbegin;
+				for (; a < aend && b < bend; ++a, ++b) {
+					if (!a.charEq(b, noCase)) return false;
+				}
+				return a == aend && b == bend;
+			} else {
+				if (aend - abegin != bend - bbegin) return false;
+				// dzia³a dla wszystkich, wiêc mo¿e byæ tu u¿yte...
+				return memcmp(abegin, bbegin, (aend - abegin) * sizeof(CHAR)) == 0;
 			}
-			return a == aend && b == bend;
 		}
 
 		static int compare(const CHAR* abegin, const CHAR* aend, const CHAR* bbegin, const CHAR* bend, bool noCase) {
@@ -380,7 +351,7 @@ namespace Stamina {
 				}
 				return current;
 			} else {
-				return findSkip(begin, end, findBegin, findEnd, noCase, skip, true);
+				return findSkip< StringType<CT> >(begin, end, findBegin, findEnd, noCase, skip, true);
 			}
 		}
 
@@ -400,10 +371,11 @@ namespace Stamina {
 				}
 				return current;
 			} else {
-				return findSkip(begin, end, findBegin, findEnd, noCase, skip, false);
+				return findSkip< StringType<CT> >(begin, end, findBegin, findEnd, noCase, skip, false);
 			}
 		}
 
+		template <class STRINGTYPE>
 		static ConstIterator findSkip(ConstIterator begin, const CHAR* end, const CHAR* findBegin, const CHAR* findEnd, bool noCase, int skip, bool findString) {
 			ConstIterator last;
 			ConstIterator current = begin;
@@ -412,9 +384,9 @@ namespace Stamina {
 			while (findLast || skip-- >= 0) {
 				ConstIterator found;
 				if (findString) {
-					found = find(current, end, findBegin, findEnd, noCase, 0);
+					found = STRINGTYPE::find(current, end, findBegin, findEnd, noCase, 0);
 				} else {
-					found = findChars(current, end, findBegin, findEnd, noCase, 0);
+					found = STRINGTYPE::findChars(current, end, findBegin, findEnd, noCase, 0);
 				}
 				if (found == end) { // koniec
 					if (findLast)
@@ -515,49 +487,130 @@ namespace Stamina {
 		}
 
 
+		static inline unsigned int convertToWideCharLength(const char* start, unsigned int length) {
+			return MultiByteToWideChar(codepage, 0, start, length, 0, 0);
+		}
+
+		static inline unsigned int convertToWideChar(const char* start, unsigned int length, wchar_t* buffer, unsigned int buffSize) {
+			return MultiByteToWideChar(codepage, 0, start, length, buffer, buffSize);
+		}
+
+		static inline unsigned int convertToCharLength(const wchar_t* start, unsigned int length) {
+			return WideCharToMultiByte(codepage, 0, start, length, 0, 0, 0, 0);
+		}
+
+		static inline unsigned int convertToChar(const wchar_t* start, unsigned int length, char* buffer, unsigned int buffSize) {
+			return WideCharToMultiByte(codepage, 0, start, length, buffer, buffSize, 0, 0);
+		}
+
 	};
 
-	// ---------------------------   CodePage Specific
 
 
-	// ----- char / UTF-8
 
 
-	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator::charSize() const {
-		if ((*_p & 0x80) == 0) return 1;
-		if ((*_p & 0xF0) == 0xF0) return 4;
-		if ((*_p & 0xE0) == 0xE0) return 3;
-		if ((*_p & 0xC0) == 0xC0) return 2;
-		return 1; // b³¹d!
-	}
 
-	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator::prevCharSize() const {
-		const CHAR* p = _p - 1;
-		if ((*p & 0x80) == 0) return 1;
-		if ((*p & 0xC0) == 0xC0) return 1; // b³¹d!
-		p--;
-		if ((*p & 0xC0) != 0x80) return 2; // 10xxxxxx
-		p--;
-		if ((*p & 0xC0) != 0x80) return 3; // 10xxxxxx
-		return 4;
-	}
+// ---------------------------------------------------------------------  StringType_ACP
 
-	template<> inline unsigned int StringType<char, cpUTF8>::ConstIterator::charSize(tCharacter ch) {
-		if ((ch & 0xFFFFFF00) == 0)
-			return 1;
-		if ((ch & 0xFFFF0000) == 0)
-			return 2;
-		if ((ch & 0xFF000000) == 0)
-			return 3;
-		return 4;
-	}
+	class StringType_char: public StringType< CharTraits_char > {
+	public:
+
+		static bool equal(const char* abegin, const char* aend, const char* bbegin, const char* bend, bool noCase) {
+			if (aend - abegin != bend - bbegin) return false;
+			if (noCase) {
+				return strnicmp(abegin, bbegin, (aend - abegin)) == 0;
+			} else {
+				// dzia³a dla wszystkich, wiêc mo¿e byæ tu u¿yte...
+				return memcmp(abegin, bbegin, (aend - abegin)) == 0;
+			}
+		}
+
+		static int compare(const char* abegin, const char* aend, const char* bbegin, const char* bend, bool noCase) {
+			int r;
+			int l = min((aend - abegin), (bend - bbegin));
+			if (noCase) {
+				r = _strnicoll(abegin, bbegin, l);
+			} else {
+				r = _strncoll(abegin, bbegin, l);
+			}
+			if (r == 0) {
+				if ((aend - abegin) > (bend - bbegin)) 
+					return 1;
+				else if ((aend - abegin) < (bend - bbegin)) 
+					return -1;
+			}
+			return r;
+		}
+
+	};
+
+	class StringType_wchar: public StringType< CharTraits_wchar > {
+	public:
+
+		static bool equal(const wchar_t* abegin, const wchar_t* aend, const wchar_t* bbegin, const wchar_t* bend, bool noCase) {
+			if (aend - abegin != bend - bbegin) return false;
+			if (noCase) {
+				return wcsnicmp(abegin, bbegin, (aend - abegin)) == 0;
+			} else {
+				// dzia³a dla wszystkich, wiêc mo¿e byæ tu u¿yte...
+				return memcmp(abegin, bbegin, (aend - abegin) * 2) == 0;
+			}
+		}
+
+		static int compare(const wchar_t* abegin, const wchar_t* aend, const wchar_t* bbegin, const wchar_t* bend, bool noCase) {
+			int r;
+			int l = min((aend - abegin), (bend - bbegin));
+			if (noCase) {
+				r = _wcsnicoll(abegin, bbegin, l);
+			} else {
+				r = _wcsncoll(abegin, bbegin, l);
+			}
+			if (r == 0) {
+				if ((aend - abegin) > (bend - bbegin)) 
+					return 1;
+				else if ((aend - abegin) < (bend - bbegin)) 
+					return -1;
+			}
+			return r;
+		}
+
+	};
 
 
-	template<> inline bool StringType<char, cpUTF8>::ConstIterator::canChangeCase() const {
-		return charSize() == 1;
-	}
+
+	typedef StringType_char stACP;
+	typedef StringType_wchar stUNICODE;
 
 
+	class StringType_UTF8: public StringType<CharTraits_UTF8> {
+	public:
+
+		static inline unsigned int convertToWideCharLength(const char* start, unsigned int length) {
+			return length; // d³u¿szy nie bêdzie
+		}
+
+		static inline unsigned int convertToWideChar(const char* start, unsigned int length, wchar_t* buffer, unsigned int buffSize) {
+			const UTF8* buff8 = (UTF8*)start;
+			UTF16* buff16 = (UTF16*)buffer;
+			ConvertUTF8toUTF16(&buff8, buff8 + length, &buff16, buff16 + buffSize, lenientConversion);
+			return buff16 - buffer;
+		}
+
+		static inline unsigned int convertToCharLength(const wchar_t* start, unsigned int length) {
+			return length * 2; // raczej d³u¿szy nie bêdzie...
+		}
+
+		static inline unsigned int convertToChar(const wchar_t* start, unsigned int length, char* buffer, unsigned int buffSize) {
+			UTF8* buff8 = (UTF8*)buffer;
+			const UTF16* buff16 = (UTF16*)start;
+			ConvertUTF16toUTF8(&buff16, buff16 + length, &buff8, buff8 + buffSize, lenientConversion);
+			return buff8 - (UTF8*)buffer;
+		}
+
+
+	};
+
+	typedef StringType_UTF8 stUTF8;
 
 }
 

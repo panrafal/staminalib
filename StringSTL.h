@@ -31,9 +31,9 @@ These classes incorporate also some STL required info and functions, like iterat
 namespace Stamina {
 
 	template <typename CHAR>
-	class StringRefSTL: public StringRefCP<cpACP> {
+	class StringRefSTL: public StringRefT<stACP> {
 	public:
-		STAMINA_OBJECT_CLASS(Stamina::StringRefSTL<CHAR>, StringRefCP<cpACP>);
+		STAMINA_OBJECT_CLASS(Stamina::StringRefSTL<CHAR>, StringRefT<stACP>);
 
 
 	public:
@@ -102,7 +102,7 @@ namespace Stamina {
 
 		inline void forceType() {
 			// mo¿emy zmieniaæ tylko na jeden rodzaj
-			StringRefCP<cpACP>::forceType<CHAR>();
+			StringRefT<stACP>::forceType<CHAR>();
 			setTypeLock();
 		}
 

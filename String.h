@@ -35,7 +35,7 @@ namespace Stamina {
 
 	All positions refer to character positions - ie. in polish word "≥Ûdü" a letter 'd' is in UTF-8 stored at byte 4, however it's real character position is 2
 
-	@warning StringRefCP<> is a base class that provides all String functions. However it's constructors do not make copies of data - referencing it instead. StringRef should be used for quick passing of arguments to functions (without copying data). Use class StringCP<> in typical situations and in function returns!
+	@warning StringRefT<> is a base class that provides all String functions. However it's constructors do not make copies of data - referencing it instead. StringRef should be used for quick passing of arguments to functions (without copying data). Use class StringT<> in typical situations and in function returns!
 
 	Check the following example:
 
@@ -66,23 +66,30 @@ namespace Stamina {
 	Remember not to use StringRef as a return type from functions, unless you really know what You're doing! Use String instead, with PassStringRef where appropriate.
 
 	*/
-	template <class CP = cpACP>
-	class StringRefCP: public iString {
+	template <class TYPE = stACP>
+	class StringRefT: public iString {
 	public:
 
-//		typedef StringIterator<CP> iterator;
-//		typedef StringType<char, CP>::Iterator iteratorA;
-//		typedef StringType<wchar_t, CP>::Iterator iteratorW;
-
-		const static unsigned int lengthUnknown = 0x0FFFFFFF;
+		const static unsigned int lengthUnknown = 0xFFFFFFFF;
 		const static unsigned int wholeData = 0xFFFFFFFF;
 		const static unsigned int npos = 0xFFFFFFFF;
 		const static unsigned int notFound = 0xFFFFFFFF;
 
-		typedef StringRefCP<CP> StringRef;
+		typedef StringRefT<TYPE> StringRef;
 
-		STAMINA_OBJECT_CLASS(Stamina::StringRefCP<CP>, iString);
+		STAMINA_OBJECT_CLASS(Stamina::StringRefT<TYPE>, iString);
 
+	protected:
+
+		enum Flags {
+			flagWide = 1,
+			flagTypeLock = 2,
+			flagSinglebyte = 1,
+		};
+		enum Masks {
+			maskWide = 4,
+			maskMultibyte = 8,
+		};
 
 	public:
 
@@ -151,44 +158,55 @@ namespace Stamina {
 			StringRef& _str;
 		};
 
-		inline StringRefCP() {
+		inline StringRefT() {
+			S_ASSERT( TYPE::isWide == false );
 			_length = lengthUnknown;
+			_flags = 0;
 		}
 
-		inline StringRefCP(PassStringRef& pass) {
+		inline StringRefT(PassStringRef& pass) {
+			_length = lengthUnknown;
+			_flags = 0;
 			this->swapBuffers(pass._str);
 		}
 
-		inline StringRefCP(const StringRef& str) {
+		inline StringRefT(const StringRef& str) {
+			_flags = 0;
 			copyType(str);
 			assignCheapReference(str);
 		}
-		inline StringRefCP(const char* ch, unsigned size = lengthUnknown) {
+		inline StringRefT(const char* ch, unsigned size = lengthUnknown) {
+			_flags = 0;
 			assignCheapReference(ch, size);
 		}
-		inline StringRefCP(const wchar_t* ch, unsigned size = lengthUnknown) {
+		inline StringRefT(const wchar_t* ch, unsigned size = lengthUnknown) {
+			_flags = 0;
 			assignCheapReference(ch, size);
 		}
 
 #ifdef _STRING_
 		/*
 		template <typename CHAR, typename TRAITS, typename ALLOCATOR>
-		StringRefCP(const std::basic_string<CHAR, TRAITS, ALLOCATOR>& ch) {
+		StringRefT(const std::basic_string<CHAR, TRAITS, ALLOCATOR>& ch) {
 			assignCheapReference(ch.c_str(), ch.size());
 		}
 		*/
-		inline StringRefCP(const std::string& ch) {
+		inline StringRefT(const std::string& ch) {
+			_flags = 0;
 			assignCheapReference(ch.c_str(), ch.size());
 		}
-		inline StringRefCP(const std::wstring& ch) {
+		inline StringRefT(const std::wstring& ch) {
+			_flags = 0;
 			assignCheapReference(ch.c_str(), ch.size());
 		}
 #endif
 #ifdef STDSTRING_H
-		inline StringRefCP(const CStdStringA& ch) {
+		inline StringRefT(const CStdStringA& ch) {
+			_flags = 0;
 			assignCheapReference(ch.c_str(), ch.size());
 		}
-		inline StringRefCP(const CStdStringW& ch) {
+		inline StringRefT(const CStdStringW& ch) {
+			_flags = 0;
 			assignCheapReference(ch.c_str(), ch.size());
 		}
 #endif
@@ -355,8 +373,8 @@ namespace Stamina {
 
 		/*
 		template <class CODEPAGE>
-		inline StringCP<CODEPAGE> getString() const {
-			return StringCP<CODEPAGE>(getData<wchar_t>(), getDataSize<wchar_t>());
+		inline StringT<CODEPAGE> getString() const {
+			return StringT<CODEPAGE>(getData<wchar_t>(), getDataSize<wchar_t>());
 		}
 		*/
 
@@ -417,9 +435,13 @@ namespace Stamina {
 
 		template <typename CHAR>
 		inline const CHAR* getDataEnd(unsigned int size = -1, unsigned int start = 0) const {
-			unsigned int length = getDataBuffer<CHAR>().getLength();
-			if (size > length || size + start > length) size = getDataBuffer<CHAR>().getLength() - start;
-			return getDataBuffer<CHAR>().getString() + size + start;
+			if (size != -1 || start != 0) {
+				unsigned int length = getDataBuffer<CHAR>().getLength();
+				if (size > length || size + start > length) size = getDataBuffer<CHAR>().getLength() - start;
+				return getDataBuffer<CHAR>().getString() + getDataPos( size + start );
+			} else {
+				return getDataBuffer<CHAR>().getString() + getDataBuffer<CHAR>().getLength();
+			}
 		}
 
 		inline const void* getData() const {
@@ -433,9 +455,13 @@ namespace Stamina {
 		protected:
 		template <typename CHAR>
 		inline unsigned int getLength() {
-			if (getDataBuffer<CHAR>().isVarbyte()) {
-				_length = StringType<CHAR, CP>::getLength(getData<CHAR>(), getDataEnd<CHAR>());
-				getDataBuffer<CHAR>().setVarbyte( _length != this->getDataSize<CHAR>() );
+			if (isSinglebyte<CHAR>() == false) {
+				if (sizeof( CHAR ) == sizeof( char )) {
+					_length = TYPE::getLength(getData<char>(), getDataEnd<char>());
+				} else {
+					_length = stUNICODE::getLength(getData<wchar_t>(), getDataEnd<wchar_t>());
+				}
+				setMaskedFlag(flagSinglebyte, getTypeMask<CHAR>(), _length == this->getDataSize<CHAR>() );
 			} else {
 				_length = this->getDataSize<CHAR>();
 			}
@@ -458,8 +484,12 @@ namespace Stamina {
 
 		template <typename CHAR>
 		inline unsigned int getDataPos(int charPos) const {
-			if (getDataBuffer<CHAR>().isVarbyte()) {
-				return StringType<CHAR, CP>::getDataPos(getData<CHAR>(), getDataEnd<CHAR>(), charPos);
+			if (isSinglebyte<CHAR>() == false) {
+				if (sizeof( CHAR ) == sizeof( char )) {
+					return TYPE::getDataPos(getData<char>(), getDataEnd<char>(), charPos);
+				} else {
+					return stUNICODE::getDataPos(getData<wchar_t>(), getDataEnd<wchar_t>(), charPos);
+				}
 			} else {
 				if (charPos >= 0) {
 					return charPos;
@@ -473,8 +503,12 @@ namespace Stamina {
 		}
 		template <typename CHAR>
 		inline unsigned int getCharPos(unsigned int dataPos) const {
-			if (getDataBuffer<CHAR>().isVarbyte()) {
-				return StringType<CHAR, CP>::getCharPos(getData<CHAR>(), getDataEnd<CHAR>(), dataPos);
+			if (isSinglebyte<CHAR>() == false) {
+				if (sizeof( CHAR ) == sizeof( char )) {
+					return TYPE::getCharPos(getData<char>(), getDataEnd<char>(), dataPos);
+				} else {
+					return stUNICODE::getCharPos(getData<wchar_t>(), getDataEnd<wchar_t>(), dataPos);
+				}
 			} else {
 				return dataPos;
 			}
@@ -532,31 +566,31 @@ namespace Stamina {
 		// ------ compare
 
 		inline bool equal(const StringRef& str, bool ignoreCase = false) const {
-			if (matchConstTypes(str)) {
-				return StringType<wchar_t, CP>::equal(getData<wchar_t>(), getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), ignoreCase);
+			if (matchConstTypes(str) || matchConstCompare(str, ignoreCase)) {
+				return stUNICODE::equal(getData<wchar_t>(), getDataEnd<wchar_t>(), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(), ignoreCase);
 			} else {
-				return StringType<char, CP>::equal(getData<char>(), getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), ignoreCase);
+				return TYPE::equal(getData<char>(), getDataEnd<char>(), str.getData<char>(), str.getDataEnd<char>(), ignoreCase);
 			}
 			/*TODO*/
 		}
 
 		inline int compare(const StringRef& str, bool ignoreCase = false, unsigned int count = lengthUnknown) const {
-			if (matchConstTypes(str)) {
-				return StringType<wchar_t, CP>::compare(getData<wchar_t>(), getDataEnd<wchar_t>(count), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(count), ignoreCase);
+			if (matchConstTypes(str) || matchConstCompare(str, ignoreCase)) {
+				return stUNICODE::compare(getData<wchar_t>(), getDataEnd<wchar_t>(count), str.getData<wchar_t>(), str.getDataEnd<wchar_t>(count), ignoreCase);
 			} else {
-				return StringType<char, CP>::compare(getData<char>(), getDataEnd<char>(count), str.getData<char>(), str.getDataEnd<char>(count), ignoreCase);
+				return TYPE::compare(getData<char>(), getDataEnd<char>(count), str.getData<char>(), str.getDataEnd<char>(count), ignoreCase);
 			}
 		}
 
 		// ------ search
 
 		inline unsigned int find(const StringRef& find, int start = 0, bool ignoreCase = false, int skip = 0, unsigned int count = lengthUnknown) const {
-			if (matchConstTypes(find)) {
-				StringType<wchar_t, CP>::ConstIterator it (getData<wchar_t>() + getDataPos<wchar_t>(start), start);
-				return StringType<wchar_t, CP>::find(it, getDataEnd<wchar_t>(count, start), find.getData<wchar_t>(), find.getDataEnd<wchar_t>(), ignoreCase, skip).getFoundPosition(getDataEnd<wchar_t>(count, start));
+			if (matchConstTypes(find) || matchConstCompare(find, ignoreCase)) {
+				stUNICODE::ConstIterator it (getData<wchar_t>() + getDataPos<wchar_t>(start), start);
+				return stUNICODE::find(it, getDataEnd<wchar_t>(count, start), find.getData<wchar_t>(), find.getDataEnd<wchar_t>(), ignoreCase, skip).getFoundPosition(getDataEnd<wchar_t>(count, start));
 			} else {
-				StringType<char, CP>::ConstIterator it (getData<char>() + getDataPos<char>(start), start);
-				return StringType<char, CP>::find(it, getDataEnd<char>(count, start), find.getData<char>(), find.getDataEnd<char>(), ignoreCase, skip).getFoundPosition(getDataEnd<char>(count, start));
+				TYPE::ConstIterator it (getData<char>() + getDataPos<char>(start), start);
+				return TYPE::find(it, getDataEnd<char>(count, start), find.getData<char>(), find.getDataEnd<char>(), ignoreCase, skip).getFoundPosition(getDataEnd<char>(count, start));
 			}
 		}
 
@@ -565,12 +599,12 @@ namespace Stamina {
 		}
 
 		inline unsigned int findChars(const StringRef& find, int start = 0, bool ignoreCase = false, int skip = 0, unsigned int count = lengthUnknown) const {
-			if (matchConstTypes(find)) {
-				StringType<wchar_t, CP>::ConstIterator it (getData<wchar_t>() + getDataPos<wchar_t>(start), start);
-				return StringType<wchar_t, CP>::findChars(it, getDataEnd<wchar_t>(count, start), find.getData<wchar_t>(), find.getDataEnd<wchar_t>(), ignoreCase, skip).getFoundPosition(getDataEnd<wchar_t>(count, start));
+			if (matchConstTypes(find) || matchConstCompare(find, ignoreCase)) {
+				stUNICODE::ConstIterator it (getData<wchar_t>() + getDataPos<wchar_t>(start), start);
+				return stUNICODE::findChars(it, getDataEnd<wchar_t>(count, start), find.getData<wchar_t>(), find.getDataEnd<wchar_t>(), ignoreCase, skip).getFoundPosition(getDataEnd<wchar_t>(count, start));
 			} else {
-				StringType<char, CP>::ConstIterator it (getData<char>() + getDataPos<char>(start), start);
-				return StringType<char, CP>::findChars(it, getDataEnd<char>(count, start), find.getData<char>(), find.getDataEnd<char>(), ignoreCase, skip).getFoundPosition(getDataEnd<char>(count, start));
+				TYPE::ConstIterator it (getData<char>() + getDataPos<char>(start), start);
+				return TYPE::findChars(it, getDataEnd<char>(count, start), find.getData<char>(), find.getDataEnd<char>(), ignoreCase, skip).getFoundPosition(getDataEnd<char>(count, start));
 			}
 		}
 
@@ -586,10 +620,10 @@ namespace Stamina {
 			this->_length = str.getKnownLength() ;
 			if (isWide()) {
 				_w.assign(str.getData<wchar_t>(), str.getDataSize<wchar_t>());
-				_w.setVarbyte( str.getDataBuffer<wchar_t>().isVarbyte() );
+				setMaskedFlag( flagSinglebyte, maskWide, str.isSinglebyte<wchar_t>() );
 			} else {
 				_a.assign(str.getData<char>(), str.getDataSize<char>());
-				_a.setVarbyte( str.getDataBuffer<char>().isVarbyte() );
+				setMaskedFlag( flagSinglebyte, maskMultibyte, str.isSinglebyte<char>() );
 			}
 			this->changed();
 		}
@@ -606,14 +640,14 @@ namespace Stamina {
 			this->_length = str.getKnownLength();
 			if (str.getDataBuffer<wchar_t>().isValid()) {
 				_w.assignCheapReference(str.getData<wchar_t>(), str.getKnownDataSize<wchar_t>());
-				_w.setVarbyte( str.getDataBuffer<wchar_t>().isVarbyte() );
+				setMaskedFlag( flagSinglebyte, maskWide, str.isSinglebyte<wchar_t>() );
 			} else {
 				//_w.reset();
 			}
 //			else
 			if (str.getDataBuffer<char>().isValid()) {
 				_a.assignCheapReference(str.getData<char>(), str.getKnownDataSize<char>());
-				_a.setVarbyte( str.getDataBuffer<char>().isVarbyte() );
+				setMaskedFlag( flagSinglebyte, maskMultibyte, str.isSinglebyte<char>() );
 			} else {
 				//_a.reset();
 			}
@@ -631,6 +665,9 @@ namespace Stamina {
 
 		void swapBuffers(StringRef& str) {
 			this->_length = str.getKnownLength();
+			int flags = this->_flags;
+			this->_flags = str._flags;
+			str._flags = flags;
 			_a.swap(str._a);
 			_w.swap(str._w);
 		}
@@ -698,7 +735,7 @@ namespace Stamina {
 			_a.discard();
 			this->resetKnownLength();
 			if (!isTypeLocked()) {
-				_w.setActive(false);
+				this->setWide(false);
 			}
 		}
 
@@ -708,10 +745,10 @@ namespace Stamina {
 			if (getLength() == 0) return;
 			if (isWide()) {
 				_w.makeUnique();
-				StringType<wchar_t, CP>::makeLower(_w.getBuffer(), _w.getBufferEnd());
+				stUNICODE::makeLower(_w.getBuffer(), _w.getBufferEnd());
 			} else {
 				_a.makeUnique();
-				StringType<char, CP>::makeLower(_a.getBuffer(), _a.getBufferEnd());
+				TYPE::makeLower(_a.getBuffer(), _a.getBufferEnd());
 			}
 			this->changed();
 		}
@@ -720,10 +757,10 @@ namespace Stamina {
 			if (getLength() == 0) return;
 			if (isWide()) {
 				_w.makeUnique();
-				StringType<wchar_t, CP>::makeUpper(_w.getBuffer(), _w.getBufferEnd());
+				stUNICODE::makeUpper(_w.getBuffer(), _w.getBufferEnd());
 			} else {
 				_a.makeUnique();
-				StringType<char, CP>::makeUpper(_a.getBuffer(), _a.getBufferEnd());
+				TYPE::makeUpper(_a.getBuffer(), _a.getBufferEnd());
 			}
 			this->changed();
 		}
@@ -744,6 +781,7 @@ namespace Stamina {
 			if (empty()) return 0;
 			resetKnownLength();
 			matchTypes(replace);
+			matchCompare(replace, ignoreCase);
 			unsigned c = 0;
 
 			unsigned int found = this->find(find, start, ignoreCase, skip, count);
@@ -778,19 +816,20 @@ namespace Stamina {
 			if (getLength() == 0) return;
 			resetKnownLength();
 			matchTypes(from);
+			matchCompare(from, ignoreCase);
 			if (isWide()) {
 				from.prepareType<wchar_t>();
 				to.prepareType<wchar_t>();
 				_w.makeUnique();
 				_w.setLength(
-					StringType<wchar_t, CP>::replaceChars(_w.getBuffer(), _w.getBufferEnd(), from.getData<wchar_t>(), from.getDataEnd<wchar_t>(), to.getData<wchar_t>(), to.getDataEnd<wchar_t>(), ignoreCase, keepCase, swapMatch, limit).getDataPosition(_w.getBuffer()) );
+					stUNICODE::replaceChars(_w.getBuffer(), _w.getBufferEnd(), from.getData<wchar_t>(), from.getDataEnd<wchar_t>(), to.getData<wchar_t>(), to.getDataEnd<wchar_t>(), ignoreCase, keepCase, swapMatch, limit).getDataPosition(_w.getBuffer()) );
 				_w.markValid();
 			} else {
 				from.prepareType<wchar_t>();
 				to.prepareType<wchar_t>();
 				_a.makeUnique();
 				_a.setLength(
-					StringType<char, CP>::replaceChars(_a.getBuffer(), _a.getBufferEnd(), from.getData<char>(), from.getDataEnd<char>(), to.getData<char>(), to.getDataEnd<char>(), ignoreCase, keepCase, swapMatch, limit).getDataPosition(_a.getBuffer()) );
+					TYPE::replaceChars(_a.getBuffer(), _a.getBufferEnd(), from.getData<char>(), from.getDataEnd<char>(), to.getData<char>(), to.getDataEnd<char>(), ignoreCase, keepCase, swapMatch, limit).getDataPosition(_a.getBuffer()) );
 				_a.markValid();
 			}
 			this->changed();
@@ -799,29 +838,42 @@ namespace Stamina {
 		// ------ type handling
 
 		inline unsigned int getCodePage() const {
-			return CP::codePage();
+			return TYPE::codepage;
 		}
 
 		/** Returns true if String is using Wide (UTF-16) characters */
 		inline bool isWide() const {
-			return _w.isActive();
+			return _flags & flagWide;
 		}
 
-		template<typename CHAR> inline bool isActive() {
+		template<typename CHAR> inline bool isActive() const {
 			return isWide() == (sizeof(CHAR) == sizeof(wchar_t));
+		}
+
+		template<typename CHAR> inline bool isSinglebyte() const {
+			return getMaskedFlag(flagSinglebyte, getTypeMask<CHAR>());
+		}
+
+		template<> inline bool isSinglebyte<char>() const {
+			return TYPE::constWidth ? true : getMaskedFlag(flagSinglebyte, getTypeMask<CHAR>());
+		}
+		
+		template<> inline bool isSinglebyte<wchar_t>() const {
+			return stUNICODE::constWidth ? true : getMaskedFlag(flagSinglebyte, getTypeMask<CHAR>());
 		}
 
 		/** Returns true if String is locked to current character type */
 		inline bool isTypeLocked() const {
-			return _w.isMajor() || _a.isMajor();
+			return (_flags & flagTypeLock) != 0;
 		}
 
 		/** Sets lock on character type. The string won't change it's type (ie. if it's Wide now - it'll be it still, even after assignment of MultiByte characters. */
 		inline void setTypeLock(bool lock) {
-			if (isWide())
-				_w.setMajor(lock);
-			else
-				_a.setMajor(lock);
+			if (lock) {
+				_flags |= flagTypeLock;
+			} else {
+				_flags &= ~flagTypeLock;
+			}
 		}
 
 		template <typename CHAR>
@@ -841,7 +893,7 @@ namespace Stamina {
 		inline void forceType(bool wide) {
 			if (isTypeLocked()) return;
 			this->prepareType(wide);
-			_w.setActive(wide);
+			setWide(wide);
 		}
 
 		template <typename CHAR>
@@ -879,6 +931,7 @@ namespace Stamina {
 			return true;
 		}
 
+
 		/** Matches current and string's types choosing the widest possible option.
 		If @a this uses MultiByte, and @a str uses Wide - @a this becomes Wide if it's not type-locked, or @a str prepares conversion otherwise.
 		If @a this uses Wide, and @a str uses MultiByte - @a str prepares conversion buffer
@@ -886,31 +939,47 @@ namespace Stamina {
 		*/
 		inline void matchTypes(const StringRef& str) {
 			if (str.isWide() == this->isWide()) {
-				matchBytes(_w, str._w);
+				matchBytes(maskWide, maskWide);
 				return;
 			}
 			if (str.isWide()) { 
 				if (isTypeLocked()) { // wymuszamy u nas MB - przystosowujemy str
  					str.prepareType(false);
-					matchBytes(_a, str._a);
+					matchBytes(maskMultibyte, maskMultibyte);
 					return;
 				} else {
 					this->forceType(true);
-					matchBytes(_w, str._w);
+					matchBytes(maskWide, maskWide);
 					return;
 				}
 			}
 			if (this->isWide()) {
 				str.prepareType(true);
-				matchBytes(_w, str._w);
+				matchBytes(maskWide, maskWide);
 			} else {
-				matchBytes(_a, str._a);
+				matchBytes(maskMultibyte, maskMultibyte);
 			}
 		}
 
-		template <typename A, typename B>
-		inline void matchBytes(StringBuffer<A>& a, const StringBuffer<B>& b) {
-			if (b.isVarbyte()) a.setVarbyte(true);
+		inline bool matchConstCompare(const StringRef& str, bool noCase) const {
+			if (noCase == false || TYPE::fullCharProperties == true) return false;
+			if (this->isWide() == false && str.isWide() == false) {
+				this->prepareType(true);
+				str.prepareType(true);
+			}
+			return true;
+		}
+
+		inline void matchCompare(const StringRef& str, bool noCase) {
+			if (noCase == false || TYPE::fullCharProperties == true) return;
+			if (this->isWide() == false && isTypeLocked() == false) { // wszystkie inne przypadki za≥atwia matchTypes
+				this->forceType(true);
+				str.prepareType(true);
+			}
+		}
+
+		inline void matchBytes(Masks a, Masks b) {
+			if (getMaskedFlag(flagSinglebyte, b) == false) setMaskedFlag(flagSinglebyte, a, false);
 		}
 
 	protected:
@@ -921,19 +990,19 @@ namespace Stamina {
 					_w.discard();
 					return;
 				}
-				_w.makeRoom( MultiByteToWideChar(CP::codePage(), 0, _a.getString(), _a.getLength(), 0, 0), 0);
-				_w.setLength( MultiByteToWideChar(CP::codePage(), 0, _a.getString(), _a.getLength(), _w.getBuffer(), _w.getBufferSize()));
+				_w.makeRoom( TYPE::convertToWideCharLength(_a.getString(), _a.getLength()), 0);
+				_w.setLength( TYPE::convertToWideChar(_a.getString(), _a.getLength(), _w.getBuffer(), _w.getBufferSize()));
 				_w.markValid();
-				_w.setVarbyte(true);
+				setMaskedFlag(flagSinglebyte, maskWide, false);
 			} else {
 				if (_w.isValid() == false) {
 					_a.discard();
 					return;
 				}
-				_a.makeRoom( WideCharToMultiByte(CP::codePage(), 0, _w.getString(), _w.getLength(), 0, 0, 0, 0), 0);
-				_a.setLength( WideCharToMultiByte(CP::codePage(), 0, _w.getString(), _w.getLength(), _a.getBuffer(), _a.getBufferSize(), 0, 0));
+				_a.makeRoom( TYPE::convertToCharLength(_w.getString(), _w.getLength()), 0);
+				_a.setLength( TYPE::convertToChar(_w.getString(), _w.getLength(), _a.getBuffer(), _a.getBufferSize()));
 				_a.markValid();
-				_a.setVarbyte(true);
+				setMaskedFlag(flagSinglebyte, maskMultibyte, false);
 			}
 
 		}
@@ -950,8 +1019,8 @@ namespace Stamina {
 
 		inline void resetKnownLength() {
 			this->_length = lengthUnknown;
-			_a.setVarbyte(true);
-			_w.setVarbyte(true);
+			setMaskedFlag(flagSinglebyte, maskWide, false);
+			setMaskedFlag(flagSinglebyte, maskMultibyte, false);
 		}
 
 		inline unsigned int getKnownLength() const {
@@ -971,6 +1040,38 @@ namespace Stamina {
 			this->_length += offset;
 		}
 
+		// ------ flags
+
+		inline void setWide(bool wide) {
+			if (wide) {
+				_flags |= flagWide;
+			} else {
+				_flags &= ~flagWide;
+			}
+		}
+
+		inline void setMaskedFlag(Flags flag, Masks mask, bool value) {
+			if (value) {
+				_flags |= flag << mask;
+			} else {
+				_flags &= ~(flag << mask);
+			}
+		}
+
+		inline bool getMaskedFlag(Flags flag, Masks mask) const {
+			return (_flags & (flag << mask)) == (flag << mask);
+		}
+
+		template <typename CHAR> inline Masks getTypeMask()  const;
+
+		template <>	inline Masks getTypeMask<char>() const {
+			return maskMultibyte;
+		}
+
+		template <>	inline Masks getTypeMask<wchar_t>() const {
+			return maskWide;
+		}
+
 		// ------ buffer handling
 
 		template <typename CHAR>
@@ -984,12 +1085,6 @@ namespace Stamina {
 			return _w;
 		}
 
-		/*
-		template <typename CHAR>
-		inline unsigned int getKnownLength() const {
-			return getDataBuffer<CHAR>().getKnownLength();
-		}
-		*/
 
 	protected:
 
@@ -997,17 +1092,18 @@ namespace Stamina {
 		StringBuffer<wchar_t> _w;
 
 		unsigned int _length;
+		int _flags;
 
 	};
 
 
-	template <class CP>
-	class StringCP: public StringRefCP<CP> {
+	template <class TYPE>
+	class StringT: public StringRefT<TYPE> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::StringCP<CP>, StringRefCP<CP>);
+		STAMINA_OBJECT_CLASS(Stamina::StringT<TYPE>, StringRefT<TYPE>);
 
-		StringCP() {}
+		StringT() {}
 		/*
 		String(const iString& b) {
 			if (b.getCodePage() == CP) {
@@ -1018,20 +1114,20 @@ namespace Stamina {
 			}
 		}*/
 
-		StringCP(const StringRefCP<CP>& str) {
+		StringT(const StringRefT<TYPE>& str) {
 			assign(str);
 		}
 
-		inline StringCP(PassStringRef& pass):StringRefCP<CP>(pass) {
+		inline StringT(PassStringRef& pass):StringRefT<TYPE>(pass) {
 		}
 
-		inline StringCP& operator = (const StringRef& b) {
-			StringRefCP<CP>::operator = (b);
+		inline StringT& operator = (const StringRef& b) {
+			StringRefT<TYPE>::operator = (b);
 			return *this;
 		}
 
-		inline StringCP& operator = (const PassStringRef& pass) {
-			StringRefCP<CP>::operator = (pass);
+		inline StringT& operator = (const PassStringRef& pass) {
+			StringRefT<TYPE>::operator = (pass);
 			return *this;
 		}
 
@@ -1042,19 +1138,19 @@ namespace Stamina {
 
 /*
 	template<typename CP = cpACP>
-	class StringCPRef: public StringCP<CP>::StringRef {
+	class StringCPRef: public StringT<CP>::StringRef {
 	public:
-		StringCPRef(typename const StringCP<CP>::StringRef& str): StringCP<CP>::StringRef(str) {
+		StringCPRef(typename const StringT<CP>::StringRef& str): StringT<CP>::StringRef(str) {
 		}
 		StringCPRef() {}
 	};
 */
 
-	typedef StringCP<cpACP> String;
-	typedef StringRefCP<cpACP> StringRef;
-	typedef StringRefCP<cpACP>::PassStringRef PassStringRef;
-	typedef StringCP<cpUTF8> StringUTF;
-	typedef StringRefCP<cpUTF8> StringUTFRef;
+	typedef StringT<stACP> String;
+	typedef StringRefT<stACP> StringRef;
+	typedef StringRefT<stACP>::PassStringRef PassStringRef;
+	typedef StringT<stUTF8> StringUTF;
+	typedef StringRefT<stUTF8> StringUTFRef;
 
 	/*
 	template<typename CP = cpACP>
@@ -1065,12 +1161,13 @@ namespace Stamina {
 	};
 	*/
 
-	template<class CharType, class Traits>
-	inline std::basic_ostream<CharType, Traits>& operator << (std::basic_ostream<CharType, Traits>& stream,const StringRef& str) {
+	template<class CharType, class Traits, class TYPE>
+	inline std::basic_ostream<CharType, Traits>& operator << (std::basic_ostream<CharType, Traits>& stream,const StringRefT<TYPE>& str) {
 		str.prepareType<CharType>();
 		stream.write(str.getData<CharType>(), str.getDataSize<CharType>());
 		return stream;
 	}
+
 
 
 

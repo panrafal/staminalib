@@ -25,7 +25,6 @@ namespace Stamina {
 	 - cheap referencing - operations on external buffer of unknown size
 	 - data discard - ability to discard buffer's data without freeing the memory
 	 - up to 0x0FFFFFFF (268.435.455) bytes of length
-	 - additional _active flag/bit
 	 - always makes room for \0 char at the string's end. All buffer and data sizes don't count the terminating null character and neither You should do that!
 
 	*/
@@ -35,36 +34,27 @@ namespace Stamina {
 	protected: // na pocz¹tku, ¿eby by³y dobrze widoczne w debuggerze
 
 		CHAR* _buffer;
-		union {
-			struct {
-				unsigned _flag : 1;
-				unsigned _active : 1;
-				unsigned _major : 1;
-				unsigned _varbyte : 1;
-				unsigned int _size : 28;
-				unsigned _align2 : 4;
-				unsigned int _length : 28;
-			};
-			__int64 __info;
-		};
+		unsigned int _size;
+		unsigned int _length;
 
 	public:
 
 //		friend class String;
 
 		const static unsigned int pooledBufferSize = 64;
-		const static unsigned int maxBufferSize = 0x0FFFFFFF;
-		const static unsigned int lengthUnknown = 0x0FFFFFFF;
+		const static unsigned int maxBufferSize = 0xFFFFFFFF;
+		const static unsigned int lengthUnknown = 0xFFFFFFFF;
+		const static unsigned int lengthDiscarded = 0xFFFFFFFE;
 		const static unsigned int wholeData = 0xFFFFFFFF;
 	public:
-		inline StringBuffer(): _size(0), _buffer(0), _active(0), _major(0), _length(0), _flag(0), _varbyte(1) {
+		inline StringBuffer(): _size(0), _buffer(0), _length(0) {
 		}
 
-		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _active(0), _length(0),_flag(0), _major(0), _varbyte(1) {
+		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _length(0) {
 			resize(initialSize, 0);
 		}
 
-		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _active(0), _length(0), _flag(0), _major(0), _varbyte(1) {
+		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _length(0) {
 			assignCheapReference(data, dataSize);
 		}
 
@@ -75,35 +65,16 @@ namespace Stamina {
 
 		inline void swap(StringBuffer<CHAR>& b) {
 			CHAR* buffer = this->_buffer;
-			__int64 info = this->__info;
+			int length = this->_length;
+			int size = this->_size;
 			this->_buffer = b._buffer;
-			this->__info = b.__info;
+			this->_length = b._length;
+			this->_size = b._size;
 
 			b._buffer = buffer;
-			b.__info = info;
+			b._length = length;
+			b._size = size;
 			
-		}
-
-		inline void setActive(bool active) {
-			_active = active;
-		}
-		inline bool isActive() const {
-			return _active;
-		}
-
-		inline void setMajor(bool major) {
-			_major = major;
-		}
-		inline bool isMajor() const {
-			return _major;
-		}
-
-		inline void setVarbyte(bool mbyte) {
-			_varbyte = mbyte;
-		}
- 
-		inline bool isVarbyte() const {
-			return _varbyte;
 		}
 
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
@@ -111,7 +82,6 @@ namespace Stamina {
 		inline void assignCheapReference(const CHAR* data, unsigned int length = lengthUnknown) {
 			S_ASSERT(data);
 			this->reset();
-			this->_flag = true;
 			this->_buffer = (CHAR*)data;
 			this->_length = length;
 		}
@@ -122,8 +92,7 @@ namespace Stamina {
 			S_ASSERT(size <= maxBufferSize);
 			this->makeRoom(size, 0);
 			copy(_buffer, data, size);
-			this->_length = size;
-			markValid();
+			markValid(size);
 		}
 
 		/** Calculates the number of bytes needed to store @a newSize of data. It only expands current buffer size. */
@@ -168,6 +137,9 @@ namespace Stamina {
 
 		/** Returns number of used bytes in the buffer */
 		inline unsigned int getLength() const {
+			if (_length == lengthDiscarded) {
+				return 0;
+			}
 			if (_length == lengthUnknown) {
 				const_cast<StringBuffer<CHAR> * >(this)->_length = 0;
 				if (!isEmpty() && isValid()) {
@@ -179,8 +151,8 @@ namespace Stamina {
 			}
 			return _length;
 		}
-		inline unsigned int getKnownLength() const {
-			return _length;
+		inline int getKnownLength() const {
+			return (signed)_length;
 		}
 
 		/** Appends data to the end of the buffer
@@ -194,8 +166,7 @@ namespace Stamina {
 			S_ASSERT(data != 0);
 			S_ASSERT(getBufferSize() >= dataSize + getLength());
 			copy(_buffer + getLength(), data, dataSize);
-			_length += dataSize;
-			markValid();
+			markValid(getLength() + dataSize);
 		}
 
 		/** Prepends data to the buffer 
@@ -214,8 +185,7 @@ namespace Stamina {
 			S_ASSERT(data != 0);
 			S_ASSERT(getBufferSize() >= dataSize + currentLength);
 			copy(_buffer, data, dataSize);
-			_length = currentLength + dataSize;
-			markValid();
+			markValid(currentLength + dataSize);
 		}
 
 		/** Inserts data into any position in the buffer.
@@ -244,8 +214,7 @@ namespace Stamina {
 			S_ASSERT(data != 0);
 			S_ASSERT(getBufferSize() >= pos + dataSize);
 			copy(_buffer + pos, data, dataSize);
-			_length = max(currentLength + dataSize, pos + dataSize);
-			markValid();
+			markValid(max(currentLength + dataSize, pos + dataSize));
 		}
 
 		inline void insertInRange(unsigned int pos, const CHAR* data, unsigned int dataSize) {
@@ -267,10 +236,11 @@ namespace Stamina {
 				return;
 			}
 			S_ASSERT(data);
+			unsigned int currentLength = getLength();
+			unsigned int newLength = currentLength;
 			if (isReference()) {
 				CHAR* from = _buffer;
-				unsigned int currentLength = getLength();
-				if (count > getLength() || pos + count > getLength()) count = getLength() - pos;
+				if (count > currentLength || pos + count > currentLength) count = currentLength - pos;
 				makeRoom(currentLength - count + dataSize, pos);
 				S_ASSERT(_buffer);
 				if (pos + count < currentLength) { // je¿eli zostaje coœ po...
@@ -278,20 +248,23 @@ namespace Stamina {
 					// kopiujemy dane po zmienianym...
 					copy(_buffer + pos + dataSize, from + pos + count, currentLength - pos - count);
 				}
-				setLength(currentLength - count + dataSize);
-			} else if (pos + count < getLength()) {
+				newLength = currentLength - count + dataSize;
+			} else if (count < currentLength && pos + count < currentLength) {
 				if (dataSize > count) {
 					moveRight(pos + count, dataSize - count);
 				} else if (dataSize < count) {
 					moveLeft(pos + count, count - dataSize);
 				}
+				newLength = lengthUnknown; // moveLeft/Right za³atwia ju¿ markValid
 			} else {
 				makeRoom(pos + dataSize, pos);
-				setLength(pos + dataSize);
+				newLength = pos + dataSize;
 			}
 			S_ASSERT(getBufferSize() >= pos + dataSize);
 			copy(_buffer + pos, data, dataSize);
-			markValid();
+			if (newLength != lengthUnknown) {
+				markValid(newLength);
+			}
 		}
 
 		inline void erase(unsigned int pos, unsigned int count = wholeData) {
@@ -311,8 +284,7 @@ namespace Stamina {
 			if (isReference()) {
 				makeUnique(pos);
 			}
-			this->_length = pos;
-			this->markValid();
+			this->markValid(pos);
 		}
 
 
@@ -326,6 +298,7 @@ namespace Stamina {
 			if (!isValid() || offset == 0) return;
 			CHAR* from = _buffer;
 			unsigned int dataLength = getLength();
+			unsigned int newLength = dataLength;
 			if (length > dataLength) length = dataLength;
 			if (start < offset) {
 				if (length > (offset - start)) {
@@ -355,10 +328,10 @@ namespace Stamina {
 			CHAR* to = _buffer;
 
 			if (truncate/* || (length + start >= this->_length)*/) {
-				this->_length = start - offset + length;
+				newLength = start - offset + length;
 			} else {
 				// skoro nic nie ucinamy - d³ugoœæ pozostaje bez zmian. Przy zmianie z reference mog³a siê jednak zmieniæ, wiêc przywracamy star¹.
-				this->_length = dataLength;
+				newLength = dataLength;
 				if (getBuffer() != from) { // kopiujemy pozosta³oœci
 					S_ASSERT(_size >= (start - offset + length) + dataLength - (start + length - offset));
 					copy(to + start - offset + length, from + start - offset + length, dataLength - (start + length - offset));
@@ -370,12 +343,7 @@ namespace Stamina {
 			from += start;
 			to += start - offset;
 			move(to, from, length);
-/*			while (length--) {
-				*to = *from;
-				++to;
-				++from;
-			}*/
-			markValid();
+			markValid(newLength);
 		}
 
 		
@@ -402,27 +370,16 @@ namespace Stamina {
 			}
 			CHAR* to = _buffer;
 
-			this->_length = max(truncate ? 0 : dataLength, start + offset + length);
-
 			S_ASSERT(from != 0);
 			S_ASSERT(to != 0);
 			S_ASSERT(_size > start + length);
-
-            //from += start + length;
-			//to += start + length + offset;
 
             from += start;
 			to += start + offset;
 
 			move(to, from, length);
 
-			/*
-			while (length--) {
-				--to;
-				--from;
-				*to = *from;
-			}*/
-			markValid();
+			markValid(max(truncate ? 0 : dataLength, start + offset + length));
 
 		}
 
@@ -433,9 +390,7 @@ namespace Stamina {
 			freeBuffer();
 			_buffer = 0;
 			_size = 0;
-			_length = 0;
-			_flag = false;
-			_varbyte = 1;
+			_length = lengthDiscarded;
 		}
 
 		void resize(unsigned int newSize, unsigned int keepData = wholeData) {
@@ -451,9 +406,7 @@ namespace Stamina {
 				freeBuffer();
 				this->_buffer = buffer;
 				this->_size = size;
-				this->_flag = false;
-				this->_length = keepData;
-				markValid();
+				markValid(keepData);
 			} else {
 				freeBuffer();
 				unsigned int size = newSize;
@@ -463,16 +416,14 @@ namespace Stamina {
 					S_ASSERT(size > 0);
 				}
 				this->_size = size;
-				this->_flag = true; // discard
-				this->_length = 0;
+				this->_length = lengthDiscarded;
 			}
 		}
 
 		/** Discards data in buffer, leaving the buffer allocated in memory so we can use it later. */
 		inline void discard() {
 			if (! this->isReference()) {
-				_flag = true;
-				this->_length = 0;
+				this->_length = lengthDiscarded;
 			} else {
 				reset();
 			}
@@ -515,15 +466,15 @@ namespace Stamina {
 
 		/** Returns true if data is valid (not discarded) */
 		inline bool isValid() const {
-			return (_flag == false && _size > 0) || isReference();
+			return _buffer != 0 && _length != lengthDiscarded;
 		}
 
 		inline bool isReference() const {
-			return _flag == true && _size == 0 && _buffer != 0;
+			return _size == 0 && _buffer != 0;
 		}
 
 		inline bool isEmpty() const {
-			return _buffer == 0 && _size == 0;
+			return _buffer == 0;
 		}
 
 		inline bool hasOwnBuffer() const {
@@ -531,15 +482,19 @@ namespace Stamina {
 		}
 
 		/** Marks data as valid (if it's not referenced) */
-		inline void markValid() {
+		inline void markValid(unsigned int length) {
 			if ( this->hasOwnBuffer() ) {
-				_flag = false;
+				_length = length;
 				if (this->_length != lengthUnknown) {
 					S_ASSERT(_size >= _length && _size > 0);
 					S_ASSERT(_buffer != 0);
 					this->_buffer[this->_length] = 0;
 				}
 			}
+		}
+
+		inline void markValid() {
+			markValid( this->_length == lengthDiscarded ? lengthUnknown : this->_length );
 		}
 
 		inline void setLength(unsigned int length) {
@@ -556,7 +511,6 @@ namespace Stamina {
 			}
 			_buffer = 0;
 			_size = 0;
-			_flag = false;
 		}
 
 		/** Returned memory block is always @a size + 1 of size */

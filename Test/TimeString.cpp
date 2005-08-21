@@ -74,30 +74,44 @@ protected:
 	typedef typename STRINGTYPE::TypedThis tTypedString;
 	typedef typename STRINGTYPE::TypedOther tTypedOther;
 
-	const static int timingLoops = 100000;
+#ifdef _DEBUG
+	const static int timingLoops = 10000;
+	const static int txtLength = 320;
+#else
+	//const static int timingLoops = 100000;
+	const static int timingLoops = 10000;
 	const static int txtLength = 1320;
+#endif
 
 	CPPUNIT_TEST_SUITE( TimeString );
   
-	CPPUNIT_TEST( timeCopy );
+/*	CPPUNIT_TEST( timeCopy );
 	CPPUNIT_TEST( timeCopyConvert );
 	CPPUNIT_TEST( timeConvert );
 	CPPUNIT_TEST( timeAdd );
-//	CPPUNIT_TEST( timeErase );
+	CPPUNIT_TEST( timeErase );
 	CPPUNIT_TEST( timeTruncate );
 	CPPUNIT_TEST( timeInsert );
-	CPPUNIT_TEST( timeReplace );
-//	CPPUNIT_TEST( timeChangeCase );
-//	CPPUNIT_TEST( timeCompare );
-//	CPPUNIT_TEST( timeFindChar );
-//	CPPUNIT_TEST( timeFind );
+	CPPUNIT_TEST( timeReplace );*/
+
+	CPPUNIT_TEST( timeChangeCase );
+	CPPUNIT_TEST( timeEqual );
+	CPPUNIT_TEST( timeCompare );
+	CPPUNIT_TEST( timeCompare_noCase );
+	CPPUNIT_TEST( timeFindChar );
+	CPPUNIT_TEST( timeFind );
+	CPPUNIT_TEST( timeFind_noCase );
+
 //	CPPUNIT_TEST(  );
-	CPPUNIT_TEST( timePassByReference );
+	
+/*	CPPUNIT_TEST( timePassByReference );
 	CPPUNIT_TEST( timePassOtherByReference );
 	CPPUNIT_TEST( timePassPointerByReference );
 	CPPUNIT_TEST( timePassAndModify );
 	CPPUNIT_TEST( timeReturn );
 	CPPUNIT_TEST( timeConditionalReturn );
+	CPPUNIT_TEST( timeComplex );*/
+	
 //	CPPUNIT_TEST(  );
 //	CPPUNIT_TEST(  );
 //	CPPUNIT_TEST(  );
@@ -157,16 +171,16 @@ protected:
 
 	void timeCopy() {
 		tTimeString a = generateString<CHAR, txtLength>();
-		tTimeString s;
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 5; i++) {
+			tTimeString s;
 			s = a;
 		}
 	}
 
 	virtual void timeCopyConvert() {
 		tTypedOther a = generateString<OTHER, txtLength>();
-		tTimeString s;
 		for (int i = 0; i < timingLoops; i++) {
+			tTimeString s;
 			s = keepChar<tString> ( a.c_str() );
 		}
 	}
@@ -216,24 +230,38 @@ protected:
 	virtual void timeFind() {
 		tTimeString a = generateString<CHAR, txtLength>();
 		tTimeString b = generateString<CHAR, txtLength / 4>();
-
+		static int c;
 		for (int i = 0; i < timingLoops; i++) {
-			a.find( b, 2 );
+			c = a.find( b, 2 );
 		}
 
 	}
 
 	virtual void timeFindChar() = 0;
 
-	virtual void timeCompare() {
+	virtual void timeFind_noCase() = 0;
+
+	virtual void timeEqual() {
 		tTimeString a = generateString<CHAR, txtLength>();
 		tTimeString b = generateString<CHAR, txtLength>();
-
+		static bool c;
 		for (int i = 0; i < timingLoops; i++) {
-			a == b;
+			c = (a == b);
 		}
 
 	}
+
+	virtual void timeCompare() {
+		tTimeString a = generateString<CHAR, txtLength>();
+		tTimeString b = generateString<CHAR, txtLength>();
+		static bool c;
+		for (int i = 0; i < timingLoops; i++) {
+			c = (a < b);
+		}
+
+	}
+
+	virtual void timeCompare_noCase() = 0;
 
 	virtual void timeChangeCase() = 0;
 
@@ -250,6 +278,8 @@ protected:
 	virtual void timeReturn() = 0;
 
 	virtual void timeConditionalReturn() = 0;
+
+	virtual void timeComplex() = 0;
 
 };
 
@@ -279,19 +309,41 @@ class TimeStringStamina : public TimeString< StaminaString<CHARTYPE> > {
 	virtual void timeFindChar() {
 		tTimeString a = generateString<CHAR, txtLength>();
 		tTimeString b = testString(L"456");
-
+		static int c;
 		for (int i = 0; i < timingLoops; i++) {
-			a.findLastChars( b );
+			c = a.findLastChars( b );
+		}
+
+	}
+
+	virtual void timeFind_noCase() {
+		tTimeString a = generateString<CHAR, txtLength>();
+		tTimeString b = generateString<CHAR, txtLength / 4>();
+		static int c;
+		for (int i = 0; i < timingLoops / 4; i++) {
+			c = a.find(b, 2, true);
+		}
+	}
+
+	virtual void timeCompare_noCase() {
+		tTimeString a = generateString<CHAR, txtLength>();
+		tTimeString b = generateString<CHAR, txtLength>();
+		static int c;
+		for (int i = 0; i < timingLoops / 4; i++) {
+			c = a.compare(b, true);
 		}
 
 	}
 
 	virtual void timeChangeCase() {
 		tTimeString a = generateString<CHAR, txtLength>();
+		static const CHAR* b;
 		for (int i = 0; i < timingLoops / 4; i++) {
 			a.toLower();
+            b = a.str<CHAR>();
 		}
 	}
+
 
 	virtual void timeReplace() {
 		tTimeString a = generateString<CHAR, txtLength>();
@@ -304,8 +356,10 @@ class TimeStringStamina : public TimeString< StaminaString<CHARTYPE> > {
 	}
 
 	void timePassByReference_f(const StringRef& a) {
-		static tTimeString b;
-		b = a;
+		//static tTimeString b;
+		//b = a;
+		static const CHAR* b;
+		b = a.str<CHAR>();
 		//static const CHAR* b;
 		//b = a.str<CHAR>();
 	}
@@ -313,14 +367,14 @@ class TimeStringStamina : public TimeString< StaminaString<CHARTYPE> > {
 	virtual void timePassByReference() {
 		tTimeString a = generateString<CHAR, txtLength>();
 		StringRef b = a;
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 20; i++) {
 			timePassByReference_f(b);
 		}
 	}
 
 	virtual void timePassOtherByReference() {
 		tTimeString a = generateString<CHAR, txtLength>();
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 20; i++) {
 			timePassByReference_f(a);
 		}
 	}
@@ -328,21 +382,21 @@ class TimeStringStamina : public TimeString< StaminaString<CHARTYPE> > {
 	virtual void timePassPointerByReference() {
 		tString a = generateString<CHAR, txtLength>();
 		const CHAR* ch = a.c_str();
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 4; i++) {
 			timePassByReference_f(ch);
 		}
 	}
 
 
 	void timePassAndModify_f(StringRef a) {
-		static tTimeString b;
+		static const CHAR* b;
 		a += "ha!";
-		b = a;
+		b = a.str<CHAR>();
 	}
 
 	virtual void timePassAndModify() {
 		tTimeString a = generateString<CHAR, txtLength>();
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 4; i++) {
 			timePassAndModify_f(a);
 		}
 	}
@@ -353,9 +407,10 @@ class TimeStringStamina : public TimeString< StaminaString<CHARTYPE> > {
 	}
 
 	virtual void timeReturn() {
-		tTimeString a;
-		for (int i = 0; i < timingLoops; i++) {
-			a = timeReturn_f();
+		//tTimeString a;
+		const CHAR* a;
+		for (int i = 0; i < timingLoops * 4; i++) {
+			a = timeReturn_f().str<CHAR>();
 		}
 	}
 
@@ -368,12 +423,34 @@ class TimeStringStamina : public TimeString< StaminaString<CHARTYPE> > {
 
 	virtual void timeConditionalReturn() {
 		tTimeString b = generateString<CHAR, txtLength>();
-		tTimeString a;
-		for (int i = 0; i < timingLoops; i++) {
-			a = timeConditionalReturn_f(b, i);
+		const CHAR* a;
+		for (int i = 0; i < timingLoops * 4; i++) {
+			a = timeConditionalReturn_f(b, i).str<CHAR>();
 		}
 	}
 
+	String timeComplex_f(const StringRef& a, const StringRef& b, int i) {
+		String c = timeConditionalReturn_f(a, i);
+		c = timeConditionalReturn_f(a.str<CHAR>(), i);
+		timePassAndModify_f(c);
+		timePassByReference_f(a);
+		timePassByReference_f(b.str<CHAR>());
+		timePassByReference_f(c);
+		c = timeReturn_f();
+		if (i % 2 == 0) {
+			return PassStringRef( c );
+		} else {
+			return PassStringRef( StringRef(b.str<CHAR>()) );
+		}
+	}
+
+	virtual void timeComplex() {
+		tTimeString b = generateString<CHAR, txtLength>();
+		tTimeString a;
+		for (int i = 0; i < timingLoops * 2; i++) {
+			a = timeComplex_f(a, b, i);
+		}
+	}
 
 };
 
@@ -387,23 +464,54 @@ class TimeStringSTL : public TimeString< STLString<CHARTYPE> > {
 	virtual void timeFindChar() {
 		tTimeString a = generateString<CHAR, txtLength>();
 		tTimeString b = testString(L"456");
-
+		static int c;
 		for (int i = 0; i < timingLoops; i++) {
-			a.find_last_of( b );
+			c = a.find_last_of( b );
 		}
 
 	}
 
+	virtual void timeFind_noCase() {
+		tTimeString a = generateString<CHAR, txtLength>();
+		tTimeString b = generateString<CHAR, txtLength / 4>();
+		static int c;
+		for (int i = 0; i < timingLoops / 4; i++) {
+			tTimeString a1 = a;
+			tTimeString b1 = b;
+			_changeCase(a1);
+			_changeCase(b1);
+			c = a1.find(b1, 2);
+		}
+	}
+
+	virtual void timeCompare_noCase() {
+		tTimeString a = generateString<CHAR, txtLength>();
+		tTimeString b = generateString<CHAR, txtLength>();
+		static bool c;
+		for (int i = 0; i < timingLoops / 4; i++) {
+			tTimeString a1 = a;
+			tTimeString b1 = b;
+			_changeCase(a1);
+			_changeCase(b1);
+			c = (a1 < b1);
+		}
+
+	}
+
+	inline void _changeCase(tTimeString & a) {
+		std::locale loc;
+		for (unsigned int j = 0; j < a.length(); j++) {
+			a[j] = std::toupper( a[j], loc );
+		}
+	}
 
 	virtual void timeChangeCase() {
 		tTimeString a = generateString<CHAR, txtLength>();
+		static const CHAR* c;
 		for (int i = 0; i < timingLoops / 4; i++) {
 			tTimeString b = a;
-			std::locale loc;
-			for (unsigned int j = 0; j < a.length(); j++) {
-				b[j] = std::toupper( a[j], loc );
-			}
-			a == b;
+			_changeCase(b);
+			c = b.c_str();
 		}
 	}
 
@@ -419,20 +527,22 @@ class TimeStringSTL : public TimeString< STLString<CHARTYPE> > {
 
 
 	void timePassByReference_f(const tString& a) {
-		static tTimeString b;
-		b = a;
+		//static tTimeString b;
+		//b = a;
+		static const CHAR* b;
+		b = a.c_str();
 	}
 
 	virtual void timePassByReference() {
 		tString a = generateString<CHAR, txtLength>();
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 10; i++) {
 			timePassByReference_f(a);
 		}
 	}
 
 	virtual void timePassOtherByReference() {
 		CStdStr<CHAR> a = generateString<CHAR, txtLength>();
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 10; i++) {
 			timePassByReference_f(a);
 		}
 	}
@@ -440,20 +550,20 @@ class TimeStringSTL : public TimeString< STLString<CHARTYPE> > {
 	virtual void timePassPointerByReference() {
 		tString a = generateString<CHAR, txtLength>();
 		const CHAR* ch = a.c_str();
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 2; i++) {
 			timePassByReference_f(ch);
 		}
 	}
 
 	void timePassAndModify_f(tTimeString a) {
-		static tTimeString b;
+		static const CHAR* b;
 		a += "ha!";
-		b = a;
+		b = a.c_str();
 	}
 
 	virtual void timePassAndModify() {
 		tTimeString a = generateString<CHAR, txtLength>();
-		for (int i = 0; i < timingLoops; i++) {
+		for (int i = 0; i < timingLoops * 4; i++) {
 			timePassAndModify_f(a);
 		}
 	}
@@ -464,9 +574,9 @@ class TimeStringSTL : public TimeString< STLString<CHARTYPE> > {
 	}
 
 	virtual void timeReturn() {
-		tTimeString a;
-		for (int i = 0; i < timingLoops; i++) {
-			a = timeReturn_f();
+		const CHAR* a;
+		for (int i = 0; i < timingLoops * 4; i++) {
+			a = timeReturn_f().c_str();
 		}
 	}
 
@@ -479,12 +589,34 @@ class TimeStringSTL : public TimeString< STLString<CHARTYPE> > {
 
 	virtual void timeConditionalReturn() {
 		tTimeString b = generateString<CHAR, txtLength>();
-		tTimeString a;
-		for (int i = 0; i < timingLoops; i++) {
-			a = timeConditionalReturn_f(b, i);
+		const CHAR* a;
+		for (int i = 0; i < timingLoops * 4; i++) {
+			a = timeConditionalReturn_f(b, i).c_str();
 		}
 	}
 
+	tTimeString timeComplex_f(const tTimeString& a, const tTimeString& b, int i) {
+		tTimeString c = timeConditionalReturn_f(a, i);
+		c = timeConditionalReturn_f(a.c_str(), i+1);
+		timePassAndModify_f(c);
+		timePassByReference_f(a);
+		timePassByReference_f(b.c_str());
+		timePassByReference_f(c);
+		c = timeReturn_f();
+		if (i % 2 == 0) {
+			return c;
+		} else {
+			return b.c_str();
+		}
+	}
+
+	virtual void timeComplex() {
+		tTimeString b = generateString<CHAR, txtLength>();
+		tTimeString a;
+		for (int i = 0; i < timingLoops * 4; i++) {
+			a = timeComplex_f(a, b, i);
+		}
+	}
 
 
 };
@@ -492,5 +624,5 @@ class TimeStringSTL : public TimeString< STLString<CHARTYPE> > {
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TimeStringStamina<CharType> );
 CPPUNIT_TEST_SUITE_REGISTRATION( TimeStringSTL<CharType> );
-//CPPUNIT_TEST_SUITE_REGISTRATION( TimeString<WCharType> );
+//CPPUNIT_TEST_SUITE_REGISTRATION( TimeStringStamina<WCharType> );
 

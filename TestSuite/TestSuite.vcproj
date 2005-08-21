@@ -71,6 +71,9 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="TRUE"
 				AdditionalIncludeDirectories="&quot;\c++\__source\md5c&quot;;&quot;\c++\__source\cppunit\include&quot;;&quot;..\..\depends&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
@@ -185,10 +188,25 @@
 			Name="Tests"
 			Filter="">
 			<File
-				RelativePath="..\Test\TestString.cpp">
+				RelativePath="..\DataTable\Test\TestColumns.cpp">
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\Test\TestString.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""/>
@@ -236,7 +254,13 @@
 			<File
 				RelativePath="..\Test\TimeString.cpp">
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"/>
 				</FileConfiguration>
@@ -260,22 +284,6 @@
 				Name="disabled"
 				Filter=""
 				ParseFiles="FALSE">
-				<File
-					RelativePath="..\DataTable\Test\TestColumns.cpp">
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="TRUE">
-						<Tool
-							Name="VCCLCompilerTool"/>
-					</FileConfiguration>
-				</File>
 				<File
 					RelativePath="..\DataTable\Test\TestCrypt.cpp">
 					<FileConfiguration
@@ -395,6 +403,9 @@
 		</File>
 		<File
 			RelativePath=".\ReadMe.txt">
+		</File>
+		<File
+			RelativePath=".\timestring.txt">
 		</File>
 	</Files>
 	<Globals>
