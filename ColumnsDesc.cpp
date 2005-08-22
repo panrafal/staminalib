@@ -93,13 +93,6 @@ namespace Stamina { namespace DT {
         return id;
     }
 
-	const Column& ColumnsDesc::getColumnByIndex(unsigned int index) const {
-		if (index > _cols.size()) {
-			return emptyColumn;
-		}
-		return _cols.at(index);
-	}
-
     unsigned int ColumnsDesc::colIndex (tColId id) const {
         int i = 0;
 		for (tColumns::const_iterator it = _cols.begin(); it != _cols.end(); it++) {

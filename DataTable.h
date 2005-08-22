@@ -224,6 +224,9 @@ namespace Stamina { namespace DT {
 			return setWCh(row, id, val.c_str(), dropDefault);
 		}
 
+		const DefaultRow& getDefaults() const {
+			return *this->_defaults;
+		}
 
 		const ColumnsDesc& getColumns() {
 			return this->_cols;
@@ -360,6 +363,7 @@ namespace Stamina { namespace DT {
 
 	private:
 		tRows _rows;
+		SharedPtr<DefaultRow> _defaults;
 		int _size;
 		tRowId _lastId; // ostatni identyfikator wiersza
 		ColumnsDesc _cols;

@@ -24,6 +24,7 @@ namespace Stamina { namespace DT {
 	const unsigned int rowIdFlag = 0x40000000;
 	const unsigned int rowIdMax = 0x3FFFFFFF;
 	const unsigned int rowIdMin = 0x1;
+	const unsigned int rowIdDefault = rowIdMax + 1;
 
 	const unsigned int colIdUniqueFlag = 0x00800000;
 
@@ -125,6 +126,11 @@ namespace Stamina { namespace DT {
 // RowFlags
 #define DT_RF_DONTSAVE  Stamina::DT::rflagDontSave
 
+	enum enHandlerResult {
+		handlerPassed,
+		handlerCancel,
+		handlerTypeChange
+	};
 
 
 	typedef unsigned int tColId;
@@ -292,5 +298,7 @@ namespace Stamina { namespace DT {
 
 
 } }
+
+
 
 #endif

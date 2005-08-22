@@ -11,33 +11,68 @@
 #ifndef __DT_DATAROW__
 #define __DT_DATAROW__
 
+#include "iRow.h"
 
 namespace Stamina { namespace DT {
 
 	class DataTable;
 
-	class DataRow {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
+
+	class DefaultRow: public SharedObject<iRow> {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
+	public:
+
+		DefaultRow(DataTable* t) {
+			_id = rowIdDefault;
+			_flag = rflagNone;
+			_size = 0;
+			_table = table;
+		}
+
+		~DefaultRow() {
+			freeData();
+		}
+
+		inline void lock() {
+		}
+		inline void unlock() {
+		}
+		inline bool canAccess()  {
+			return true;
+		}
+		inline Lock& getCS() {
+			static Lock_blank blank;
+			return blank;
+		}
+
+		const DataEntry getData (unsigned int colIndex) throw(...); // Pobiera wartosc kolumny
+		/**Sets the column value (without conversion and without locking and column lookup)*/
+		bool setData (unsigned int colIndex, DataEntry val) throw(...);
+
+		inline bool hasColumnSlot(unsigned int colIndex) {
+			return (colIndex >= 0 && colIndex < _data->size());
+		}
+
+	protected:
+
+		bool freeData();
+
+		virtual void prepareSlot(unsigned int colIndex);
+
+		typedef std::vector<DataEntry> tData;
+		tData _data;
+
+	};
+
+	class DataRow: public SharedObject<iRow> {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
 	public:
 		friend class FileBin;
 	public:
-		bool allocData();
-		bool freeData();
-		const DataEntry get (tColId id) throw(...); // Pobiera wartosc kolumny
-		const DataEntry getByIndex (unsigned int colIndex) throw(...); // Pobiera wartosc kolumny
-		/**Sets the column value (without conversion!)*/
-		bool set (tColId id, DataEntry val, bool dropDefault = false) throw(...);
-		/**Sets the column value (without conversion and without locking and column lookup)*/
-		bool setByIndex (unsigned int colIndex, DataEntry val, bool dropDefault = false) throw(...);
 
+		STAMINA_OBJECT_CLASS(DT::DataRow, iRow);
 
-		inline bool hasColumnData(unsigned int colIndex) {
-			return (colIndex >= 0 && colIndex < this->_size);
+		DataRow (DataTable* t):DefaultRow(t) {
+			_id = rowIdDefault;
 		}
-
-		DataRow (const DataRow & v);
-
-		DataRow (DataTable* t, char allocate=1);
-		~DataRow ();
 
 		inline void lock() {
 			_cs.lock();
@@ -53,48 +88,19 @@ namespace Stamina { namespace DT {
 			return _cs;
 		}
 	
-		enRowFlag getFlags() const {
-			return _flag;
-		}
-		void setFlag(enRowFlag flag, bool setting) {
-			if (setting)
-				_flag = (enRowFlag) (_flag | flag);
-			else
-				_flag = (enRowFlag) (_flag & (~flag));
-		}
-		bool hasFlag(enRowFlag flag) const {
-			return (_flag & flag) != 0;
-		}
 
 		inline void setId(tRowId id) {
 			_id = flagId(id);
 		}
 
-		inline tRowId getId() const {
-			return _id;
-		}
+	protected:
 
-		inline static tRowId flagId(tRowId row) {
-			return (tRowId)((row) | DT::rowIdFlag);
-		}
-		/** Removes flag from the row Id */
-		inline static tRowId unflagId(tRowId row) {
-			return (tRowId)( row&(~DT::rowIdFlag) );
-		}
-
-		DataTable* getOwner() {
-			return _table;
-		}
+		virtual void prepareSlot(unsigned int colIndex);
 
 
-	private:
-		class DataTable * _table; ///< Parent table
-		unsigned int _size;  ///< Data slots count
-		DataEntry * _data; ///< Data slots
+	protected:
+
 		unsigned int _filePos;
-		//int _index;
-		tRowId _id;    // identyfikator wiersza
-		enRowFlag _flag;
 		CriticalSection_blank _cs; // blokada
 	};
 

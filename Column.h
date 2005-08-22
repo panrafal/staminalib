@@ -11,94 +11,60 @@
 #ifndef __DT_COLUMN__
 #define __DT_COLUMN__
 
+#include "iColumn.h"
+
+
 namespace Stamina { namespace DT {
 
-	class Column {
+	class Column: public SharedObject<iColumn> {
 	public:
+
+		STAMINA_OBJECT_CLASS(DT::Column, iColumn);
 
 		Column();
 
-		inline enColumnType getType() const {
-			return (enColumnType) (_type & ctypeMask);
-		}
-		inline enColumnFlag getFlags() const {
-			return (enColumnFlag) _type;
-		}
+		virtual iObject* cloneObject();
 
-		inline tColId getId() const {
-			return _id;
-		}
-
-		inline void setId(tColId id) {
+		void init(unsigned int index, tColId id, enColumnFlag flags, const StringRef& name) {
+			_index = index;
 			_id = id;
-		}
-
-		inline bool isIdUnique() const {
-			return (_id & colIdUniqueFlag) != 0;
-		}
-
-		/** Returns true if type occupies only 4 bytes and can be stored directly (without creating objects)
-		*/
-		inline bool isStaticType() const {
-			return this->getType() == ctypeInt;
-		}
-
-		inline bool empty() const {
-			return this->_type == ctypeUnknown;
-		}
-
-		inline const std::string& getName() const {
-			return _name;
-		}
-		inline void setName(const std::string& name) {
+			this->setFlag(flags, true);
 			_name = name;
 		}
 
-		void setType(enColumnType type, bool resetFlags) {
-			if (resetFlags)
-				_type = type;
-			else
-				_type = (enColumnType)((_type & ~ctypeMask) | type);
-		}
-
-		void setFlag(enColumnFlag flag, bool setting) {
-			if (setting)
-				_type = _type | flag;
-			else
-				_type = (enColumnType) (_type & (~flag));
-		}
-		bool hasFlag(enColumnFlag flag) const {
-			return (_type & flag) != 0;
-		}
-
-		inline DataEntry getDefValue() const {
-			return _def;
-		}
-		inline void setDefValue(DataEntry val) {
-			_def = val;
-		}
+		/** Initializes the row's data.
+		@param alloc - true if any data should be allocated.
+		*/
+		virtual DataEntry dataInit(bool alloc) const = 0;
+		virtual void dataDispose(DataEntry data) const = 0;
 
 	private:
-		enColumnType _type;
-		tColId _id;
-		DataEntry _def; // default
-		std::string _name;  // tekstowy identyfikator
+
+	};
+
+	class Column_int: public Column {
+	public:
+
+		STAMINA_OBJECT_CLASS(DT::Column_int, Column);
+
+		virtual iObject* cloneObject();
+
 
 
 	};
 
-	extern const Column emptyColumn;
+
 
 	class ColumnsDesc {  // Opis typow kolumn
 	public:
-		typedef std::vector<Column> tColumns;
+		typedef std::vector<oColumn> tColumns;
 	public:
 		ColumnsDesc ();
 		operator = (const ColumnsDesc & x);
 
 		int setColumnCount (int count, bool expand = false); // ustawia ilosc kolumn
-		tColId setColumn (tColId id , enColumnType type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
-		tColId setUniqueCol (const char * name , enColumnType type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
+		tColId setColumn (tColId id, enColumnType type , const StringRef& name="");  // ustawia rodzaj danych w kolumnie
+		tColId setUniqueCol (const StringRef& name, enColumnType type);  // ustawia rodzaj danych w kolumnie o podanej nazwie
 
 		inline unsigned int getColCount () const {
 			return _cols.size();
@@ -107,11 +73,23 @@ namespace Stamina { namespace DT {
 			return _cols.size();
 		}
 
-		const Column& getColumnByIndex(unsigned int index) const;
-		const Column& getColumn(tColId id) const {
+		tColumns::const_iterator begin() const {
+			return _cols.begin();
+		}
+		tColumns::const_iterator end() const {
+			return _cols.end();
+		}
+
+		const Column* getColumnByIndex(unsigned int index) const {
+			if (index > _cols.size()) {
+				return 0;
+			}
+			return _cols[index];
+		}
+		const Column* getColumn(tColId id) const {
 			return getColumnByIndex(colIndex(id));
 		}
-		const Column& getColumn(const char* name) const {
+		const Column* getColumn(const char* name) const {
 			return getColumn(getNameId(name));
 		}
 
@@ -137,8 +115,6 @@ namespace Stamina { namespace DT {
 	protected:
 		tColumns _cols;
 		bool _loader;
-		//void * table;
-		//int _deftype;
 	};
 } }
 

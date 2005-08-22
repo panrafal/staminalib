@@ -161,6 +161,12 @@
 				RelativePath=".\FileBin.h">
 			</File>
 			<File
+				RelativePath=".\iColumn.h">
+			</File>
+			<File
+				RelativePath=".\iRow.h">
+			</File>
+			<File
 				RelativePath=".\stdafx.h">
 			</File>
 		</Filter>

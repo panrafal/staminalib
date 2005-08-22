@@ -13,6 +13,7 @@
 namespace Stamina { namespace DT {
 
 	DataTable::DataTable() {
+		_defaults = new DefaultRow(this, false);
 		//mode=0;
 		//notypecheck=0;
 //      filecols.table=this;
