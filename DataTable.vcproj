@@ -143,6 +143,9 @@
 				RelativePath=".\Column.h">
 			</File>
 			<File
+				RelativePath=".\ColumnTypes.h">
+			</File>
+			<File
 				RelativePath=".\Crypt.h">
 			</File>
 			<File
@@ -155,10 +158,16 @@
 				RelativePath=".\DT.h">
 			</File>
 			<File
+				RelativePath=".\DTDeprecated.h">
+			</File>
+			<File
 				RelativePath=".\FileBase.h">
 			</File>
 			<File
 				RelativePath=".\FileBin.h">
+			</File>
+			<File
+				RelativePath=".\Find.h">
 			</File>
 			<File
 				RelativePath=".\iColumn.h">
@@ -168,6 +177,9 @@
 			</File>
 			<File
 				RelativePath=".\stdafx.h">
+			</File>
+			<File
+				RelativePath=".\Value.h">
 			</File>
 		</Filter>
 		<Filter

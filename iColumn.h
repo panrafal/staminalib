@@ -13,6 +13,7 @@
 
 #include "iRow.h"
 #include "..\ObjectPtr.h"
+#include "..\StringSTL.h"
 
 namespace Stamina { namespace DT {
 
@@ -40,7 +41,7 @@ namespace Stamina { namespace DT {
 			return _index;
 		}
 
-		inline String& getName() const {
+		inline const AString& getName() const {
 			return _name;
 		}
 
@@ -60,34 +61,53 @@ namespace Stamina { namespace DT {
 		}
 
 		virtual void setFlag(enColumnFlag flag, bool setting) {
-			flag &= ~ctypeMask;
+			flag = (enColumnFlag)(flag & ~ctypeMask);
 			if (setting)
 				_type = _type | flag;
 			else
 				_type = (enColumnType) (_type & (~flag));
 		}
 
+		bool isUndefined() const {
+			return _type == ctypeUnknown;
+		}
+
 		// get / set
 
 		/** Resets the value */
-		virtual void reset(iRow& row) const = 0;
+		virtual void reset(iRow* row) const = 0;
 
-		virtual int getInt(iRow& row) const = 0;
-		virtual __int64 getInt64(iRow& row) const = 0;
-		virtual String getString(iRow& row) const = 0;
-		virtual ByteBuffer getBin(iRow& row) const = 0;
+		virtual int getInt(const iRow* row) const { return 0; }
+		virtual __int64 getInt64(const iRow* row) const { return 0; }
+		virtual double getDouble(const iRow* row) const { return 0; }
+		virtual String getString(const iRow* row, bool copy = true) const { return String(); }
+		virtual ByteBuffer getBin(const iRow* row, bool copy = true) const { return ByteBuffer(); }
 
-		virtual void setInt(iRow& row, int) const = 0;
-		virtual void setInt64(iRow& row, __int64) const = 0;
-		virtual void setString(iRow& row, String) const = 0;
-		virtual void setBin(iRow& row, ByteBuffer) const = 0;
+		virtual bool setInt(iRow* row, int) const { return false; }
+		virtual bool setInt64(iRow* row, __int64) const { return false; }
+		virtual bool setDouble(iRow* row, double) const { return false; }
+		virtual bool setString(iRow* row, const StringRef&) const { return false; }
+		virtual bool setBin(iRow* row, const ByteBuffer&) const { return false; }
+
+		virtual bool convertible(enColumnType type, bool from) const {return false;}
 
 	protected:
+
+		virtual cloneMembers(const iObject* a) {
+			BaseClass::cloneMembers(a);
+			iColumn* b = static_cast<iColumn*>(a);
+			this->_type = b->_type;
+			this->_id = b->_id;
+			this->_name = b->_name;
+			this->_index = b->_index;
+		}
+
 		enColumnType _type;
 		tColId _id;
-		String _name;  // tekstowy identyfikator
+		AString _name;  // tekstowy identyfikator
         unsigned int _index;
 
+		
 
 	};
 

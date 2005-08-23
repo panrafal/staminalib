@@ -9,11 +9,11 @@
  */
 #include "stdafx.h"
 #include "DataTable.h"
+#include "Find.h"
 
 namespace Stamina { namespace DT {
 
 	DataTable::DataTable() {
-		_defaults = new DefaultRow(this, false);
 		//mode=0;
 		//notypecheck=0;
 //      filecols.table=this;
@@ -31,27 +31,24 @@ namespace Stamina { namespace DT {
     void DataTable::clearRows() {
         LockerCS lock(_cs);
         _changed = true;
-		for (tRows::iterator it = _rows.begin(); it != _rows.end() ; it++) {
-            delete *it;
-        }
         _rows.clear();
     }
 
-    tRowId DataTable::addRow(tRowId id) {
+	oDataRow DataTable::addRow(tRowId id) {
 		return this->insertRow(rowNotFound, id);
     }
 
-    tRowId DataTable::insertRow(unsigned int rowPos , tRowId id) {
+    oDataRow DataTable::insertRow(unsigned int rowPos , tRowId id) {
         LockerCS lock(_cs);
 
 		if (id != rowNotFound) {
 			if (unflagId(id) > rowIdMax || unflagId(id) < rowIdMin) {
-				return rowNotFound;
+				return oDataRow();
 			}
 			id = flagId(id);
 			if (getRowPos(id) != rowNotFound) {
 				//throw DTException(errNoRow);
-				return rowNotFound;
+				return oDataRow();
 			}
 			if (_lastId < unflagId(id)) {
 				_lastId = unflagId(id);
@@ -59,16 +56,16 @@ namespace Stamina { namespace DT {
 		}
 
 		_changed = true;
-		DataRow* row = new DataRow(this,1);
+		oDataRow row = new DataRow(this);
 		if (rowPos == -1) {
 			rowPos = _rows.size();
 			_rows.push_back(row);
 		} else {
 			rowPos = getRowPos(rowPos);
-			_rows.insert(_rows.begin() + rowPos , row);
+			_rows.insert(_rows.begin() + rowPos, row);
 		}
 		row->setId(id != rowNotFound ? unflagId(id) : getNewRowId());
-        return row->getId();
+        return row;
     }
 
     bool DataTable::deleteRow(tRowId row) {
@@ -78,7 +75,6 @@ namespace Stamina { namespace DT {
 		if (row == rowNotFound || row >= _rows.size()) {
 			return false;
 		}
-        delete _rows[row];
         _rows.erase(_rows.begin() + row);
         return true;
     }
@@ -89,42 +85,11 @@ namespace Stamina { namespace DT {
 		a = getRowPos(a);
 		b = getRowPos(a);
 		if (a == rowNotFound || b == rowNotFound) return;
-		DataRow* temp = _rows[a];
+		oDataRow temp = _rows[a];
 		_rows[a] = _rows[b];
 		_rows[b] = temp;
 	}
 
-
-    DataEntry DataTable::get(tRowId row , tColId id) {
-        Locker lock(_cs);
-        row = (tRowId) getRowPos(row);
-        if (row == rowNotFound || row >= _rows.size()) {
-			throw DTException(errNoRow);
-		}
-        try {
-/*            if (id == DT_C_ID) ret=(DataEntry)rows[row]->id;
-            else ret=(rows[row])->get(id);
-            return ret;*/
-			return _rows[row]->get(id);
-        } catch (...) {
-			throw DTException(errNoRow);
-		}
-    }
-
-    bool DataTable::set(tRowId row , tColId id , DataEntry val,bool dropDefault) {
-        LockerCS lock(_cs);
-        _changed = true;
-        row = (tRowId) getRowPos(row);
-		if (row == rowNotFound || row >= _rows.size()) {
-			throw DTException(errNoRow);
-		}
-        try {
-            _rows[row]->set(id, val, dropDefault);
-        } catch (...) {
-			throw DTException(errNoRow);
-		}
-        return 0;
-    }
 
     void DataTable::lock(tRowId row) {
         if (row == allRows) {
@@ -230,24 +195,28 @@ namespace Stamina { namespace DT {
 */
 
 
-	tRowId DataTable::findRow(unsigned int startPos, int argCount, ...) {
+	oDataRow DataTable::findRow(unsigned int startPos, int argCount, ...) {
 		va_list list;
 		va_start(list, argCount);
-		tRowId result = findRow(startPos, argCount, list);
+		oDataRow result = findRow(startPos, argCount, list);
 		va_end(list);
 		return result;
 	}
 
-	tRowId DataTable::findRow(unsigned int startPos, int argCount, va_list list) {
-	    if (argCount == 0) return rowNotFound;
+	oDataRow DataTable::findRow(unsigned int startPos, int argCount, va_list list) {
+	    if (argCount == 0) return oDataRow();
         
-		this->lock(allRows);
+		LockerDT(this, allRows);
 
 		unsigned int found = rowNotFound;
+		startPos = this->getRowPos((tRowId) startPos);
+		if (startPos == rowNotFound) return oDataRow();
 
-		for (unsigned int i = this->getRowPos((tRowId) startPos); i < this->getRowCount(); i++) {
-			found = i;
+		for (tRows::iterator it = _rows.begin() + startPos; it != _rows.end(); ++it) {
 			int args = argCount;
+
+			oDataRow& row = *it;
+			bool found = true;
 	
 			va_list marker = list;
 
@@ -256,73 +225,67 @@ namespace Stamina { namespace DT {
 				if (!find) break;
 				// sprawdzamy...
 
-				Value value(find->value.getType());
-				if (value.getType() == ctypeString || value.getType() == ctypeWideString) {
-					// Pozniej trzeba to zwolnic
-					value.buffSize = -1;
-				}
-				this->getValue(i, find->col, value);
-				int cmp = 0;
-				switch (value.getType()) {
-					case ctypeString:
-						cmp = stricmp(value.vCChar, find->value.vCChar);
-						break;
-					case ctypeWideString:
-						cmp = _wcsicmp(value.vCWChar, find->value.vCWChar);
-						break;
-					case ctypeInt64:
-						if (value.vInt64 > find->value.vInt64)
-							cmp = 1;
-						else if (value.vInt64 < find->value.vInt64)
-							cmp = -1;
-						break;
-					default:
-						if (value.vInt > find->value.vInt)
-							cmp = 1;
-						else if (value.vInt < find->value.vInt)
-							cmp = -1;
-						break;
+				const Column* col = this->getColumn( find->col );
+				if (col->isUndefined()) {
+					found = false;
+					break;
 				}
 
-				if (value.type == ctypeString || value.type == ctypeWideString) {
-					free(value.vChar);
+				int cmp = 0;
+				switch (find->value->getType()) {
+					case ctypeString:
+						cmp = find->value->castStaticObject<Value_string>()->cmp( col->getString(row, false) );
+						break;
+					case ctypeInt:
+						cmp = find->value->castStaticObject<Value_int>()->cmp( col->getInt(row) );
+						break;
+					case ctypeInt64:
+						cmp = find->value->castStaticObject<Value_int64>()->cmp( col->getInt64(row) );
+						break;
+					case ctypeDouble:
+						cmp = find->value->castStaticObject<Value_double>()->cmp( col->getDouble(row) );
+						break;
+					case ctypeBin:
+						cmp = find->value->castStaticObject<Value_bin>()->cmp( col->getBin(row, false) );
+						break;
+					default:
+						found = false;
+						break;
 				}
 
 				switch (find->operation) {
 					case Find::eq:
-						if (cmp != 0) found = rowNotFound;
+						if (cmp != 0) found = false;
 						break;
 					case Find::neq:
-						if (cmp == 0) found = rowNotFound;
+						if (cmp == 0) found = false;
 						break;
 					case Find::gt:
-						if (cmp <= 0) found = rowNotFound;
+						if (cmp <= 0) found = false;
 						break;
 					case Find::gteq:
-						if (cmp < 0) found = rowNotFound;
+						if (cmp < 0) found = false;
 						break;
 					case Find::lt:
-						if (cmp >= 0) found = rowNotFound;
+						if (cmp >= 0) found = false;
 						break;
 					case Find::lteq:
-						if (cmp > 0) found = rowNotFound;
+						if (cmp > 0) found = false;
 						break;
 				}
-			} while (--args != 0 && found == i);
+			} while (--args != 0 && found);
 			//va_end( marker );
 
-			if (found == i)
-				break;
+			if (found == true)
+				return row;
 
 		}
 
-		this->unlock(allRows);
-        
-		return this->getRowId(found);
+		return oDataRow();
 	}
 
 
-
+/*
 	bool DataTable::getValue(tRowId row , tColId col , Value& value) {
 		LockerCS lock(_cs);
 		row = getRowPos(row);
@@ -435,7 +398,7 @@ namespace Stamina { namespace DT {
 				} else if (value.buffSize == -1) {
 					size_t len = strlen(ch);
 					value.vWChar = (wchar_t*)malloc((len+1) * 2);
-					MultiByteToWideChar(CP_ACP, 0, ch, len + 1 /*0*/, value.vWChar, len + 1);
+					MultiByteToWideChar(CP_ACP, 0, ch, len + 1 , value.vWChar, len + 1);
 					value.vWChar[len] = 0;
 				} else {
 					if (value.vWChar && value.buffSize == 0) {
@@ -538,7 +501,7 @@ namespace Stamina { namespace DT {
 			case ctypeWideString: {
 				size_t len = wcslen(value.vCWChar);
 				alloc = malloc(len + 1);
-				WideCharToMultiByte(CP_ACP, 0, value.vCWChar, len + 1 /*0*/, (LPSTR)alloc, len + 1, 0, 0);
+				WideCharToMultiByte(CP_ACP, 0, value.vCWChar, len + 1 , (LPSTR)alloc, len + 1, 0, 0);
 				val = alloc; 
 				break;}
 			case ctype64: _i64toa(value.vInt64 , buff , 10); val = buff; break;
@@ -552,7 +515,7 @@ namespace Stamina { namespace DT {
 			case ctypeString: {
 				size_t len = strlen(value.vCChar);
 				alloc = malloc((len+1)*2);
-				MultiByteToWideChar(CP_ACP, 0, value.vCChar, len + 1 /*0*/, (LPWSTR)alloc, len + 1);
+				MultiByteToWideChar(CP_ACP, 0, value.vCChar, len + 1 , (LPWSTR)alloc, len + 1);
 				val = alloc; 
 				break;}
 			case ctype64: _i64tow(value.vInt64 , (wchar_t*)buff , 10); val = buff; break;
@@ -573,7 +536,7 @@ namespace Stamina { namespace DT {
 		return true;
 	}
 
-
+*/
 
 
 };};

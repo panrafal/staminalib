@@ -8,8 +8,8 @@
  *  $Id$
  */
 #pragma once
-#ifndef __DT_DATAROW__
-#define __DT_DATAROW__
+#ifndef __DT_IROW__
+#define __DT_IROW__
 
 #include "iRow.h"
 #include "..\ObjectPtr.h"
@@ -68,6 +68,9 @@ namespace Stamina { namespace DT {
 	};
 
 	typedef SharedPtr<iRow> oRow;
+
+	const iRow* rowDefault = (iRow*)-1;
+
 
 } }
 

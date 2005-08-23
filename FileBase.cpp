@@ -79,7 +79,7 @@ namespace Stamina { namespace DT {
 			this->writeHeader();
 		    this->writeDescriptor();
 			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
-				if (_table->getRow(i).hasFlag(rflagDontSave) == false) {
+				if (_table->getRow(i)->hasFlag(rflagDontSave) == false) {
 					this->writeRow(i);
 				}
 			}
@@ -110,7 +110,7 @@ namespace Stamina { namespace DT {
 			}
 			this->seekToEnd();
 			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
-				_table->getRow(i).setId(_table->getNewRowId());
+				_table->getRow(i)->setId(_table->getNewRowId());
 				this->writeRow(i);
 			}
 		} catch (DTException e) {

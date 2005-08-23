@@ -24,9 +24,9 @@ namespace Stamina { namespace DT {
 	const unsigned int rowIdFlag = 0x40000000;
 	const unsigned int rowIdMax = 0x3FFFFFFF;
 	const unsigned int rowIdMin = 0x1;
-	const unsigned int rowIdDefault = rowIdMax + 1;
 
 	const unsigned int colIdUniqueFlag = 0x00800000;
+
 
 #define DT_CC_RESIZE 1
 #define DT_CC_FILL 2
@@ -73,8 +73,7 @@ namespace Stamina { namespace DT {
 		ctypeInt64		= 3,
 		ctype64			= 3,
 		ctypeBin		= 4, ///< Binary data stored with TypeBin
-		ctypeWideString = 5,
-		ctypeWString    = ctypeWideString,
+		ctypeDouble		= 6,
 		ctypeUnknown	= -1,
 	};
 
@@ -144,144 +143,6 @@ namespace Stamina { namespace DT {
 	const tColId colByName = (tRowId) -1;
 //	const tRowId rowIdFlag = DT_ROWID_MASK;
 
-	struct _TypeBin {
-		void * buff;
-		unsigned int size;
-	};
-
-	class TypeBin: public _TypeBin {
-	public:
-		TypeBin(void* buff = 0, unsigned int size = 0) {
-			this->buff = buff;
-			this->size = size;
-		}
-
-		TypeBin(const _TypeBin& b) {
-			this->buff = b.buff;
-			this->size = b.size;
-		}
-
-		bool operator == (const TypeBin& b) {
-			if (size != b.size) return false;
-			return memcmp(buff, b.buff, size) == 0;
-		}
-	};
-
-	#pragma pack(push, 1)
-	struct Value {
-		short type; ///< Typ przekazywanej wartoœci
-		union {
-			struct {
-				union {
-					char * vChar;
-					const char * vCChar;
-					wchar_t * vWChar;
-					const wchar_t * vCWChar;
-				};
-				int buffSize;
-			};
-			int vInt;
-			__int64 vInt64;
-			_TypeBin vBin;
-
-		};
-		Value(tColType type=ctypeUnknown):type((short)type) {vInt64 = 0;buffSize=0;}
-
-		enColumnType getType() const {
-			return (enColumnType) this->type;
-		}
-	};
-	#pragma pack(pop)
-
-	inline Value ValueStr(const char* value, int buffSize=0) {
-		Value v(ctypeString);
-		v.vCChar = value;
-		v.buffSize = buffSize;
-		return v;
-	}
-	inline Value ValueStrDuplicate() {
-		Value v(ctypeString);
-		v.vChar = 0;
-		v.buffSize = -1;
-		return v;
-	}
-	inline Value ValueStrGetSize() {
-		Value v(ctypeString);
-		v.vChar = 0;
-		v.buffSize = 0;
-		return v;
-	}
-
-	inline Value ValueWideStr(const wchar_t* value, int buffSize=0) {
-		Value v(ctypeWideString);
-		v.vCWChar = value;
-		v.buffSize = buffSize;
-		return v;
-	}
-	inline Value ValueWideStrDuplicate() {
-		Value v(ctypeWideString);
-		v.vWChar = 0;
-		v.buffSize = -1;
-		return v;
-	}
-	inline Value ValueWideStrGetSize() {
-		Value v(ctypeWideString);
-		v.vChar = 0;
-		v.buffSize = 0;
-		return v;
-	}
-
-
-	inline Value ValueInt(int value) {
-		Value v(ctypeInt);
-		v.vInt = value;
-		return v;
-	}
-	inline Value ValueInt64(__int64 value) {
-		Value v(ctypeInt64);
-		v.vInt64 = value;
-		return v;
-	}
-	inline Value ValueBin(const TypeBin& val) {
-		Value v(ctypeBin);
-		v.vBin = val;
-		return v;
-	}
-	inline Value ValueBin(void* data, int size) {
-		Value v(ctypeBin);
-		v.vBin.buff = data;
-		v.vBin.size = size;
-		return v;
-	}
-
-	class Find {
-	public:
-
-		enum Operation {
-			eq, neq, gt, gteq, lt, lteq
-		};
-
-		inline Find(Operation operation, tColId col, const Value& value):operation(operation), col(col), value(value) {}
-
-		static inline Find EqStr(tColId col, const char* str) {
-			return Find(eq, col, ValueStr(str));
-		}
-#ifdef _STRING_
-		static inline Find EqStr(tColId col, const std::string& str) {
-			return Find(eq, col, ValueStr(str.c_str()));
-		}
-#endif
-		static inline Find EqWStr(tColId col, const wchar_t* str) {
-			return Find(eq, col, ValueWideStr(str));
-		}
-		static inline Find EqInt(tColId col, int value) {
-			return Find(eq, col, ValueInt(value));
-		}
-
-		Operation operation;
-		tColId col;
-		Value value;
-	};
 
 
 	class DTException: public Stamina::Exception {
@@ -290,7 +151,7 @@ namespace Stamina { namespace DT {
 		}
 		enError errorCode;
 
-		std::string getReason() {
+		String getReason() {
 			return "DTException";
 		}
 	};

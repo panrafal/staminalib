@@ -23,7 +23,7 @@ namespace Stamina { namespace DT {
 	const char binRowSeparator = '\n';
 	const char binColumnSeparator = '\n';
 	const char binVersionMaj = '3';
-	const char binVersionMin = '5';
+	const char binVersionMin = '6';
 
 	const __int64 minimumBackupPeriod = 60 * 60; // an hour
 
@@ -129,6 +129,12 @@ namespace Stamina { namespace DT {
 			return _verMin >= '5';
 		}
 
+		inline bool versionNewString() {
+			if (_verMaj > '3') return true;
+			if (_verMaj < '3') return false;
+			return _verMin >= '6';
+		}
+
 		inline void setOldCryptVersion() {
 			_verMaj = '3';
 			_verMin = '4';
@@ -213,25 +219,22 @@ namespace Stamina { namespace DT {
 				*increment += size;
 		}
 
-		inline std::string readString(unsigned int* decrement = 0) throw(...) {
-			unsigned int size;
-			readData(&size, 4, decrement);
-			if (ftell(_file) + size > _fileSize) throw DTException(errBadFormat);
-			std::basic_string<char> s;
-			readData(stringBuffer(s, size), size, decrement);
-			stringRelease(s, size);
-			return s;
+		PassStringRef readString(const Column* col = 0, unsigned int* decrement = 0) throw(...);
+
+		void writeString(const StringRef& s, const Column* col = 0, unsigned int* increment = 0) throw(...);
+
+		PassStringRef readString(unsigned int* decrement = 0) throw(...) {
+			return readString(0, decrement);
 		}
 
-		inline void writeString(const std::basic_string<char>& s, unsigned int* increment = 0) throw(...) {
-			unsigned int length = s.length();
-			writeData(&length, 4, increment);
-			writeData(s.c_str(), s.length(), increment);
+		void writeString(const StringRef& s, unsigned int* increment = 0) throw(...) {
+			writeString(s, 0, increment);
 		}
 
-		void readCryptedData(const Column& col, void* buffer, int size, unsigned int* decrement = 0) throw(...);
 
-		void writeCryptedData(const Column& col, void* buffer, int size, unsigned int* increment = 0) throw(...);
+		void readCryptedData(const Column* col, void* buffer, int size, unsigned int* decrement = 0) throw(...);
+
+		void writeCryptedData(const Column* col, const void* buffer, int size, unsigned int* increment = 0) throw(...);
 
 
 		inline void updateFileSize() {

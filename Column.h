@@ -12,6 +12,7 @@
 #define __DT_COLUMN__
 
 #include "iColumn.h"
+#include "../StringSTL.h"
 
 
 namespace Stamina { namespace DT {
@@ -21,50 +22,55 @@ namespace Stamina { namespace DT {
 
 		STAMINA_OBJECT_CLASS(DT::Column, iColumn);
 
-		Column();
+		Column() {
+		}
 
-		virtual iObject* cloneObject();
+		//virtual iObject* cloneObject();
 
-		void init(unsigned int index, tColId id, enColumnFlag flags, const StringRef& name) {
+		void init(unsigned int index, tColId id, enColumnFlag flags, const AStringRef& name) {
 			_index = index;
 			_id = id;
 			this->setFlag(flags, true);
 			_name = name;
 		}
 
-		/** Initializes the row's data.
-		@param alloc - true if any data should be allocated.
-		*/
-		virtual DataEntry dataInit(bool alloc) const = 0;
-		virtual void dataDispose(DataEntry data) const = 0;
+		virtual DataEntry getDefaultStaticData() const {
+			return 0;
+		}
+		virtual void dataDispose(DataEntry data) const {
+		}
 
 	private:
 
+		void setIndex(unsigned int index) {
+			_index = index;
+		}
+		void setId(tColId id) {
+			_id = id;
+		}
+
+		virtual cloneMembers(const iObject* a) {
+			BaseClass::cloneMembers(a);
+		}
+
+
 	};
-
-	class Column_int: public Column {
-	public:
-
-		STAMINA_OBJECT_CLASS(DT::Column_int, Column);
-
-		virtual iObject* cloneObject();
-
-
-
-	};
-
-
 
 	class ColumnsDesc {  // Opis typow kolumn
 	public:
 		typedef std::vector<oColumn> tColumns;
+		
 	public:
-		ColumnsDesc ();
+		ColumnsDesc () {
+			_loader=false;
+		}
 		operator = (const ColumnsDesc & x);
 
 		int setColumnCount (int count, bool expand = false); // ustawia ilosc kolumn
-		tColId setColumn (tColId id, enColumnType type , const StringRef& name="");  // ustawia rodzaj danych w kolumnie
-		tColId setUniqueCol (const StringRef& name, enColumnType type);  // ustawia rodzaj danych w kolumnie o podanej nazwie
+		oColumn setColumn (tColId id, enColumnType type , const AStringRef& name="");  // ustawia rodzaj danych w kolumnie
+		bool setColumn (const oColumn& col);  // ustawia rodzaj danych w kolumnie
+
+		oColumn setUniqueCol (const AStringRef& name, enColumnType type);  // ustawia rodzaj danych w kolumnie o podanej nazwie
 
 		inline unsigned int getColCount () const {
 			return _cols.size();
@@ -84,7 +90,7 @@ namespace Stamina { namespace DT {
 			if (index > _cols.size()) {
 				return 0;
 			}
-			return _cols[index];
+			return (Column*)_cols[index].get();
 		}
 		const Column* getColumn(tColId id) const {
 			return getColumnByIndex(colIndex(id));
@@ -99,7 +105,6 @@ namespace Stamina { namespace DT {
 			_cols.clear();
 		}
 
-		void optimize();
 		int join(const ColumnsDesc& other , bool overwrite); // ³¹czy dwa deskryptory, zwraca liczbê do³¹czonych
 
 		tColId getNewUniqueId(void);
