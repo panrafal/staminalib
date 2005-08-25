@@ -9,6 +9,7 @@
  */
 
 #include "stdafx.h"
+#include "ColumnTypes.h"
 #include "DataTable.h"
 
 
@@ -19,6 +20,7 @@ namespace Stamina { namespace DT {
 
 	// ---------------------------------------------------  ColumnsDesc
 
+	oColumn colUndefined = new Column_undefined();
 
     ColumnsDesc::operator = (const ColumnsDesc & x) {
 		_cols.resize(x._cols.size());
@@ -35,7 +37,7 @@ namespace Stamina { namespace DT {
         int resize = _cols.size();
         _cols.resize(count + resize, 0);
 		for (int i = resize; i < count + resize; ++i) {
-			_cols[i] = new Column_undefined();
+			_cols[i] = colUndefined;
 		}
         return _cols.size();
     } // ustawia ilosc kolumn
@@ -51,7 +53,7 @@ namespace Stamina { namespace DT {
 			default: col = new Column_int(); break;
 		};
 
-		col->castObject<Column>()->init(index, id, (enColumnFlag)(type & ~ctypeMask), name);
+		col->castObject<Column>()->init(0, id, (enColumnFlag)(type & ~ctypeMask), name);
 
 		if (setColumn(col)) {
 			return col;
@@ -67,13 +69,13 @@ namespace Stamina { namespace DT {
 	bool ColumnsDesc::setColumn (const oColumn& col) {
 
 		if (col->getId() != colNotFound && ((col->getId() & 0xFF000000) == 0xFF000000)) 
-			col->castStaticObject<Column>()->setId() = colNotFound;
+			col->castStaticObject<Column>()->setId(colNotFound);
 		if (col->getId() == colByName && col->getName().empty() == false) {
 			tColId id = getNameId(col->getName().c_str());
 			if (id == colNotFound) {
 				id = getNewUniqueId();
 			}
-			col->castStaticObject<Column>()->setId() = id;
+			col->castStaticObject<Column>()->setId(id);
 		}
 
 		int index = this->colIndex(col->getId());

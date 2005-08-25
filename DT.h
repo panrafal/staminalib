@@ -93,6 +93,7 @@ namespace Stamina { namespace DT {
 
 	enum enColumnFlag {
 		ctypeMask		= 0xFF,  ///< Mask for column type
+		cflagNone		= 0,
 		cflagDontSave	= 0x100,
 		cflagNoSave		= 0x100, ///< This column won't be saved
 		cflagKey		= 0x200, ///< This column is a key @deprecated
@@ -131,7 +132,9 @@ namespace Stamina { namespace DT {
 		none = 0,
 		getCopy = 0x10,
 		getHandler = 0x20,
-		setHandler = 0x100,
+		getToFile = 0x40,
+		setHandler = 0x1000,
+		setFromFile = 0x2000
 	};
 
 	inline GetSet operator | (const GetSet & a, const GetSet & b) {

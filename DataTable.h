@@ -24,7 +24,7 @@
 
 #include "DT.h"
 #include "DataRow.h"
-#include "Column.h"
+#include "ColumnsDesc.h"
 #include "Find.h"
 
 #define DT_SETBLANKSBYTYPE
@@ -205,11 +205,11 @@ namespace Stamina { namespace DT {
 			return this->_cols;
 		}
 
-		inline const Column* getColumn(tColId colId) {
+		inline Column* getColumn(tColId colId) const {
 			return this->_cols.getColumn(colId);
 		}
 
-		inline const Column* getColumn(const char* name) {
+		inline Column* getColumn(const char* name) const {
 			return this->_cols.getColumn(name);
 		}
 

@@ -154,7 +154,7 @@ namespace Stamina { namespace DT {
 		STAMINA_OBJECT_CLASS(DT::Value_bin, Value);
 
 		Value_bin(const ByteBuffer& v) {
-			_v.assignCheapReference(v.getBuffer(), v.getBufferSize());
+			_v.assignCheapReference(v.getBuffer(), v.getLength());
 		}
 
 		virtual enColumnType getType() const {

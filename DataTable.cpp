@@ -130,7 +130,7 @@ namespace Stamina { namespace DT {
             return;
         }
     }
-
+/*
     bool DataTable::canAccess(tRowId row){
         if (row == allRows) {
 			if (!this->_cs.canAccess()) return false;
@@ -150,7 +150,7 @@ namespace Stamina { namespace DT {
         }
         return true;
     }
-
+*/
 
 
 /*
@@ -234,7 +234,7 @@ namespace Stamina { namespace DT {
 				int cmp = 0;
 				switch (find->value->getType()) {
 					case ctypeString:
-						cmp = find->value->castStaticObject<Value_string>()->cmp( col->getString(row, false) );
+						cmp = find->value->castStaticObject<Value_string>()->cmp( col->getString(row, gsNone) );
 						break;
 					case ctypeInt:
 						cmp = find->value->castStaticObject<Value_int>()->cmp( col->getInt(row) );
@@ -246,7 +246,7 @@ namespace Stamina { namespace DT {
 						cmp = find->value->castStaticObject<Value_double>()->cmp( col->getDouble(row) );
 						break;
 					case ctypeBin:
-						cmp = find->value->castStaticObject<Value_bin>()->cmp( col->getBin(row, false) );
+						cmp = find->value->castStaticObject<Value_bin>()->cmp( col->getBin(row, gsNone) );
 						break;
 					default:
 						found = false;

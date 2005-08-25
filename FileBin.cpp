@@ -18,6 +18,7 @@
 #include <Stamina\Assert.h>
 #include <Stamina\FindFileFiltered.h>
 #include <Stamina\WideChar.h>
+#include <Stamina\WinHelper.h>
 
 using namespace std;
 
@@ -721,7 +722,7 @@ namespace Stamina { namespace DT {
 					else {
 						int val;
 						readCryptedData(&col, &val, 4);
-						tableCol.setInt( rowObj, val );
+						tableCol.setInt( rowObj, val, setFromFile );
 					}
 					break;
 				case ctypeInt64:
@@ -730,7 +731,7 @@ namespace Stamina { namespace DT {
 					} else {
 						__int64 val;
 						readCryptedData(&col, &val, 8);
-						tableCol.setInt64( rowObj, val );
+						tableCol.setInt64( rowObj, val, setFromFile );
 					}
 					break;
 				case ctypeDouble:
@@ -739,14 +740,14 @@ namespace Stamina { namespace DT {
 					} else {
 						double val;
 						readCryptedData(&col, &val, 8);
-						tableCol.setDouble( rowObj, val );
+						tableCol.setDouble( rowObj, val, setFromFile );
 					}
 					break;
 				case ctypeString: {
 					if (skip) {
 						readData(&skipBytes, 4);
 					} else {
-						tableCol.setString( rowObj, this->readString(&col) );
+						tableCol.setString( rowObj, this->readString(&col), setFromFile );
 					}
 
 					break;}
@@ -762,10 +763,10 @@ namespace Stamina { namespace DT {
 						ByteBuffer buff(size);
 						readCryptedData(&col, buff.getBuffer(), size);
 						buff.setLength(size);
-						tableCol.setBin( rowObj, buff );
+						tableCol.setBin( rowObj, buff, setFromFile );
 					} else {
 						ByteBuffer buff;
-						tableCol.setBin( rowObj, buff );
+						tableCol.setBin( rowObj, buff, setFromFile );
 					}
 					break; }
 
@@ -833,26 +834,26 @@ namespace Stamina { namespace DT {
 
 				switch (col.getType()) {
 					case ctypeInt: {
-						int val = skip ? 0 : tableCol.getInt(rowObj);
+						int val = skip ? 0 : tableCol.getInt(rowObj, getToFile);
 						writeCryptedData(&col, &val, 4, &rowSize);
 						break;}
 					case ctype64: {
-						__int64 val = skip ? 0 : tableCol.getInt64(rowObj);
+						__int64 val = skip ? 0 : tableCol.getInt64(rowObj, getToFile);
 						writeCryptedData(&col, &val, 8, &rowSize);
 						break;}
 					case ctypeString: {
 						StringRef val;
 						if (!skip) {
-							val = PassStringRef( tableCol.getString(rowObj, false) );
+							val = PassStringRef( tableCol.getString(rowObj, getToFile) );
 						}
 						this->writeString(val, &col, &rowSize);
 						break;}
 					case ctypeBin: {
 						ByteBuffer buff;
 						if (!skip) {
-							buff.assignCheapReference( tableCol.getBin(rowObj, false) );
+							buff.assignCheapReference( tableCol.getBin(rowObj, getToFile) );
 						}
-						unsigned int size = buff.getBufferSize();
+						unsigned int size = buff.getLength();
 						writeData(&size, 4, &rowSize);
 						if (size > 0) {
 							writeCryptedData(&col, buff.getBuffer(), size, &rowSize);

@@ -9,6 +9,7 @@
  */
 
 #include "stdafx.h"
+#include "Column.h"
 #include "DataTable.h"
 
 namespace Stamina { namespace DT {
@@ -36,7 +37,7 @@ namespace Stamina { namespace DT {
 	}
 
     bool DataRow::freeData() {
-		LockerCS lock (_cs);
+		LockerCS lock (this->CS());
 		ColumnsDesc::tColumns::const_iterator colIt = _table->getColumns().begin();
 		for (tData::iterator i = _data.begin() ; i != _data.end() ; ++i, ++colIt) {
 			S_ASSERT( colIt != _table->getColumns().end() );

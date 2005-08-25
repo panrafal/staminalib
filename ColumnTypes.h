@@ -11,21 +11,27 @@
 #ifndef __DT_COLUMNTYPES__
 #define __DT_COLUMNTYPES__
 
-#include <boost/function.hpp>
-#include <boost/signal.hpp>
-
 #include "Column.h"
 #include "Value.h"
 #include "DataRow.h"
 
+#ifdef __DT_COLUMN__CHEAP
+#error Include Column.h or ColumnTypes.h BEFORE DataTable.h to use this header
+#endif
+
 namespace Stamina { namespace DT {
 
 
-	class Column_unknown: public Column {
+	class Column_undefined: public Column {
 	public:
 
-		STAMINA_OBJECT_CLASS(DT::Column_unknown, Column);
+		STAMINA_OBJECT_CLASS(DT::Column_undefined, Column);
 		STAMINA_OBJECT_CLONEABLE();
+
+		Column_undefined() {
+			_type = ctypeUnknown;
+			this->init(0, colNotFound, cflagNone, "");
+		}
 
 		virtual void reset(iRow* row) const {}
 
@@ -37,9 +43,25 @@ namespace Stamina { namespace DT {
 	template <typename TO, typename FROM> 
 	TO convert(FROM v);
 
+	template <typename TO> 
+	inline TO convertValue(const oValue& v) {
+
+		S_ASSERT(v.isValid());
+
+		switch (v->getType()) {
+			case ctypeInt: return convert<TO, int>( v->castStaticObject<Value_int>()->getInt() );
+			case ctypeInt64: return convert<TO, __int64>( v->castStaticObject<Value_int64>()->getInt64() );
+			case ctypeDouble: return convert<TO, double>( v->castStaticObject<Value_double>()->getDouble() );
+			case ctypeString: return convert<TO, const StringRef&>( v->castStaticObject<Value_string>()->getString() );
+			case ctypeBin: return convert<TO, const ByteBuffer&>( v->castStaticObject<Value_bin>()->getBin() );
+		}
+		return convert<TO>( (int) 0 );
+	}
+
+
 	class ColumnType_int {
 	public:
-		const static int type = ctypeInt;
+		const static enColumnType type = ctypeInt;
 		typedef int tData;
 		typedef int tType;
 		typedef int tCRef;
@@ -51,7 +73,7 @@ namespace Stamina { namespace DT {
 
 	class ColumnType_int64 {
 	public:
-		const static int type = ctypeInt64;
+		const static enColumnType type = ctypeInt64;
 		typedef __int64* tData;
 		typedef __int64 tType;
 		typedef __int64 tCRef;
@@ -63,7 +85,7 @@ namespace Stamina { namespace DT {
 
 	class ColumnType_double {
 	public:
-		const static int type = ctypeDouble;
+		const static enColumnType type = ctypeDouble;
 		typedef double* tData;
 		typedef double tType;
 		typedef double tCRef;
@@ -76,25 +98,25 @@ namespace Stamina { namespace DT {
 
 	class ColumnType_string {
 	public:
-		const static int type = ctypeString;
+		const static enColumnType type = ctypeString;
 		typedef String* tData;
 		typedef String tType;
 		typedef const StringRef& tCRef;
 		typedef PassStringRef tConvert;
 		typedef const StringRef& tSetTypeData;
-		typedef PassStringRef tGetTypeData;
+		typedef StringRef tGetTypeData;
 		typedef Value_string tValue;
 	};
 
 	class ColumnType_bin {
 	public:
-		const static int type = ctypeBin;
+		const static enColumnType type = ctypeBin;
 		typedef ByteBuffer* tData;
 		typedef ByteBuffer tType;
 		typedef const ByteBuffer& tCRef;
-		typedef ByteBuffer tConvert;
+		typedef ByteBuffer::PassBuffer tConvert;
 		typedef const ByteBuffer& tSetTypeData;
-		typedef ByteBuffer tGetTypeData;
+		typedef ByteBuffer::BufferRef tGetTypeData;
 		typedef Value_bin tValue;
 	};
 
@@ -109,7 +131,9 @@ namespace Stamina { namespace DT {
 		typedef typename TYPE::tGetTypeData tGetTypeData;
 		typedef typename TYPE::tValue tValue;
 
-
+		//template<typename TYPE, class COLUMN, typename VALUE>
+		//friend void setAllocatedData(const COLUMN* col, iRow* row, VALUE val);
+        
 		virtual void reset(iRow* row) const {
 			DataEntry data = (DataEntry)this->getData(row, false);
 			if (data) {
@@ -129,20 +153,24 @@ namespace Stamina { namespace DT {
 			return get<ColumnType_double>(row, flags);
 		}
 		virtual String getString(const iRow* row, GetSet flags) const {
-			ObjLocker l (row);
-			String s = get<ColumnType_string>(row, flags);
 			if (flags & getCopy) {
+				ObjLocker l (getRowLocker(row));
+				String s = get<ColumnType_string>(row, flags);
 				s.makeUnique();
+				return PassStringRef(s);
+			} else {
+				return get<ColumnType_string>(row, flags);
 			}
-			return PassStringRef(s);
 		}
 		virtual ByteBuffer getBin(const iRow* row, GetSet flags) const { 
-			ObjLocker l (row);
-			ByteBuffer b = get<ColumnType_bin>(row, flags);
 			if (flags & getCopy) {
+				ObjLocker l (getRowLocker(row));
+				ByteBuffer b = get<ColumnType_bin>(row, flags);
 				b.makeUnique();
+				return b;
+			} else {
+				return get<ColumnType_bin>(row, flags);
 			}
-			return b;
 		}
 
 
@@ -167,7 +195,16 @@ namespace Stamina { namespace DT {
 	protected:
 
 		Column_template() {
+			_type = TYPE::type;
 			_default = 0;
+		}
+
+		const iLockableObject* getRowLocker(const iRow* row) const {
+			if (row == rowDefault) {
+				return this;
+			} else {
+				return row;
+			}
 		}
 
 		void setData(iRow* row, tData val) const {
@@ -197,21 +234,21 @@ namespace Stamina { namespace DT {
 
 		template <class TO>
 		typename TO::tConvert get(const iRow* row, GetFlags flags) const {
-			ObjLocker l (row);
-			tType val = this->getTypeData(row, true);
+			ObjLocker l (getRowLocker(row));
+			tGetTypeData val = this->getTypeData(row, true);
 			if (this->_getHandler.empty() == false) {
 				tValue current (val);
 				current.disableRefCount();
 				oValue v = &current;
 				this->_getHandler(v, this, row, flags | getHandler);
-				return convert<TO::tConvert>(v);
+				return convertValue<TO::tConvert>(v);
 			}
-			return convert<TO::tConvert>(val);
+			return convert<TO::tConvert, tCRef>(val);
 		}
 
 		template <typename FROM>
 		bool set(iRow* row, typename FROM::tCRef val, SetFlags flags) const {
-			ObjLocker l (row);
+			ObjLocker l (getRowLocker(row));
 			if (_setHandler.empty() == false) {
 				FROM::tValue current (val);
 				current.disableRefCount();
@@ -220,7 +257,7 @@ namespace Stamina { namespace DT {
 					if (this->_preTrigger.empty() == false) {
 						this->_preTrigger(this, row, flags | setHandler);
 					}
-					this->setTypeData(row, convert<tConvert>(v));
+					this->setTypeData(row, convertValue<tConvert>(v));
 					if (this->_postTrigger.empty() == false) {
 						this->_postTrigger(this, row, flags | setHandler);
 					}
@@ -231,7 +268,7 @@ namespace Stamina { namespace DT {
 			if (this->_preTrigger.empty() == false) {
 				this->_preTrigger(this, row, flags);
 			}
-			this->setTypeData(row, convert<tConvert>(val));
+			this->setTypeData(row, convert<tConvert, FROM::tCRef>(val));
 			if (this->_postTrigger.empty() == false) {
 				this->_postTrigger(this, row, flags);
 			}
@@ -252,21 +289,23 @@ namespace Stamina { namespace DT {
 
         tData _default;
 
-		// enResult getHandler (oValue&, const iColumn*, iRow*, GetFlags)
-		// enResult setHandler (oValue&, const iColumn*, iRow*, SetFlags)
-		// void trigger(const iColumn*, iRow*, SetFlags)
-
-		boost::function4< enResult, oValue&, const iColumn*, const iRow*, GetFlags > _getHandler;
-		boost::function4< enResult, oValue&, const iColumn*, iRow*, SetFlags > _setHandler;
-		boost::signal3<void, const iColumn*, iRow*, SetFlags> _preTrigger;
-		boost::signal3<void, const iColumn*, iRow*, SetFlags> _postTrigger;
 
 
 	};
 
 
 
+	template<class TYPE> 
+	class Column_allocated: public Column_template<TYPE> {
+	public:
 
+		virtual void dataDispose(DataEntry data) const {
+			if (data) {
+				delete reinterpret_cast< Column_template<TYPE>::tData >( data );
+			}
+		}
+
+	};
 
 
 	// ------------------------------------------
@@ -287,6 +326,66 @@ namespace Stamina { namespace DT {
 
 	};
 
+
+	// ------------------------------------------
+
+	class Column_int64: public Column_allocated<ColumnType_int64> {
+	public:
+
+		STAMINA_OBJECT_CLASS(DT::Column_int64, Column_allocated<ColumnType_int64>);
+		STAMINA_OBJECT_CLONEABLE();
+
+		virtual bool convertible(enColumnType type, bool from) const {
+			return (type != ctypeBin);
+		}
+
+
+
+	};
+
+
+	// ------------------------------------------
+
+	class Column_double: public Column_allocated<ColumnType_double> {
+	public:
+
+		STAMINA_OBJECT_CLASS(DT::Column_double, Column_allocated<ColumnType_double>);
+		STAMINA_OBJECT_CLONEABLE();
+
+		virtual bool convertible(enColumnType type, bool from) const {
+			return (type != ctypeBin);
+		}
+
+	};
+
+	// ------------------------------------------
+
+	class Column_string: public Column_allocated<ColumnType_string> {
+	public:
+
+		STAMINA_OBJECT_CLASS(DT::Column_string, Column_allocated<ColumnType_string>);
+		STAMINA_OBJECT_CLONEABLE();
+
+		virtual bool convertible(enColumnType type, bool from) const {
+			return true;
+		}
+
+	};
+
+
+	// ------------------------------------------
+
+	class Column_bin: public Column_allocated<ColumnType_bin> {
+	public:
+
+		STAMINA_OBJECT_CLASS(DT::Column_bin, Column_allocated<ColumnType_bin>);
+		STAMINA_OBJECT_CLONEABLE();
+
+		virtual bool convertible(enColumnType type, bool from) const {
+			return (type == ctypeBin || type == ctypeString);
+		}
+
+	};
 
 
 } }
