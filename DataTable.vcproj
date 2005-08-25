@@ -105,6 +105,9 @@
 				RelativePath=".\ColumnsDesc.cpp">
 			</File>
 			<File
+				RelativePath=".\ColumnTypes.cpp">
+			</File>
+			<File
 				RelativePath=".\Crypt.cpp">
 			</File>
 			<File

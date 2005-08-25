@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#include <Stamina\Helpers.h>
-#include <Stamina\WinHelper.h>
+#include <boost/function.hpp>
+#include <boost/signal.hpp>
+
 using namespace std;

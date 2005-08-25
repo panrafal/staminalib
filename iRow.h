@@ -11,7 +11,7 @@
 #ifndef __DT_IROW__
 #define __DT_IROW__
 
-#include "iRow.h"
+#include "DT.h"
 #include "..\ObjectPtr.h"
 
 namespace Stamina { namespace DT {
@@ -22,12 +22,12 @@ namespace Stamina { namespace DT {
 	public:
 
 		STAMINA_OBJECT_CLASS_VERSION(DT::iRow, iSharedObject, Version(1, 0, 0, 0));
+/*
+		virtual void lockRow() = 0;
+		virtual void unlockRow() = 0;
 
-		virtual void lock() = 0;
-		virtual void unlock() = 0;
-
-		virtual bool canAccess() = 0;
-
+		virtual bool canAccessRow() = 0;
+*/
 		virtual Lock& getCS() = 0;
 	
 		enRowFlag getFlags() const {
@@ -55,7 +55,7 @@ namespace Stamina { namespace DT {
 			return (tRowId)( row&(~DT::rowIdFlag) );
 		}
 
-		DataTable* getOwner() {
+		DataTable* getOwner() const {
 			return _table;
 		}
 
@@ -69,7 +69,7 @@ namespace Stamina { namespace DT {
 
 	typedef SharedPtr<iRow> oRow;
 
-	const iRow* rowDefault = (iRow*)-1;
+	iRow* const rowDefault = (iRow*)-1;
 
 
 } }

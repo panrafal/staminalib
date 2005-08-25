@@ -36,19 +36,19 @@ namespace Stamina { namespace DT {
 		~DataRow() {
 			freeData();
 		}
-
-		inline void lock() {
+/*
+		inline void lockRow() {
 			_cs.lock();
 		}
-		inline void unlock() {
+		inline void unlockRow() {
 			_cs.unlock();
 		}
-		inline bool canAccess()  {
+		inline bool canAccessRow()  {
 			return _cs.canAccess();
 		}
-
+*/
 		inline Lock& getCS() {
-			return _cs;
+			return CS();
 		}
 	
 
@@ -73,7 +73,7 @@ namespace Stamina { namespace DT {
 		typedef std::vector<DataEntry> tData;
 		tData _data;
 		unsigned int _filePos;
-		CriticalSection_blank _cs; // blokada
+		//CriticalSection_blank _cs; // blokada
 
 	};
 

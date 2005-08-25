@@ -61,6 +61,7 @@ namespace Stamina { namespace DT {
 		resSkipped = 1,
 		resNothingToRead = 2,
 
+
 	};
 	typedef enError enResult;
 
@@ -125,12 +126,20 @@ namespace Stamina { namespace DT {
 // RowFlags
 #define DT_RF_DONTSAVE  Stamina::DT::rflagDontSave
 
-	enum enHandlerResult {
-		handlerPassed,
-		handlerCancel,
-		handlerTypeChange
+	enum GetSet {
+		gsNone = 0,
+		none = 0,
+		getCopy = 0x10,
+		getHandler = 0x20,
+		setHandler = 0x100,
 	};
 
+	inline GetSet operator | (const GetSet & a, const GetSet & b) {
+		return (GetSet) ((int)a | (int)b); 
+	}
+
+	typedef GetSet GetFlags;
+	typedef GetSet SetFlags;
 
 	typedef unsigned int tColId;
 	typedef enColumnType tColType;

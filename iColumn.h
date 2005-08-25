@@ -11,6 +11,7 @@
 #ifndef __DT_ICOLUMN__
 #define __DT_ICOLUMN__
 
+
 #include "iRow.h"
 #include "..\ObjectPtr.h"
 #include "..\StringSTL.h"
@@ -77,25 +78,25 @@ namespace Stamina { namespace DT {
 		/** Resets the value */
 		virtual void reset(iRow* row) const = 0;
 
-		virtual int getInt(const iRow* row) const { return 0; }
-		virtual __int64 getInt64(const iRow* row) const { return 0; }
-		virtual double getDouble(const iRow* row) const { return 0; }
-		virtual String getString(const iRow* row, bool copy = true) const { return String(); }
-		virtual ByteBuffer getBin(const iRow* row, bool copy = true) const { return ByteBuffer(); }
+		virtual int getInt(const iRow* row, GetSet flags = gsNone) const { return 0; }
+		virtual __int64 getInt64(const iRow* row, GetSet flags = gsNone) const { return 0; }
+		virtual double getDouble(const iRow* row, GetSet flags = gsNone) const { return 0; }
+		virtual String getString(const iRow* row, GetSet flags = getCopy) const { return String(); }
+		virtual ByteBuffer getBin(const iRow* row, GetSet flags = getCopy) const { return ByteBuffer(); }
 
-		virtual bool setInt(iRow* row, int) const { return false; }
-		virtual bool setInt64(iRow* row, __int64) const { return false; }
-		virtual bool setDouble(iRow* row, double) const { return false; }
-		virtual bool setString(iRow* row, const StringRef&) const { return false; }
-		virtual bool setBin(iRow* row, const ByteBuffer&) const { return false; }
+		virtual bool setInt(iRow* row, int, GetSet flags = gsNone) const { return false; }
+		virtual bool setInt64(iRow* row, __int64, GetSet flags = gsNone) const { return false; }
+		virtual bool setDouble(iRow* row, double, GetSet flags = gsNone) const { return false; }
+		virtual bool setString(iRow* row, const StringRef&, GetSet flags = gsNone) const { return false; }
+		virtual bool setBin(iRow* row, const ByteBuffer&, GetSet flags = gsNone) const { return false; }
 
 		virtual bool convertible(enColumnType type, bool from) const {return false;}
 
 	protected:
 
-		virtual cloneMembers(const iObject* a) {
+		virtual void cloneMembers(const iObject* a) {
 			BaseClass::cloneMembers(a);
-			iColumn* b = static_cast<iColumn*>(a);
+			iColumn* b = static_cast<iColumn*>( const_cast<iObject*>( a ) );
 			this->_type = b->_type;
 			this->_id = b->_id;
 			this->_name = b->_name;

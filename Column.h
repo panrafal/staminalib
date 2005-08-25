@@ -11,8 +11,10 @@
 #ifndef __DT_COLUMN__
 #define __DT_COLUMN__
 
-#include "iColumn.h"
+
+#include "../ObjectImpl.h"
 #include "../StringSTL.h"
+#include "iColumn.h"
 
 
 namespace Stamina { namespace DT {
@@ -49,7 +51,7 @@ namespace Stamina { namespace DT {
 			_id = id;
 		}
 
-		virtual cloneMembers(const iObject* a) {
+		virtual void cloneMembers(const iObject* a) {
 			BaseClass::cloneMembers(a);
 		}
 
