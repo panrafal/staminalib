@@ -66,24 +66,24 @@ namespace Stamina { namespace DT {
 		/**Loads data from specified file.
 		Uses only column descriptor from assigned table.
 		*/
-		virtual enResult load (const std::string& fn = "", enFileOperation operation = loadColumns); // wgrywa caly plik
+		virtual enResult load (const StringRef& fn = "", enFileOperation operation = loadColumns); // wgrywa caly plik
 		/**Loads all data from specified file.
 		Uses merged column descriptors from assigned table and specified file.
 		*/
-		virtual enResult loadAll (const std::string& fn = "") {
+		virtual enResult loadAll (const StringRef& fn = "") {
 			return this->load(fn, loadColumns);
 		}
 
 		/**Stores all information from assigned table. The file is recreated.*/
-		virtual enResult save (const std::string& fn = "", enFileOperation operation = noOperation); // zapisuje caly plik
+		virtual enResult save (const StringRef& fn = "", enFileOperation operation = noOperation); // zapisuje caly plik
 
 		/**Appends table data to specified file using only file's column descriptor.*/
-		virtual enResult append (const std::string& fn = "", enFileOperation operation = noOperation); // dopisuje elementy
+		virtual enResult append (const StringRef& fn = "", enFileOperation operation = noOperation); // dopisuje elementy
 
 		// placeHolders
 
 		/**Opens file in specified mode*/
-		virtual void open (const std::string& fn , enFileMode mode) throw (...) = 0;
+		virtual void open (const StringRef& fn , enFileMode mode) throw (...) = 0;
 		virtual void close ()=0; // zamyka plik
 		//virtual examine() {return 0;}; // Zapisuje lokalizacje wierszy
 		//virtual examinePos(tRowId row) {return 0;}; // zapisuje lokalizacje wiersza
@@ -172,7 +172,7 @@ namespace Stamina { namespace DT {
 		bool _recreating;
 		bool _headerLoaded;
 		ColumnsDesc _fcols;
-		std::string _fileName;
+		StringRef _fileName;
 		bool _writeFailed;
 
 	};

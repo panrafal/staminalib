@@ -93,11 +93,11 @@ namespace Stamina { namespace DT {
 	// --- from STRING
 
 	template<> extern inline int convert<int, const StringRef&>(const StringRef& v) {
-		return atoi(v.a_str());
+		return chtoint(v.a_str());
 	}
 
 	template<> extern inline __int64 convert<__int64, const StringRef&>(const StringRef& v) {
-		return _atoi64(v.a_str());
+		return chtoint64(v.a_str());
 	}
 
 	template<> extern inline  double convert<double, const StringRef&>(const StringRef& v) {

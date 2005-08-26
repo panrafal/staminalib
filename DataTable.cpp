@@ -208,7 +208,6 @@ namespace Stamina { namespace DT {
         
 		LockerDT(this, allRows);
 
-		unsigned int found = rowNotFound;
 		startPos = this->getRowPos((tRowId) startPos);
 		if (startPos == rowNotFound) return oDataRow();
 
@@ -225,7 +224,7 @@ namespace Stamina { namespace DT {
 				if (!find) break;
 				// sprawdzamy...
 
-				const Column* col = this->getColumn( find->col );
+				const Column* col = find->col->castStaticObject<const Column>();
 				if (col->isUndefined()) {
 					found = false;
 					break;
@@ -252,6 +251,8 @@ namespace Stamina { namespace DT {
 						found = false;
 						break;
 				}
+
+				cmp = -cmp; // porównujemy find->value z col->get, a operacje zakladaja porownanie odwrotne...
 
 				switch (find->operation) {
 					case Find::eq:

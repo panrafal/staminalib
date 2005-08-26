@@ -78,7 +78,7 @@ namespace Stamina { namespace DT {
 	};
 
 
-	typedef SharedPtr<DataRow> oDataRow;
+	typedef oRowT<DataRow> oDataRow;
 
 
 } }

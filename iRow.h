@@ -67,7 +67,34 @@ namespace Stamina { namespace DT {
 
 	};
 
-	typedef SharedPtr<iRow> oRow;
+	template <class TYPE>
+	class oRowT: public SharedPtr<TYPE> {
+	public:
+		oRowT(TYPE * obj = 0):SharedPtr<TYPE>() {
+			this->set(obj);
+		}
+		oRowT(TYPE & obj):SharedPtr<TYPE>() {
+			this->set(obj);
+		}
+		oRowT(const oRowT & b):SharedPtr<TYPE>() {
+			this->set(&*b);
+		}
+		oRowT& operator = (const oRowT & b) {
+			this->set(&*b);
+			return *this;
+		}
+
+		operator tRowId() const {
+			if (this->get()) {
+				return this->get()->getId();
+			} else {
+				return rowNotFound;
+			}
+		}
+
+	};
+
+	typedef oRowT<iRow> oRow;
 
 	iRow* const rowDefault = (iRow*)-1;
 

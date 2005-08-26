@@ -42,7 +42,7 @@ namespace Stamina { namespace DT {
 		_headerLoaded = false;
 	}
 
-    enResult FileBase::load (const std::string& fn, enFileOperation operation) {
+    enResult FileBase::load (const StringRef& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
 
 		_table->clearRows();
@@ -64,7 +64,7 @@ namespace Stamina { namespace DT {
     }
 
 
-    enResult FileBase::save (const std::string& fn, enFileOperation operation)
+    enResult FileBase::save (const StringRef& fn, enFileOperation operation)
     {
 		if (!_table) return errNotInitialized;
 
@@ -92,7 +92,7 @@ namespace Stamina { namespace DT {
     }
 
 
-    enResult FileBase::append (const std::string& fn, enFileOperation operation) {
+    enResult FileBase::append (const StringRef& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
 		
 		_fcols.clear();

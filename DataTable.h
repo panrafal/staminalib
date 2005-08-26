@@ -16,7 +16,6 @@
 
 #include <vector>
 #include <map>
-#include <Stdstring.h>
 #include <Stamina\CriticalSection.h>
 #include <Stamina\MD5.h>
 #include <Stamina\Time64.h>
@@ -45,7 +44,7 @@ namespace Stamina { namespace DT {
 	class DataTable {
 	public:
 		typedef std::vector <oDataRow> tRows;
-		typedef std::map <std::string, std::string> tParams;
+		typedef std::map <String, String> tParams;
 
 
 		friend class FileBase;
@@ -143,58 +142,58 @@ namespace Stamina { namespace DT {
 		*/
 
 		// inne
-		inline int getInt(tRowId row , tColId id)  {
-			return this->getColumn(id)->getInt( this->getRow(row) );
+		inline int getInt(tRowId row , tColId id, GetSet flags = gsNone)  {
+			return this->getColumn(id)->getInt( this->getRow(row), flags);
 		}
-		inline bool setInt(tRowId rowId , tColId id , int val) {
+		inline bool setInt(tRowId rowId , tColId id , int val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
 			if (row) {
-				this->getColumn(id)->setInt(row , val );
+				return this->getColumn(id)->setInt(row , val, flags);
 			}
 			return row;
 		}
-		inline String getString(tRowId row , tColId id) {
-			return PassStringRef( this->getColumn(id)->getString( this->getRow(row) ) );
+		inline String getString(tRowId row , tColId id, GetSet flags = getCopy) {
+			return PassStringRef( this->getColumn(id)->getString( this->getRow(row), flags ) );
 		}
-		inline bool setString(tRowId rowId , tColId id , const StringRef& val) {
+		inline bool setString(tRowId rowId , tColId id , const StringRef& val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
 			if (row) {
-				this->getColumn(id)->setString(row, val);
+				return this->getColumn(id)->setString(row, val, flags);
 			}
 			return row;
 		}
 
-		inline ByteBuffer getBin(tRowId row , tColId id ) {
+		inline ByteBuffer getBin(tRowId row , tColId id, GetSet flags = getCopy) {
 			ByteBuffer b;
-			b.swap( this->getColumn(id)->getBin( this->getRow(row) ) );
+			b.swap( this->getColumn(id)->getBin( this->getRow(row), flags ) );
 			return b;
 		}
-		inline bool setBin(tRowId rowId , tColId id , const ByteBuffer& val) {
+		inline bool setBin(tRowId rowId , tColId id , const ByteBuffer& val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
 			if (row) {
-				this->getColumn(id)->setBin(row, val);
+				return this->getColumn(id)->setBin(row, val, flags);
 			}
 			return row;
 		}
 
-		inline __int64 get64(tRowId row , tColId id) {
-			return this->getColumn(id)->getInt64( this->getRow(row) );
+		inline __int64 get64(tRowId row , tColId id, GetSet flags = gsNone) {
+			return this->getColumn(id)->getInt64( this->getRow(row), flags );
 		}
-		inline bool set64(tRowId rowId , tColId id , __int64 val) {
+		inline bool set64(tRowId rowId , tColId id , __int64 val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
 			if (row) {
-				this->getColumn(id)->setInt64(row , val );
+				return this->getColumn(id)->setInt64(row , val, flags );
 			}
 			return row;
 		}
 
-		inline double getDouble(tRowId row , tColId id) {
-			return this->getColumn(id)->getDouble( this->getRow(row) );
+		inline double getDouble(tRowId row , tColId id, GetSet flags = gsNone) {
+			return this->getColumn(id)->getDouble( this->getRow(row), flags );
 		}
-		inline bool setDouble(tRowId rowId , tColId id , double val) {
+		inline bool setDouble(tRowId rowId , tColId id , double val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
 			if (row) {
-				this->getColumn(id)->setDouble(row , val );
+				return this->getColumn(id)->setDouble(row , val, flags );
 			}
 			return row;
 		}
@@ -281,13 +280,13 @@ namespace Stamina { namespace DT {
 			return _xor1_key;
 		}
 
-		static MD5Digest createPasswordDigest(const std::string& pass) {
-			return MD5Digest(pass);
+		static MD5Digest createPasswordDigest(const StringRef& pass) {
+			return MD5Digest(pass.a_str());
 		}
 
 		/**Generates password digest*/
-		void setPassword(const std::string& pass) {
-			setPasswordDigest(createPasswordDigest(pass));
+		void setPassword(const StringRef& pass) {
+			setPasswordDigest(createPasswordDigest(pass.a_str()));
 		}
 
 		/**Sets password digest*/
@@ -300,21 +299,21 @@ namespace Stamina { namespace DT {
 			return this->_passwordDigest;
 		}
 
-		inline bool paramExists(const std::string& name) {
+		inline bool paramExists(const StringRef& name) {
 			return _params.find(name) != _params.end();
 		}
 
-		inline CStdString getParam(const std::string& name) {
+		inline String getParam(const StringRef& name) {
 			if (!paramExists(name)) return "";
 			return _params[name];
 		}
 
-		inline const void setParam(const std::string& name, const std::string& value) {
+		inline const void setParam(const StringRef& name, const StringRef& value) {
 			_params[name] = value;
 			_changed = true;
 		}
 
-		inline void resetParam(const std::string& name) {
+		inline void resetParam(const StringRef& name) {
 			_changed = true;
 			_params.erase(name);
 		}

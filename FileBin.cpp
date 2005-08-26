@@ -97,7 +97,7 @@ namespace Stamina { namespace DT {
 		_xorDigest.addSalt(_xorSalt);
 	}
 
-	void FileBin::open (const std::string& fileToOpen , enFileMode mode) {
+	void FileBin::open (const StringRef& fileToOpen , enFileMode mode) {
 		this->close();
 
 		if (!fileToOpen.empty())
@@ -125,7 +125,7 @@ namespace Stamina { namespace DT {
 			int i = 0;
 			do {
 				_temp_fileName = _fileName + stringf(".[%d].tmp", ++i);
-			} while ( ! _access(_temp_fileName , 0));
+			} while ( ! _access(_temp_fileName.a_str() , 0));
 		} else {
 			_temp_fileName = "";
 		}
@@ -232,7 +232,7 @@ namespace Stamina { namespace DT {
 				}
 #endif
             }
-            if (!success) _unlink(_temp_fileName);
+			if (!success) _unlink(_temp_fileName.a_str());
 		}
 
 		_opened = fileClosed;
@@ -1108,7 +1108,7 @@ namespace Stamina { namespace DT {
 		return d;
 	}
 
-	FindFile::Found findLastBackup(const std::string& filename, Date64* time = 0) {
+	FindFile::Found findLastBackup(const StringRef& filename, Date64* time = 0) {
 		FindFileFiltered ff(getFileDirectory(filename, true) + "\\*.bak");
 		ff.setFileOnly();
 		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + RegEx::addSlashes(getFileName(filename)) + ")\\.(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
@@ -1127,7 +1127,7 @@ namespace Stamina { namespace DT {
 	}
 
 
-	void FileBin::backupFile(const std::string& filename, bool move) {
+	void FileBin::backupFile(const StringRef& filename, bool move) {
 		if (filename.empty()) throw DTException(errBadParameter);
 		if (move) {
 			MoveFileEx(filename.c_str(), makeBackupFilename(filename).c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
@@ -1144,24 +1144,24 @@ namespace Stamina { namespace DT {
 	}
 
 	struct BackupFound {
-		BackupFound(const Date64& date = Date64(), const std::string& file=""):date(date), file(file) {
+		BackupFound(const Date64& date = Date64(), const StringRef& file=""):date(date), file(file) {
 		}
-		bool operator == (const std::string& file) const {
+		bool operator == (const StringRef& file) const {
 			return this->file == file;
 		}
 		Date64 date;
-		std::string file;
+		String file;
 	};
 
 	struct FileBackups {
-		std::list<std::string> files; // wszystkie backupy
+		std::list<String> files; // wszystkie backupy
 		std::vector<BackupFound > found; // backupy wg. granic
 	};
 
-	void FileBin::cleanupBackups(const std::string& filename) {
+	void FileBin::cleanupBackups(const StringRef& filename) {
 
 
-		std::map<std::string, FileBackups> files;
+		std::map<String, FileBackups> files;
 		std::vector<Date64> range;
 
 		range.push_back(Time64(true) - (30 * 24 * 60 * 60)); // sprzed miesiaca
@@ -1176,11 +1176,11 @@ namespace Stamina { namespace DT {
 		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + (all ? std::string(".+\\.dtb") : RegEx::addSlashes(::Stamina::getFileName(filename))) + ").(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
 		ff.addFilter(re);
 		while (ff.find()) {
-			FileBackups& file = files[re->getSub(1)];
+			FileBackups& file = files[ StringRef(re->getSub(1)) ];
 			if (file.found.empty()) {
 				file.found.resize(range.size());
 			}
-			file.files.push_back(ff->getFileName());
+			file.files.push_back( StringRef( ff->getFileName() ) );
 			Date64 date = getBackupDate(re.getRE());
 
 			for (unsigned int i = 0; i < range.size(); ++i) {
@@ -1196,9 +1196,9 @@ namespace Stamina { namespace DT {
 		}
 
 		// usuwamy wszystko co jest na liscie plików a nie ma na liœcie zaakceptowanych
-		for (std::map<std::string, FileBackups>::iterator it = files.begin(); it != files.end(); ++it) {
+		for (std::map<String, FileBackups>::iterator it = files.begin(); it != files.end(); ++it) {
 			FileBackups& backups = it->second;
-			for (std::list<std::string>::iterator file = backups.files.begin(); file != backups.files.end(); ++file) {
+			for (std::list<String>::iterator file = backups.files.begin(); file != backups.files.end(); ++file) {
 				if (std::find(backups.found.begin(), backups.found.end(), *file) == backups.found.end()) { // nie ma go na liœcie znalezionych wiêc usuwamy...
 					DeleteFile(file->c_str());
 				}
@@ -1206,7 +1206,7 @@ namespace Stamina { namespace DT {
 		}
 	}
 
-	void FileBin::restoreBackup(const std::string& filename) {
+	void FileBin::restoreBackup(const StringRef& filename) {
 		if (filename.empty()) throw DTException(errBadParameter);
 		if (fileExists(filename.c_str()) == false) throw DTException(errFileNotFound);
 		std::string original = RegEx::doGet("/^(.+\\.dtb).\\d+-\\d+-\\d+ \\d+-\\d+-\\d+.bak$/i", filename.c_str(), 1);
@@ -1220,7 +1220,7 @@ namespace Stamina { namespace DT {
 
 
 
-	bool FileBin::restoreLastBackup(const std::string& filename) {
+	bool FileBin::restoreLastBackup(const StringRef& filename) {
 		// szukamy backupów
 		FindFile::Found found = DT::findLastBackup(filename.empty() ? this->_fileName : filename);
 		if (found.empty()) return false;
@@ -1228,12 +1228,12 @@ namespace Stamina { namespace DT {
 		return true;
 	}
 
-	Date64 FileBin::findLastBackupDate(const std::string& filename) {
+	Date64 FileBin::findLastBackupDate(const StringRef& filename) {
 		Date64 date;
 		DT::findLastBackup(filename.empty() ? this->_fileName : filename, &date);
 		return date;
 	}
-	std::string FileBin::findLastBackupFile(const std::string& filename) {
+	String FileBin::findLastBackupFile(const StringRef& filename) {
 		return DT::findLastBackup(filename.empty() ? this->_fileName : filename).getFileName();
 	}
 

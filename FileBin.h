@@ -88,7 +88,7 @@ namespace Stamina { namespace DT {
 		virtual void reset();
 
 
-		void open (const std::string& fn , enFileMode mode) throw (...);
+		void open (const StringRef& fn , enFileMode mode) throw (...);
 		void close ();
 
 		virtual void readRows(bool skipFailed) throw (...); // wczytuje wiersze
@@ -109,13 +109,13 @@ namespace Stamina { namespace DT {
 			return (_fileFlag & flag) != 0;
 		}
 
-		std::string getOpenedFileName() {
+		String getOpenedFileName() {
 			if (! _temp_fileName.empty())
 				return _temp_fileName;
 			else
 				return _fileName;
 		}
-		std::string getFileName() {
+		String getFileName() {
             return _fileName;
 		}
 		bool isUsingTemp() {
@@ -242,29 +242,29 @@ namespace Stamina { namespace DT {
 		}
 
 		/**Creates a backup of specified file*/
-		void backupFile(const std::string& filename, bool move);
+		void backupFile(const StringRef& filename, bool move);
 		/**Creates a backup of the file we are currently operating on...
 		This function automatically determines if backup is really needed, and sets lastBackupTime property.
 		*/
 		void backupFile(bool move = true);
 
-		static std::string makeBackupFilename(const std::string& filename, const Time64& time = Time64(true)) {
+		static String makeBackupFilename(const StringRef& filename, const Time64& time = Time64(true)) {
 			return filename + time.strftime(".%d-%m-%Y %H-%M-%S.bak");
 		}
 
 		/** Removes old backups leaving only few of them.
 		@param filename - If it points to .dtb file, only backups of these file are cleaned. Otherwise it cleans up whole directory.
 		*/
-		static void cleanupBackups(const std::string& filename);
+		static void cleanupBackups(const StringRef& filename);
 
 		/** Restores specified backup file to it's original filename */
-		static void restoreBackup(const std::string& filename);
+		static void restoreBackup(const StringRef& filename);
 
 		/** Restores latest backup of specified filename */
-		bool restoreLastBackup(const std::string& filename = "");
+		bool restoreLastBackup(const StringRef& filename = "");
 
-		Date64 findLastBackupDate(const std::string& filename = "");
-		std::string findLastBackupFile(const std::string& filename = "");
+		Date64 findLastBackupDate(const StringRef& filename = "");
+		String findLastBackupFile(const StringRef& filename = "");
 
 	public:
 
@@ -297,7 +297,7 @@ namespace Stamina { namespace DT {
 		unsigned int _xorSalt;
 
 		bool _temp_enabled;
-		CStdString _temp_fileName; // Podczas uzywania tempa plik z ... tempem :)
+		String _temp_fileName; // Podczas uzywania tempa plik z ... tempem :)
 
 		unsigned int _fileSize;
 

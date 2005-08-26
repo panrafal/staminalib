@@ -20,7 +20,7 @@ namespace Stamina { namespace DT {
 
 	// ---------------------------------------------------  ColumnsDesc
 
-	oColumn colUndefined = new Column_undefined();
+	StaticObj<Column_undefined> colUndefined;
 
     ColumnsDesc::operator = (const ColumnsDesc & x) {
 		_cols.resize(x._cols.size());
@@ -37,7 +37,7 @@ namespace Stamina { namespace DT {
         int resize = _cols.size();
         _cols.resize(count + resize, 0);
 		for (int i = resize; i < count + resize; ++i) {
-			_cols[i] = colUndefined;
+			_cols[i] = colUndefined.get();
 		}
         return _cols.size();
     } // ustawia ilosc kolumn

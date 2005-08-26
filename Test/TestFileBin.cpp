@@ -61,10 +61,10 @@ protected:
 	tRowId row2;
 	tRowId row3;
 
-	std::string testString1, testStringDef;
-	std::string testString2;
-	std::string testString3;
-	std::wstring testWide, testWideDef;
+	String testString1, testStringDef;
+	String testString2;
+	String testString3;
+	String testWide, testWideDef;
 
 	std::string password;
 	bool cryptAll;
@@ -72,10 +72,10 @@ protected:
 
 	int testInt, testIntDef;
 	__int64 test64, test64Def;
-	TypeBin testBin, testBinDef;
+	ByteBuffer testBin, testBinDef;
 
 	char buffer [50];
-	TypeBin binBuffer;
+	ByteBuffer binBuffer;
 
 public:
 
@@ -86,8 +86,7 @@ public:
 		cryptAll = false;
 		password = "";
 
-		binBuffer.size = 50;
-		binBuffer.buff = buffer;
+		binBuffer.assign((unsigned char*)buffer, 50);
 
 		row1 = DataTable::flagId(1);
 		row2 = DataTable::flagId(2);
@@ -97,10 +96,8 @@ public:
 		testIntDef = 1000;
 		test64 = 0xFF00000000;
 		test64Def = 0xAA00000001;
-		testBin.size = 10;
-		testBin.buff = "1234567890";
-		testBinDef.size = 5;
-		testBinDef.buff = "12345";
+		testBin.assign((unsigned char*)"1234567890", 10);
+		testBinDef.assign((unsigned char*)"12345", 5);
 		testString1 = "sadhgasd gadshagd asdgsh dgsajhag dshgd";
 		testString2 = "4u535873658653875637856345876345g dshgd";
 		testString3 = "AAHSGAJSGASJGASJGJSGASGJSGASHGSHAGSHGSAG";
@@ -109,23 +106,23 @@ public:
 		testWide = L"¥Œê¹œ¹ê¹œ¹ó³ñ¿ŸSDSAJDHSDY WSADSJDH ";
 		testWideDef = L"D¹FAULT";
 
-		_colsNoExtra.setColumn(colInt, ctypeInt , 0, "Int");
-		_colsNoExtra.setColumn(colIntDef, ctypeInt | cflagXor, (DataEntry) testIntDef, "IntDef");
+		_colsNoExtra.setColumn(colInt, ctypeInt , "Int");
+		_colsNoExtra.setColumn(colIntDef, ctypeInt | cflagXor, "IntDef")->setInt(rowDefault, testIntDef);
 		_colsNoExtra.setColumn(1000, ctypeInt | cflagDontSave);
-		_colsNoExtra.setColumn(colString, ctypeString, 0, "String");
-		_colsNoExtra.setColumn(colStringDef, ctypeString | cflagXor, (void*)testStringDef.c_str(), "StringDef");
-		_colsNoExtra.setColumn(colWide, ctypeWideString, 0, "Wide");
-		_colsNoExtra.setColumn(colWideDef, ctypeWideString | cflagXor, (void*)testWideDef.c_str(), "WideDef");
+		_colsNoExtra.setColumn(colString, ctypeString, "String");
+		_colsNoExtra.setColumn(colStringDef, ctypeString | cflagXor, "StringDef")->setString(rowDefault, testStringDef);
+		_colsNoExtra.setColumn(colWide, ctypeString, "Wide");
+		_colsNoExtra.setColumn(colWideDef, ctypeString | cflagXor, "WideDef")->setString(rowDefault, testWideDef);
 		_colsNoExtra.setColumn(1001, ctypeString | cflagDontSave);
-		_colsNoExtra.setColumn(col64, ctype64, 0, "64");
-		_colsNoExtra.setColumn(col64Def, ctype64 | cflagXor, &test64Def, "64Def");
+		_colsNoExtra.setColumn(col64, ctype64, "64");
+		_colsNoExtra.setColumn(col64Def, ctype64 | cflagXor, "64Def")->setInt64(rowDefault, test64Def);
 		_colsNoExtra.setColumn(1002, ctype64 | cflagDontSave);
-		_colsNoExtra.setColumn(colBin, ctypeBin, 0, "Bin");
-		_colsNoExtra.setColumn(colBinDef, ctypeBin | cflagXor, &testBinDef, "BinDef");
+		_colsNoExtra.setColumn(colBin, ctypeBin, "Bin");
+		_colsNoExtra.setColumn(colBinDef, ctypeBin | cflagXor, "BinDef")->setBin(rowDefault, testBinDef);
 		_colsNoExtra.setColumn(1003, ctypeBin | cflagDontSave);
 
 		_cols.join(_colsNoExtra, false);
-		_cols.setColumn(colExtra, ctypeString, (DataEntry)"!!!!!!EXTRA!!!!!!");
+		_cols.setColumn(colExtra, ctypeString)->setString(rowDefault, "!!!!!!EXTRA!!!!!!");
 	}
 	void setUp() {
 	}
@@ -151,11 +148,11 @@ protected:
 		dt.setInt(row1, colInt, testInt);
 		dt.set64(row1, col64, test64);
 		dt.setBin(row1, colBin, testBin);
-		dt.setStr(row1, colString, testString1);
-		dt.setStr(row1, colStringDef, testString2);
-		dt.setWStr(row1, colWide, testWide);
-		dt.setStr(row2, colString, testString2);
-		dt.setStr(row3, colString, testString3);
+		dt.setString(row1, colString, testString1);
+		dt.setString(row1, colStringDef, testString2);
+		dt.setString(row1, colWide, testWide);
+		dt.setString(row2, colString, testString2);
+		dt.setString(row3, colString, testString3);
 
 		FileBin fb;
 		fb.assign(dt);
@@ -209,7 +206,7 @@ protected:
 
 		DataTable dt;
 		tColId colString2 = 100;
-		dt.setColumn(colString2, ctypeString | cflagXor, (DataEntry) testStringDef.c_str());
+		dt.setColumn(colString2, ctypeString | cflagXor)->setString(rowDefault, testStringDef);
 
 		dt.mergeColumns(_colsNoExtra);
 
@@ -219,27 +216,27 @@ protected:
 		fbl.assign(dt);
 		CPPUNIT_ASSERT( fbl.load(getFileName("testLoad")) == success );
 
-		CPPUNIT_ASSERT( dt.getColumns().getColumn(colExtra).hasFlag(cflagIsLoaded) );
-		CPPUNIT_ASSERT( dt.getColumns().getColumn(colString).hasFlag(cflagIsDefined) );
+		CPPUNIT_ASSERT( dt.getColumns().getColumn(colExtra)->hasFlag(cflagIsLoaded) );
+		CPPUNIT_ASSERT( dt.getColumns().getColumn(colString)->hasFlag(cflagIsDefined) );
 
 		CPPUNIT_ASSERT( fbl.hasFileFlag(FileBin::fflagCryptAll) == cryptAll );
 
-		CPPUNIT_ASSERT_EQUAL( testString1, dt.getStr(row1, colString) );
-		CPPUNIT_ASSERT_EQUAL( testString2, dt.getStr(row1, colStringDef) );
-		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getStr(row2, colStringDef) );
-		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getStr(row2, colString2) );
-		CPPUNIT_ASSERT_EQUAL( testWide, dt.getWStr(row1, colWide) );
-		CPPUNIT_ASSERT_EQUAL( testWideDef, dt.getWStr(row1, colWideDef) );
+		CPPUNIT_ASSERT_EQUAL( testString1, dt.getString(row1, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt.getString(row1, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getString(row2, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getString(row2, colString2) );
+		CPPUNIT_ASSERT_EQUAL( testWide, dt.getString(row1, colWide) );
+		CPPUNIT_ASSERT_EQUAL( testWideDef, dt.getString(row1, colWideDef) );
 		CPPUNIT_ASSERT_EQUAL( testInt, dt.getInt(row1, colInt) );
 		CPPUNIT_ASSERT_EQUAL( test64, dt.get64(row1, col64) );
-		CPPUNIT_ASSERT( dt.getBin(row1, colBin, binBuffer) == testBin );
+		CPPUNIT_ASSERT( dt.getBin(row1, colBin) == testBin );
 		CPPUNIT_ASSERT_EQUAL( testIntDef, dt.getInt(row1, colIntDef) );
 		CPPUNIT_ASSERT_EQUAL( test64Def, dt.get64(row1, col64Def) );
-		CPPUNIT_ASSERT( dt.getBin(row1, colBinDef, binBuffer) == testBinDef );
+		CPPUNIT_ASSERT( dt.getBin(row1, colBinDef) == testBinDef );
 
-		dt.setStr(row1, colString, testString2);
-		dt.setStr(row2, colString2, testString2);
-		dt.setStr(row1, colWide, testString1);
+		dt.setString(row1, colString, testString2);
+		dt.setString(row2, colString2, testString2);
+		dt.setString(row1, colWide, testString1);
 
 		FileBin fbs;
 		fbs.assign(dt);
@@ -255,11 +252,11 @@ protected:
 
 		CPPUNIT_ASSERT( fbl2.hasFileFlag(FileBin::fflagCryptAll) == cryptAll );
 
-		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row1, colString) );
-		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row1, colStringDef) );
-		CPPUNIT_ASSERT_EQUAL( testStringDef, dt2.getStr(row2, colStringDef) );
-		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row2, colString2) );
-		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getStr(row1, colWide) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getString(row1, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getString(row1, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testStringDef, dt2.getString(row2, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getString(row2, colString2) );
+		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getString(row1, colWide) );
 
 	}
 
@@ -270,7 +267,7 @@ protected:
 		DataTable dt;
 		dt.setPassword(password);
 		tColId colString2 = 100;
-		dt.setColumn(colString2, ctypeString | cflagXor, (DataEntry) testStringDef.c_str());
+		dt.setColumn(colString2, ctypeString | cflagXor)->setString(rowDefault, testStringDef);
 		dt.mergeColumns(_colsNoExtra);
 
 		tRowId rowA = DataTable::flagId( 100 );
@@ -279,9 +276,9 @@ protected:
 		dt.addRow(rowA);
 		dt.addRow(rowB);
 
-		dt.setStr(rowA, colString, testString1);
-		dt.setStr(rowB, colString, testString2);
-		dt.setStr(rowA, colString2, testString3);
+		dt.setString(rowA, colString, testString1);
+		dt.setString(rowB, colString, testString2);
+		dt.setString(rowA, colString2, testString3);
 
 		FileBin fba;
 		fba.assign(dt);
@@ -301,23 +298,23 @@ protected:
 		CPPUNIT_ASSERT( fbl2.hasFileFlag(FileBin::fflagCryptAll) == cryptAll );
 		CPPUNIT_ASSERT_EQUAL( (unsigned int)5, dt2.getRowCount() );
 
-		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getStr(row1, colString) );
-		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(row1, colStringDef) );
-		CPPUNIT_ASSERT_EQUAL( testStringDef, dt2.getStr(row2, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getString(row1, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getString(row1, colStringDef) );
+		CPPUNIT_ASSERT_EQUAL( testStringDef, dt2.getString(row2, colStringDef) );
 
-		CPPUNIT_ASSERT( dt2.getColumns().getColumn(colString2).empty() );
+		CPPUNIT_ASSERT( dt2.getColumns().getColumn(colString2)->isUndefined() );
 
-		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getStr(rowA, colString) );
-		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getStr(rowB, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getString(rowA, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getString(rowB, colString) );
 
 
-		CPPUNIT_ASSERT_EQUAL( testWide, dt2.getWStr(row1, colWide) );
+		CPPUNIT_ASSERT_EQUAL( testWide, dt2.getString(row1, colWide) );
 		CPPUNIT_ASSERT_EQUAL( testInt, dt2.getInt(row1, colInt) );
-		CPPUNIT_ASSERT( dt2.getBin(row1, colBin, binBuffer) == testBin );
+		CPPUNIT_ASSERT( dt2.getBin(row1, colBin) == testBin );
 
-		CPPUNIT_ASSERT_EQUAL( testWideDef, dt2.getWStr(rowA, colWideDef) );
+		CPPUNIT_ASSERT_EQUAL( testWideDef, dt2.getString(rowA, colWideDef) );
 		CPPUNIT_ASSERT_EQUAL( testIntDef, dt2.getInt(rowA, colIntDef) );
-		CPPUNIT_ASSERT( dt2.getBin(rowA, colBinDef, binBuffer) == testBinDef );
+		CPPUNIT_ASSERT( dt2.getBin(rowA, colBinDef) == testBinDef );
 
 	}
 
@@ -342,9 +339,9 @@ protected:
 		fb2.assign(dt2);
 		fb2.load(getFileName("testErased"));
 
-		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getStr(0, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getString(0, colString) );
 		// jako drugi powinien zl¹dowaæ poprzedni trzeci...
-		CPPUNIT_ASSERT_EQUAL( testString3, dt2.getStr(1, colString) );
+		CPPUNIT_ASSERT_EQUAL( testString3, dt2.getString(1, colString) );
 		CPPUNIT_ASSERT_EQUAL( (unsigned int)2, dt2.getRowCount() );
 		
 	}
@@ -381,7 +378,7 @@ protected:
 			for (i = 0; i < stressCount; i++) {
 				tRowId row = dt1.addRow(i == 0 ? startRow : rowNotFound);
 				dt1.setInt(row, colInt, i);
-				dt1.setStr(row, colString, inttostr(i));
+				dt1.setString(row, colString, inttostr(i));
 				cp.doStep();
 			}
 			fb1.save(getFileName("testStress"));
@@ -400,7 +397,7 @@ protected:
 			for (; i < 2 * stressCount; i++) {
 				tRowId row = dt2.addRow();
 				dt2.setInt(row, colInt, i);
-				dt2.setStr(row, colString, inttostr(i));
+				dt2.setString(row, colString, inttostr(i));
 				cp.doStep();
 			}
 			ConsoleProgress cp2(0, appendCount);
@@ -436,7 +433,7 @@ protected:
 					fb3.readRow(row, false);
 					cp.doStep();
 					read = dt3.getInt(row, colInt);
-					if (dt3.getInt(row, colInt) != i || dt3.getStr(row, colString) != inttostr(i) || dt3.getStr(row, colStringDef) != testStringDef || dt3.getWStr(row, colWideDef) != testWideDef) {
+					if (dt3.getInt(row, colInt) != i || dt3.getString(row, colString) != inttostr(i) || dt3.getString(row, colStringDef) != testStringDef || dt3.getString(row, colWideDef) != testWideDef) {
 						failed = i;
 						break;
 					}
@@ -459,10 +456,10 @@ protected:
 			CPPUNIT_ASSERT( fb.loadAll("TestFileBinOld.dtb") == success );
 			CPPUNIT_ASSERT_EQUAL( (unsigned int) 3, dt.getRowCount() );
 
-			CPPUNIT_ASSERT_EQUAL( string("Kontakt 0"), dt.getStr(0, dt.getColumnId("Display")) );
-			CPPUNIT_ASSERT_EQUAL( string("Imiê 0"), dt.getStr(0, dt.getColumnId("Name")) );
-			CPPUNIT_ASSERT_EQUAL( string("Kontakt 2"), dt.getStr(2, dt.getColumnId("Display")) );
-			CPPUNIT_ASSERT_EQUAL( string("Imiê 2"), dt.getStr(2, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( String("Kontakt 0"), dt.getString(0, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( String("Imiê 0"), dt.getString(0, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( String("Kontakt 2"), dt.getString(2, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( String("Imiê 2"), dt.getString(2, dt.getColumnId("Name")) );
 
 			FileBin fb2(dt);
 			fb2.setFileFlag(FileBin::fflagCryptAll, cryptAll);
@@ -484,10 +481,10 @@ protected:
 		
 		CPPUNIT_ASSERT_EQUAL( (unsigned int) 3, dt3.getRowCount() );
 
-		CPPUNIT_ASSERT_EQUAL( string("Kontakt 0"), dt3.getStr(0, dt3.getColumnId("Display")) );
-		CPPUNIT_ASSERT_EQUAL( string("Imiê 0"), dt3.getStr(0, dt3.getColumnId("Name")) );
-		CPPUNIT_ASSERT_EQUAL( string("Kontakt 2"), dt3.getStr(2, dt3.getColumnId("Display")) );
-		CPPUNIT_ASSERT_EQUAL( string("Imiê 2"), dt3.getStr(2, dt3.getColumnId("Name")) );
+		CPPUNIT_ASSERT_EQUAL( String("Kontakt 0"), dt3.getString(0, dt3.getColumnId("Display")) );
+		CPPUNIT_ASSERT_EQUAL( String("Imiê 0"), dt3.getString(0, dt3.getColumnId("Name")) );
+		CPPUNIT_ASSERT_EQUAL( String("Kontakt 2"), dt3.getString(2, dt3.getColumnId("Display")) );
+		CPPUNIT_ASSERT_EQUAL( String("Imiê 2"), dt3.getString(2, dt3.getColumnId("Name")) );
 
 	}
 
@@ -502,11 +499,11 @@ protected:
 			fb.loadAll(getFileName("testOldAppend"));
 		}
 		// zmieniamy minimalnie...
-		dt.setStr(1, dt.getColumnId("Display"), "Kontakt zmieniony");
-		dt.setStr(1, dt.getColumnId("Name"), "Imiê zmienione");
+		dt.setString(1, dt.getColumnId("Display"), "Kontakt zmieniony");
+		dt.setString(1, dt.getColumnId("Name"), "Imiê zmienione");
 		tRowId row = dt.insertRow(0);
-		dt.setStr(row, dt.getColumnId("Display"), "Kontakt dodany");
-		dt.setStr(row, dt.getColumnId("Name"), "Imiê dodane");
+		dt.setString(row, dt.getColumnId("Display"), "Kontakt dodany");
+		dt.setString(row, dt.getColumnId("Name"), "Imiê dodane");
 		{
 			FileBin fb(dt);
 			fb.append(getFileName("testOldAppend"));
@@ -518,12 +515,12 @@ protected:
 			fb.load(getFileName("testOldAppend"));
 			CPPUNIT_ASSERT_EQUAL( (unsigned int) 7, dt.getRowCount() );
 
-			CPPUNIT_ASSERT_EQUAL( string("Kontakt 0"), dt.getStr(0, dt.getColumnId("Display")) );
-			CPPUNIT_ASSERT_EQUAL( string("Imiê 0"), dt.getStr(4, dt.getColumnId("Name")) );
-			CPPUNIT_ASSERT_EQUAL( string("Kontakt 2"), dt.getStr(2, dt.getColumnId("Display")) );
-			CPPUNIT_ASSERT_EQUAL( string("Imiê 2"), dt.getStr(6, dt.getColumnId("Name")) );
-			CPPUNIT_ASSERT_EQUAL( string("Kontakt dodany"), dt.getStr(3, dt.getColumnId("Display")) );
-			CPPUNIT_ASSERT_EQUAL( string("Imiê zmienione"), dt.getStr(5, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( String("Kontakt 0"), dt.getString(0, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( String("Imiê 0"), dt.getString(4, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( String("Kontakt 2"), dt.getString(2, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( String("Imiê 2"), dt.getString(6, dt.getColumnId("Name")) );
+			CPPUNIT_ASSERT_EQUAL( String("Kontakt dodany"), dt.getString(3, dt.getColumnId("Display")) );
+			CPPUNIT_ASSERT_EQUAL( String("Imiê zmienione"), dt.getString(5, dt.getColumnId("Name")) );
 		}
 	}
 
@@ -533,7 +530,7 @@ protected:
 		DataTable dt;
 		dt.setPassword(password);
 		FileBin fb(dt);
-		dt.setColumn(colString, ctypeInt, (DataEntry)testIntDef);
+		dt.setColumn(colString, ctypeInt)->setInt(rowDefault, testIntDef);
 		fb.load(getFileName("testChangeType"));
 		// powinien zignorowaæ zawartoœæ pliku i u¿yæ wartoœci domyœlnej...
 		CPPUNIT_ASSERT_EQUAL( testIntDef, dt.getInt(0, colString) );
@@ -547,9 +544,9 @@ protected:
 		FileBin fb(dt);
 		fb.useTempFile = true;
 		fb.loadAll(getFileName("testTemporary"));
-		CPPUNIT_ASSERT_EQUAL(testString1, dt.getStr(row1, colString));
+		CPPUNIT_ASSERT_EQUAL(testString1, dt.getString(row1, colString));
 		// skoro jest za³adowane próbujemy nieudanego zapisu
-		dt.setStr(row1, colString, testString2);
+		dt.setString(row1, colString, testString2);
 		fb.open(getFileName("testTemporary"), fileWrite);
 		fb.setWriteFailed(true);
 		CPPUNIT_ASSERT(fb._temp_enabled == true);
@@ -566,12 +563,12 @@ protected:
 		}
 
 		fb.loadAll(getFileName("testTemporary"));
-		CPPUNIT_ASSERT_EQUAL(testString1, dt.getStr(row1, colString));
-		dt.setStr(row1, colString, testString2);
+		CPPUNIT_ASSERT_EQUAL(testString1, dt.getString(row1, colString));
+		dt.setString(row1, colString, testString2);
 		fb.useTempFile = true;
 		fb.save();
 		fb.loadAll();
-		CPPUNIT_ASSERT_EQUAL(testString2, dt.getStr(row1, colString));
+		CPPUNIT_ASSERT_EQUAL(testString2, dt.getString(row1, colString));
 	}
 
 	/* 
@@ -589,7 +586,7 @@ protected:
 		dt.setPassword(password);
 		FileBin fb(dt);
 		fb.loadAll(filename);
-		dt.setStr(row1, colString, testString2);
+		dt.setString(row1, colString, testString2);
 		fb.useTempFile = false;
 		fb.makeBackups = true;
 		// backup bez tempa
@@ -616,13 +613,13 @@ protected:
 		CPPUNIT_ASSERT(backup.empty() == false);
 		// sprawdzamy wyszukiwanie najnowszych...
 		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - 120).strftime(".%d-%m-%Y %H-%M-%S.bak")).c_str(), false);
-		CPPUNIT_ASSERT_EQUAL(backup, fb.findLastBackupFile());
+		CPPUNIT_ASSERT_EQUAL(String(backup), fb.findLastBackupFile());
 
 		// przywracanie
 		createFile("testBackup");
 		fb.restoreLastBackup();
 		fb.loadAll();
-		CPPUNIT_ASSERT_EQUAL(testString2, dt.getStr(row1, colString));
+		CPPUNIT_ASSERT_EQUAL(testString2, dt.getString(row1, colString));
 
 	}
 

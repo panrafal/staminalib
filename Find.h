@@ -25,17 +25,17 @@ namespace Stamina { namespace DT {
 			eq, neq, gt, gteq, lt, lteq
 		};
 
-		inline Find(Operation operation, tColId col, const oValue& value):operation(operation), col(col), value(value) {}
+		inline Find(Operation operation, const oColumn& col, const oValue& value):operation(operation), col(col), value(value) {}
 
-		static inline Find EqStr(tColId col, const StringRef& str) {
+		static inline Find EqStr(const oColumn& col, const StringRef& str) {
 			return Find(eq, col, new Value_string(str));
 		}
-		static inline Find EqInt(tColId col, int value) {
+		static inline Find EqInt(const oColumn& col, int value) {
 			return Find(eq, col, new Value_int(value));
 		}
 
 		Operation operation;
-		tColId col;
+		oColumn col;
 		oValue value;
 	};
 

@@ -221,9 +221,18 @@ namespace Stamina { namespace DT {
 			if (row == rowDefault) {
 				return _default;
 			} else if (row != 0) {
-				tData data = (tData) row->castStaticObject<const DataRow>()->getData(this->_index);
-				if (useDefault && this->isStaticType() == false && data == 0) {
-					data = _default;
+				tData data;
+				if (this->isStaticType()) {
+					if (useDefault && row->castStaticObject<const DataRow>()->hasColumnSlot(this->_index) == false) {
+						data = _default;
+					} else {
+						data = (tData) row->castStaticObject<const DataRow>()->getData(this->_index);
+					}
+				} else {
+					data = (tData) row->castStaticObject<const DataRow>()->getData(this->_index);
+					if (useDefault && data == 0) {
+						data = _default;
+					}
 				}
 				return data;
 			}
@@ -265,6 +274,7 @@ namespace Stamina { namespace DT {
 					return false;
 				}
 			}
+			if (!this->convertible(FROM::type, true)) return false;
 			if (this->_preTrigger.empty() == false) {
 				this->_preTrigger(this, row, flags);
 			}
