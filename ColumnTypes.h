@@ -26,11 +26,14 @@ namespace Stamina { namespace DT {
 	public:
 
 		STAMINA_OBJECT_CLASS(DT::Column_undefined, Column);
-		STAMINA_OBJECT_CLONEABLE();
 
 		Column_undefined() {
 			_type = ctypeUnknown;
 			this->init(0, colNotFound, cflagNone, "");
+		}
+
+		virtual iObject* cloneObject() const {
+			return const_cast<Column_undefined*>( this );
 		}
 
 		virtual void reset(iRow* row) const {}

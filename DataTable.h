@@ -57,11 +57,13 @@ namespace Stamina { namespace DT {
 
 		// rows
 		tRowId DataTable::getRowId(unsigned int row) const {
+	        LockerCS lock(_cs);
 			if (isRowId(row)) return row;
 			if (row >= this->getRowCount()) return rowNotFound;
 			return flagId(_rows[row]->getId());
 		}
 		tRowId DataTable::getRowPos(tRowId row) const {
+	        LockerCS lock(_cs);
 			if (!isRowId(row)) return row;
 			for (unsigned int i=0; i < _rows.size(); i++)
 				if (_rows[i]->getId() == row) return i;
@@ -88,6 +90,7 @@ namespace Stamina { namespace DT {
 		bool deleteRow(tRowId row);
 
 		inline unsigned int getRowCount() const {
+	        LockerCS lock(_cs);
 			return _rows.size();
 		}
 
@@ -96,6 +99,7 @@ namespace Stamina { namespace DT {
 		void clearRows();
 
 		tRowId getNewRowId() {
+	        LockerCS lock(_cs);
 	        _lastId++;
 			if (_lastId > rowIdMax) _lastId = rowIdMin;
 			// Je¿eli wiersz z tym id ju¿ istnieje - szukamy nowego...
@@ -213,17 +217,21 @@ namespace Stamina { namespace DT {
 		}
 
 		void clearColumns() {
+			if (_rows.size() > 0) return;
 			this->_cols.clear();
 		}
 
 		void mergeColumns(const ColumnsDesc& columns) {
+			if (_rows.size() > 0) return;
 			this->_cols.join(columns, false);
 		}
 
 		inline oColumn setColumn (tColId id , enColumnType type , const char * name="") {
+			if (_rows.size() > 0) return oColumn();
 			return _cols.setColumn(id, type, name);
 		}
 		inline oColumn setUniqueCol (const char * name , enColumnType type) {
+			if (_rows.size() > 0) return oColumn();
 			return _cols.setUniqueCol(name, type);
 		}
 
@@ -244,10 +252,12 @@ namespace Stamina { namespace DT {
 		}
 
 		void setChanged() {
+	        LockerCS lock(_cs);
 			_changed = true;
 		}
 
 		bool isChanged() {
+	        LockerCS lock(_cs);
 			return _changed;
 		}
 
@@ -274,6 +284,7 @@ namespace Stamina { namespace DT {
 		//bool setValue(tRowId row, tColId col, const Value& value, bool dropDefault=false);
 
 		inline void setXor1Key(char* key) {
+	        LockerCS lock(_cs);
 			_xor1_key = (unsigned char*) key;
 		}
 		inline const unsigned char* getXor1Key() {
@@ -291,6 +302,7 @@ namespace Stamina { namespace DT {
 
 		/**Sets password digest*/
 		void setPasswordDigest(const MD5Digest& digest) {
+	        LockerCS lock(_cs);
 			this->_passwordDigest = digest;
 			this->_changed = true;
 		}
@@ -300,30 +312,36 @@ namespace Stamina { namespace DT {
 		}
 
 		inline bool paramExists(const StringRef& name) {
+	        LockerCS lock(_cs);
 			return _params.find(name) != _params.end();
 		}
 
 		inline String getParam(const StringRef& name) {
+	        LockerCS lock(_cs);
 			if (!paramExists(name)) return "";
 			return _params[name];
 		}
 
 		inline const void setParam(const StringRef& name, const StringRef& value) {
+	        LockerCS lock(_cs);
 			_params[name] = value;
 			_changed = true;
 		}
 
 		inline void resetParam(const StringRef& name) {
+	        LockerCS lock(_cs);
 			_changed = true;
 			_params.erase(name);
 		}
 
 		inline void resetParams() {
+	        LockerCS lock(_cs);
 			_changed = true;
 			_params.clear();
 		}
 
-		const tParams getParamsMap() {
+		const tParams& getParamsMap() {
+	        LockerCS lock(_cs);
 			return _params;
 		}
 

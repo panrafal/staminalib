@@ -801,6 +801,8 @@ namespace Stamina { namespace DT {
 				throw DTFileException();
 
 			oDataRow rowObj = _table->getRow(row);
+			ObjLocker l(rowObj);
+			
 
 			unsigned int rowSize = 0;
 
@@ -1047,14 +1049,14 @@ namespace Stamina { namespace DT {
 			}
 
 			if (codePage == -1) { //Unicode
-				readCryptedData(col, val.useBuffer<wchar_t>(length), length, decrement);
-				val.releaseBuffer<wchar_t>(length);
+				readCryptedData(col, val.useBuffer<wchar_t>(length / 2), length, decrement);
+				val.releaseBuffer<wchar_t>(length / 2);
 			} else {
 				char * buffer = val.useBuffer<char>(length);
 				readCryptedData(col, buffer, length, decrement);
 				val.releaseBuffer<char>(length);
 				if (codePage == GetACP()) {
-					val.assignCheapReference( buffer, length);
+					//val.assignCheapReference( buffer, length);
 				} else {
 					val.assign( toUnicode(buffer, codePage) );
 				}
@@ -1081,7 +1083,7 @@ namespace Stamina { namespace DT {
 			writeData(&length, 4, increment);
 			if (length > 0) {
 				writeData(&codepage, 4, increment);
-				writeCryptedData(col, buffer, length, increment);
+				writeCryptedData(col, buffer, length - 4, increment);
 			}
 		} else {
 			unsigned int length = val.getDataSize<char>();

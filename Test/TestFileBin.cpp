@@ -66,6 +66,11 @@ protected:
 	String testString3;
 	String testWide, testWideDef;
 
+	String param1;
+	String param2;
+	String paramValue1;
+	String paramValue2;
+
 	std::string password;
 	bool cryptAll;
 
@@ -103,6 +108,11 @@ public:
 		testString3 = "AAHSGAJSGASJGASJGJSGASGJSGASHGSHAGSHGSAG";
 		testStringDef = "DEFAULT";
 
+		param1 = "Param1";
+		param2 = L"Param2";
+		paramValue1 = "Value1¹æ";
+		paramValue2 = L"Value2¹æ";
+
 		testWide = L"¥Œê¹œ¹ê¹œ¹ó³ñ¿ŸSDSAJDHSDY WSADSJDH ";
 		testWideDef = L"D¹FAULT";
 
@@ -122,7 +132,7 @@ public:
 		_colsNoExtra.setColumn(1003, ctypeBin | cflagDontSave);
 
 		_cols.join(_colsNoExtra, false);
-		_cols.setColumn(colExtra, ctypeString)->setString(rowDefault, "!!!!!!EXTRA!!!!!!");
+		_cols.setColumn(colExtra, ctypeString)->setString(rowDefault, L"!!!!!!EXTRA!!!!!!");
 	}
 	void setUp() {
 	}
@@ -153,6 +163,9 @@ protected:
 		dt.setString(row1, colWide, testWide);
 		dt.setString(row2, colString, testString2);
 		dt.setString(row3, colString, testString3);
+
+		dt.setParam(param1, paramValue1);
+		dt.setParam(param2, paramValue2);
 
 		FileBin fb;
 		fb.assign(dt);
@@ -234,9 +247,14 @@ protected:
 		CPPUNIT_ASSERT_EQUAL( test64Def, dt.get64(row1, col64Def) );
 		CPPUNIT_ASSERT( dt.getBin(row1, colBinDef) == testBinDef );
 
+		CPPUNIT_ASSERT_EQUAL( paramValue1, dt.getParam(param1) );
+		CPPUNIT_ASSERT_EQUAL( paramValue2, dt.getParam(param2) );
+
 		dt.setString(row1, colString, testString2);
 		dt.setString(row2, colString2, testString2);
 		dt.setString(row1, colWide, testString1);
+
+		dt.setParam(param1, paramValue2);
 
 		FileBin fbs;
 		fbs.assign(dt);
@@ -257,6 +275,8 @@ protected:
 		CPPUNIT_ASSERT_EQUAL( testStringDef, dt2.getString(row2, colStringDef) );
 		CPPUNIT_ASSERT_EQUAL( testString2, dt2.getString(row2, colString2) );
 		CPPUNIT_ASSERT_EQUAL( testString1, dt2.getString(row1, colWide) );
+
+		CPPUNIT_ASSERT_EQUAL( paramValue2, dt.getParam(param1) );
 
 	}
 

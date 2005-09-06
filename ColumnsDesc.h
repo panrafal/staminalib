@@ -38,9 +38,11 @@ namespace Stamina { namespace DT {
 		oColumn setUniqueCol (const AStringRef& name, enColumnType type);  // ustawia rodzaj danych w kolumnie o podanej nazwie
 
 		inline unsigned int getColCount () const {
+	        LockerCS lock(_cs);
 			return _cols.size();
 		}
 		inline unsigned int size() const {
+	        LockerCS lock(_cs);
 			return _cols.size();
 		}
 
@@ -52,11 +54,15 @@ namespace Stamina { namespace DT {
 		}
 
 		Column* getColumnByIndex(unsigned int index) const {
+	        LockerCS lock(_cs);
 			if (index > _cols.size()) {
-				return 0;
+				return (Column*)getUndefinedColumn();
 			}
 			return (Column*)_cols[index].get();
 		}
+
+		iColumn* getUndefinedColumn() const;
+
 		Column* getColumn(tColId id) const {
 			return getColumnByIndex(colIndex(id));
 		}
@@ -67,6 +73,7 @@ namespace Stamina { namespace DT {
 		unsigned int colIndex (tColId id) const; // zwraca index kolumny
 
 		void clear() {
+	        LockerCS lock(_cs);
 			_cols.clear();
 		}
 
@@ -85,6 +92,7 @@ namespace Stamina { namespace DT {
 	protected:
 		tColumns _cols;
 		bool _loader;
+		CriticalSection_w32 _cs;
 	};
 } }
 

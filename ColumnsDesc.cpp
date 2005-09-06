@@ -23,6 +23,7 @@ namespace Stamina { namespace DT {
 	StaticObj<Column_undefined> colUndefined;
 
     ColumnsDesc::operator = (const ColumnsDesc & x) {
+        LockerCS lock(_cs);
 		_cols.resize(x._cols.size());
 		for (unsigned int i=0; i<x._cols.size();i++)
 			_cols[i] = x._cols[i]->cloneColumn();
@@ -30,6 +31,7 @@ namespace Stamina { namespace DT {
     }
 
     int ColumnsDesc::setColumnCount (int count, bool expand) {
+        LockerCS lock(_cs);
         if (!expand) {
 			// 
 			_cols.clear();
@@ -43,6 +45,7 @@ namespace Stamina { namespace DT {
     } // ustawia ilosc kolumn
 
 	oColumn ColumnsDesc::setColumn (tColId id, enColumnType type, const AStringRef&  name) {
+        LockerCS lock(_cs);
 		oColumn col;
 
 		switch (type & ctypeMask) {
@@ -67,6 +70,7 @@ namespace Stamina { namespace DT {
     }
 
 	bool ColumnsDesc::setColumn (const oColumn& col) {
+        LockerCS lock(_cs);
 
 		if (col->getId() != colNotFound && ((col->getId() & 0xFF000000) == 0xFF000000)) 
 			col->castStaticObject<Column>()->setId(colNotFound);
@@ -104,6 +108,7 @@ namespace Stamina { namespace DT {
     }
 
     unsigned int ColumnsDesc::colIndex (tColId id) const {
+        LockerCS lock(_cs);
         int i = 0;
 		for (tColumns::const_iterator it = _cols.begin(); it != _cols.end(); it++) {
 			if ((*it)->getId() == id) 
@@ -113,7 +118,14 @@ namespace Stamina { namespace DT {
 		return colNotFound;
     }
 
+
+	iColumn* ColumnsDesc::getUndefinedColumn() const {
+		return colUndefined.get();
+	}
+
+
     tColId ColumnsDesc::getNewUniqueId(void) {
+        LockerCS lock(_cs);
         int unique = time(0) & 0xFFFF;
         do {
             unique++;
@@ -123,6 +135,7 @@ namespace Stamina { namespace DT {
     }
 
     tColId ColumnsDesc::getNameId(const char * name) const {
+        LockerCS lock(_cs);
         if (_cols.size()==0) return colNotFound;
 		for (tColumns::const_iterator it = _cols.begin(); it != _cols.end(); it++) {
 			if ((*it)->getName().equal(name)) 
@@ -132,6 +145,7 @@ namespace Stamina { namespace DT {
     }
 
 	int ColumnsDesc::join(const ColumnsDesc& other, bool overwrite) {
+        LockerCS lock(_cs);
 		int c = 0;
 		for (tColumns::const_iterator it = other._cols.begin(); it != other._cols.end(); it ++) {
 			oColumn col = *it;

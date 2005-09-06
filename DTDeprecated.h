@@ -68,71 +68,70 @@ namespace Stamina { namespace DT {
 		}
 	};
 	#pragma pack(pop)
-/*
-	inline Value ValueStr(const char* value, int buffSize=0) {
-		Value v(ctypeString);
+
+	inline OldValue OldValueStr(const char* value, int buffSize=0) {
+		OldValue v(ctypeString);
 		v.vCChar = value;
 		v.buffSize = buffSize;
 		return v;
 	}
-	inline Value ValueStrDuplicate() {
-		Value v(ctypeString);
+	inline OldValue OldValueStrDuplicate() {
+		OldValue v(ctypeString);
 		v.vChar = 0;
 		v.buffSize = -1;
 		return v;
 	}
-	inline Value ValueStrGetSize() {
-		Value v(ctypeString);
-		v.vChar = 0;
-		v.buffSize = 0;
-		return v;
-	}
 
-	inline Value ValueWideStr(const wchar_t* value, int buffSize=0) {
-		Value v(ctypeWideString);
-		v.vCWChar = value;
-		v.buffSize = buffSize;
-		return v;
-	}
-	inline Value ValueWideStrDuplicate() {
-		Value v(ctypeWideString);
-		v.vWChar = 0;
-		v.buffSize = -1;
-		return v;
-	}
-	inline Value ValueWideStrGetSize() {
-		Value v(ctypeWideString);
-		v.vChar = 0;
-		v.buffSize = 0;
-		return v;
-	}
-
-
-	inline Value ValueInt(int value) {
-		Value v(ctypeInt);
+	inline OldValue OldValueInt(int value) {
+		OldValue v(ctypeInt);
 		v.vInt = value;
 		return v;
 	}
-	inline Value ValueInt64(__int64 value) {
-		Value v(ctypeInt64);
+	inline OldValue OldValueInt64(__int64 value) {
+		OldValue v(ctypeInt64);
 		v.vInt64 = value;
 		return v;
 	}
-	inline Value ValueBin(const TypeBin& val) {
-		Value v(ctypeBin);
+	inline OldValue OldValueBin(const OldTypeBin& val) {
+		OldValue v(ctypeBin);
 		v.vBin = val;
 		return v;
 	}
-	inline Value ValueBin(void* data, int size) {
-		Value v(ctypeBin);
+	inline OldValue OldValueBin(void* data, int size) {
+		OldValue v(ctypeBin);
 		v.vBin.buff = data;
 		v.vBin.size = size;
 		return v;
 	}
 
-*/
 
 
+
+	class OldFind {
+	public:
+
+		enum Operation {
+			eq, neq, gt, gteq, lt, lteq
+		};
+
+		inline OldFind(Operation operation, tColId col, const OldValue& value):operation(operation), col(col), value(value) {}
+
+		static inline OldFind EqStr(tColId col, const char* str) {
+			return OldFind(eq, col, OldValueStr(str));
+		}
+#ifdef _STRING_
+		static inline OldFind EqStr(tColId col, const std::string& str) {
+			return OldFind(eq, col, OldValueStr(str.c_str()));
+		}
+#endif
+		static inline OldFind EqInt(tColId col, int value) {
+			return OldFind(eq, col, OldValueInt(value));
+		}
+
+		Operation operation;
+		tColId col;
+		OldValue value;
+	};
 
 
 } }

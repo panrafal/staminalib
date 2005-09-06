@@ -13,6 +13,7 @@
 
 
 #include "iRow.h"
+#include "..\Object.h"
 #include "..\ObjectPtr.h"
 #include "..\StringSTL.h"
 

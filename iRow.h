@@ -13,6 +13,7 @@
 
 #include "DT.h"
 #include "..\ObjectPtr.h"
+#include "..\Lock.h"
 
 namespace Stamina { namespace DT {
 

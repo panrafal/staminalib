@@ -14,6 +14,7 @@
 */
 
 #include "DT.h"
+#include "iColumn.h"
 #include "Value.h"
 
 namespace Stamina { namespace DT {
