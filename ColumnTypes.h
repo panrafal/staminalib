@@ -108,7 +108,7 @@ namespace Stamina { namespace DT {
 		typedef PassStringRef tConvert;
 		typedef const StringRef& tSetTypeData;
 		typedef StringRef tGetTypeData;
-		typedef Value_string tValue;
+		typedef Value_stringRef tValue;
 	};
 
 	class ColumnType_bin {
@@ -248,11 +248,11 @@ namespace Stamina { namespace DT {
 		typename TO::tConvert get(const iRow* row, GetFlags flags) const {
 			ObjLocker l (getRowLocker(row));
 			tGetTypeData val = this->getTypeData(row, true);
-			if (this->_getHandler.empty() == false) {
+			if (this->getHandler.empty() == false) {
 				tValue current (val);
 				current.disableRefCount();
 				oValue v = &current;
-				this->_getHandler(v, this, row, flags | getHandler);
+				this->getHandler(v, this, row, TO::type, flags | getByHandler);
 				return convertValue<TO::tConvert>(v);
 			}
 			return convert<TO::tConvert, tCRef>(val);
@@ -261,29 +261,32 @@ namespace Stamina { namespace DT {
 		template <typename FROM>
 		bool set(iRow* row, typename FROM::tCRef val, SetFlags flags) const {
 			ObjLocker l (getRowLocker(row));
-			if (_setHandler.empty() == false) {
+			if (setHandler.empty() == false) {
 				FROM::tValue current (val);
 				current.disableRefCount();
 				oValue v = &current;
-				if (_setHandler(v, this, row, flags | setHandler) == success) {
-					if (this->_preTrigger.empty() == false) {
-						this->_preTrigger(this, row, flags | setHandler);
+				if (setHandler(v, this, row, flags | setByHandler) == success) {
+					if (this->preTrigger.empty() == false) {
+						this->preTrigger(v.get(), this, row, flags | setByHandler);
 					}
 					this->setTypeData(row, convertValue<tConvert>(v));
-					if (this->_postTrigger.empty() == false) {
-						this->_postTrigger(this, row, flags | setHandler);
+					if (this->postTrigger.empty() == false) {
+						this->postTrigger(this, row, flags | setByHandler);
 					}
 				} else {
 					return false;
 				}
-			}
-			if (!this->convertible(FROM::type, true)) return false;
-			if (this->_preTrigger.empty() == false) {
-				this->_preTrigger(this, row, flags);
-			}
-			this->setTypeData(row, convert<tConvert, FROM::tCRef>(val));
-			if (this->_postTrigger.empty() == false) {
-				this->_postTrigger(this, row, flags);
+			} else {
+				if (!this->convertible(FROM::type, true)) return false;
+				if (this->preTrigger.empty() == false) {
+					FROM::tValue v (val);
+					v.disableRefCount();
+					this->preTrigger(&v, this, row, flags);
+				}
+				this->setTypeData(row, convert<tConvert, FROM::tCRef>(val));
+				if (this->postTrigger.empty() == false) {
+					this->postTrigger(this, row, flags);
+				}
 			}
 			return true;
 		}

@@ -1,6 +1,7 @@
 #include <stdafx.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include <Stamina/VersionControl.h>
+#include "..\Column.h"
 #include "..\DataTable.h"
 #include <Stamina\MD5.h>
 #include <Stamina\Helpers.h>
@@ -25,6 +26,8 @@ class TestTable : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testGetSetEmptyValue );
 	CPPUNIT_TEST( testFindRow );
 	CPPUNIT_TEST( testWideString );
+	CPPUNIT_TEST( testHandlers );
+	CPPUNIT_TEST( testTriggers );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -299,10 +302,80 @@ protected:
 	}
 
 
+	static enResult getHandler (oValue& v, const iColumn*, const iRow*, enColumnType type, GetFlags) {
+		if (type != ctypeString) {
+			char ret [2];
+			v = new Value_int( v->castStaticObject<Value_string>()->getString().a_str()[0] - 'A');
+		}
+		return DT::success;
+	}
+ 
+	static enResult setHandler (oValue& v, const iColumn*, iRow*, SetFlags) {
+		if (v->getType() == ctypeInt) {
+			char ret [2];
+			ret[1] = 0;
+			ret[0] = 'A' + v->castStaticObject<Value_int>()->getInt();
+			v = new Value_string(ret); // podmieniamy typ...
+		}
+		return DT::success;
+	}
+
+	void testHandlers() {
+
+		DataTable dt;
+		Column* col = dt.setColumn(colString, ctypeString)->castStaticObject<Column>();
+
+		col->getHandler = getHandler;
+		col->setHandler = setHandler;
+
+		DataRow* row = dt.addRow();
+		col->setString(row, "C");
+
+		CPPUNIT_ASSERT_EQUAL( (int)2, col->getInt(row) );
+		CPPUNIT_ASSERT_EQUAL( String("C"), col->getString(row) );
+
+		col->setInt(row, 5);
+		CPPUNIT_ASSERT_EQUAL( (int)5, col->getInt(row) );
+		CPPUNIT_ASSERT_EQUAL( (__int64)5, col->getInt64(row) );
+		CPPUNIT_ASSERT_EQUAL( String("F"), col->getString(row) );
+
+	}
+
+	static int _triggerTest;
+
+	static void preTrigger(const Value* v, const iColumn* col, iRow* row, SetFlags) {
+		_triggerTest++;
+		CPPUNIT_ASSERT_EQUAL( String("A"), col->getString(row) );
+		CPPUNIT_ASSERT_EQUAL( String("B"), v->castStaticObject<const Value_string>()->getString() );
+	}
+
+	static void postTrigger(const iColumn* col, iRow* row, SetFlags) {
+		_triggerTest++;
+		CPPUNIT_ASSERT_EQUAL( String("B"), col->getString(row) );
+	}
+
+	void testTriggers() {
+
+		_triggerTest = 0;
+
+		DataTable dt;
+		Column* col = dt.setColumn(colString, ctypeString)->castStaticObject<Column>();
+		
+		DataRow* row = dt.addRow();
+		col->setString(row, "A");
+		col->preTrigger.connect(&TestTable::preTrigger);
+		col->postTrigger.connect(&TestTable::postTrigger);
+
+		col->setString(row, "B");
+		CPPUNIT_ASSERT_EQUAL( String("B"), col->getString(row) );
+		CPPUNIT_ASSERT_EQUAL( (int)2, _triggerTest );
+
+	}
+
 };
 
 
-
+int TestTable::_triggerTest;
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestTable );

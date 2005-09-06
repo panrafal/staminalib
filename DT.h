@@ -132,9 +132,9 @@ namespace Stamina { namespace DT {
 		none = 0,
 		getCopy = 0x10,
 		getReference = 0,
-		getHandler = 0x20,
+		getByHandler = 0x20,
 		getToFile = 0x40,
-		setHandler = 0x1000,
+		setByHandler = 0x1000,
 		setFromFile = 0x2000
 	};
 

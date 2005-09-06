@@ -42,6 +42,9 @@ namespace Stamina { namespace DT {
 		int getInt() const {
 			return _v;
 		}
+		int& operator * () {
+			return _v;
+		}
 		int cmp(int b) const {
 			if (_v < b) return -1;
 			if (_v > b) return 1;
@@ -115,7 +118,7 @@ namespace Stamina { namespace DT {
 		STAMINA_OBJECT_CLASS(DT::Value_string, Value);
 
 		Value_string(const StringRef& v) {
-			_v.assignCheapReference(v);
+			_v.assign(v);
 		}
 
 		virtual enColumnType getType() const {
@@ -132,17 +135,20 @@ namespace Stamina { namespace DT {
 		}
 	protected:
 
+		Value_string() {
+		}
+
 		String _v;
 	};
 
 
-	class Value_stringCopy: public Value_string {
+	class Value_stringRef: public Value_string {
 	public:
 
-		STAMINA_OBJECT_CLASS(DT::Value_stringCopy, Value);
+		STAMINA_OBJECT_CLASS(DT::Value_stringRef, Value_string);
 
-		Value_stringCopy(const StringRef& v):Value_string(v) {
-			_v.makeUnique();
+		Value_stringRef(const StringRef& v):Value_string() {
+			_v.assignCheapReference(v);
 		}
 
 	};
@@ -154,7 +160,7 @@ namespace Stamina { namespace DT {
 		STAMINA_OBJECT_CLASS(DT::Value_bin, Value);
 
 		Value_bin(const ByteBuffer& v) {
-			_v.assignCheapReference(v.getBuffer(), v.getLength());
+			_v.assign(v.getBuffer(), v.getLength());
 		}
 
 		virtual enColumnType getType() const {
@@ -180,17 +186,19 @@ namespace Stamina { namespace DT {
 			return this->cmp(b) == 0;
 		}
 	protected:
+		Value_bin() {
+		}
 
 		ByteBuffer _v;
 	};
 
-	class Value_binCopy: public Value_bin {
+	class Value_binRef: public Value_bin {
 	public:
 
-		STAMINA_OBJECT_CLASS(DT::Value_binCopy, Value);
+		STAMINA_OBJECT_CLASS(DT::Value_binRef, Value_bin);
 
-		Value_binCopy(const ByteBuffer& v):Value_bin(v) {
-			_v.makeUnique();
+		Value_binRef(const ByteBuffer& v):Value_bin() {
+			_v.assignCheapReference(v.getBuffer(), v.getLength());
 		}
 
 	};

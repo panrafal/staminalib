@@ -106,8 +106,8 @@ namespace Stamina { namespace DT {
 
 		enColumnType _type;
 		tColId _id;
-		AString _name;  // tekstowy identyfikator
         unsigned int _index;
+		AString _name;  // tekstowy identyfikator
 
 		
 

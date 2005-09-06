@@ -65,14 +65,42 @@ namespace Stamina { namespace DT {
 			this->_postTrigger = b->_postTrigger;*/
 		}
 
-		// enResult getHandler (oValue&, const iColumn*, iRow*, GetFlags)
+	public:
+
+		// enResult getHandler (oValue&, const iColumn*, iRow*, enColumnType, GetFlags)
 		// enResult setHandler (oValue&, const iColumn*, iRow*, SetFlags)
 		// void trigger(const iColumn*, iRow*, SetFlags)
 
-		boost::function4< enResult, oValue&, const iColumn*, const iRow*, GetFlags > _getHandler;
-		boost::function4< enResult, oValue&, const iColumn*, iRow*, SetFlags > _setHandler;
-		boost::signal3<void, const iColumn*, iRow*, SetFlags> _preTrigger;
-		boost::signal3<void, const iColumn*, iRow*, SetFlags> _postTrigger;
+		/** Handler for @b get operations on column.
+		@param oValue - in/out value object. Contains the current value in column's type. You can change only the value, or even assign a new value object.
+		@param iColumn - the column being read
+		@param iRow - the row being read
+		@param enColumnType - target value type
+		@param GetFlags - additional flags
+		*/
+		boost::function5< enResult, oValue&, const iColumn*, const iRow*, enColumnType, GetFlags > getHandler;
+		/** Handler for @b set operations on column.
+		@param oValue - in/out value object. Contains the value to be set (can be any of any type!). You can change only the value, or even assign a new value object.
+		@param iColumn - the column being set
+		@param iRow - the row being set
+		@param SetFlags - additional flags
+		*/
+		boost::function4< enResult, oValue&, const iColumn*, iRow*, SetFlags > setHandler;
+
+		/** List of triggers which are called @before setting a new value on column.
+		@param Value - value currently being set
+		@param iColumn - the column being set
+		@param iRow - the row being set
+		@param SetFlags - additional flags
+		*/
+		boost::signal4<void, const Value*, const iColumn*, iRow*, SetFlags> preTrigger;
+
+		/** List of triggers which are called @after setting a new value on column.
+		@param iColumn - the column being set
+		@param iRow - the row being set
+		@param SetFlags - additional flags
+		*/
+		boost::signal3<void, const iColumn*, iRow*, SetFlags> postTrigger;
 
 
 	};
