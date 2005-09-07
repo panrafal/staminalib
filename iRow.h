@@ -56,6 +56,8 @@ namespace Stamina { namespace DT {
 			return (tRowId)( row&(~DT::rowIdFlag) );
 		}
 
+		virtual void removeFromTable()=0;
+
 		DataTable* getOwner() const {
 			return _table;
 		}

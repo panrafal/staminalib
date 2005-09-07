@@ -68,6 +68,11 @@ namespace Stamina { namespace DT {
 		return true;
     }
 
+	void DataRow::removeFromTable() {
+		if (_table) {
+			_table->deleteRow(this->getId());
+		}
+	}
 
 
 	// ----------------------------------------  DataRow

@@ -66,7 +66,7 @@ namespace Stamina { namespace DT {
 		Column* getColumn(tColId id) const {
 			return getColumnByIndex(colIndex(id));
 		}
-		Column* getColumn(const char* name) const {
+		Column* getColumn(const StringRef& name) const {
 			return getColumn(getNameId(name));
 		}
 
@@ -80,7 +80,7 @@ namespace Stamina { namespace DT {
 		int join(const ColumnsDesc& other , bool overwrite); // ³¹czy dwa deskryptory, zwraca liczbê do³¹czonych
 
 		tColId getNewUniqueId(void);
-		tColId getNameId(const char * name) const;
+		tColId getNameId(const StringRef& name) const;
 
 		bool isLoader() const {
 			return _loader;

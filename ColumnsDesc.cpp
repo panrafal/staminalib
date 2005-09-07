@@ -134,7 +134,7 @@ namespace Stamina { namespace DT {
         return (tColId)(unique | colIdUniqueFlag);
     }
 
-    tColId ColumnsDesc::getNameId(const char * name) const {
+    tColId ColumnsDesc::getNameId(const StringRef& name) const {
         LockerCS lock(_cs);
         if (_cols.size()==0) return colNotFound;
 		for (tColumns::const_iterator it = _cols.begin(); it != _cols.end(); it++) {

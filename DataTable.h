@@ -212,7 +212,7 @@ namespace Stamina { namespace DT {
 			return this->_cols.getColumn(colId);
 		}
 
-		inline Column* getColumn(const char* name) const {
+		inline Column* getColumn(const StringRef& name) const {
 			return this->_cols.getColumn(name);
 		}
 
@@ -226,16 +226,16 @@ namespace Stamina { namespace DT {
 			this->_cols.join(columns, false);
 		}
 
-		inline oColumn setColumn (tColId id , enColumnType type , const char * name="") {
+		inline oColumn setColumn (tColId id , enColumnType type , const AStringRef& name = AStringRef()) {
 			if (_rows.size() > 0) return oColumn();
 			return _cols.setColumn(id, type, name);
 		}
-		inline oColumn setUniqueCol (const char * name , enColumnType type) {
+		inline oColumn setUniqueCol (const AStringRef& name , enColumnType type) {
 			if (_rows.size() > 0) return oColumn();
 			return _cols.setUniqueCol(name, type);
 		}
 
-		inline tColId getColumnId(const char* name) {
+		inline tColId getColumnId(const AStringRef& name) {
 			return this->_cols.getNameId(name);
 		}
 

@@ -64,6 +64,9 @@ namespace Stamina { namespace DT {
 			return (colIndex >= 0 && colIndex < _data.size());
 		}
 
+		virtual void removeFromTable();
+
+
 	protected:
 
 		bool freeData();
