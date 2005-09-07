@@ -13,8 +13,12 @@
 #include "FileBin.h"
 #include "Crypt.h"
 
+
+
 #include <Stamina\Assert.h>
 #include <Stamina\FindFileFiltered.h>
+#include <Stamina\WideChar.h>
+#include <Stamina\WinHelper.h>
 
 using namespace std;
 
@@ -93,7 +97,7 @@ namespace Stamina { namespace DT {
 		_xorDigest.addSalt(_xorSalt);
 	}
 
-	void FileBin::open (const std::string& fileToOpen , enFileMode mode) {
+	void FileBin::open (const StringRef& fileToOpen , enFileMode mode) {
 		this->close();
 
 		if (!fileToOpen.empty())
@@ -121,7 +125,7 @@ namespace Stamina { namespace DT {
 			int i = 0;
 			do {
 				_temp_fileName = _fileName + stringf(".[%d].tmp", ++i);
-			} while ( ! _access(_temp_fileName , 0));
+			} while ( ! _access(_temp_fileName.a_str() , 0));
 		} else {
 			_temp_fileName = "";
 		}
@@ -228,7 +232,7 @@ namespace Stamina { namespace DT {
 				}
 #endif
             }
-            if (!success) _unlink(_temp_fileName);
+			if (!success) _unlink(_temp_fileName.a_str());
 		}
 
 		_opened = fileClosed;
@@ -312,8 +316,8 @@ namespace Stamina { namespace DT {
 			int paramCount;
 			readData(&paramCount, 4, &dataLeft);
 			for (int i = 0; i < paramCount; i++) {
-				std::string key = readString(&dataLeft);
-				std::string value = readString(&dataLeft);
+				String key = readString(&dataLeft);
+				String value = readString(&dataLeft);
 				if (_table->paramExists(key) == false) {
 					_table->setParam(key, value);
 				}
@@ -506,7 +510,7 @@ namespace Stamina { namespace DT {
 					setFilePosition(dataSize, fromCurrent); // We have to get past unprocessed data.
 				}
 			}
-			_fcols.setColumn(id, type, 0, name.c_str());
+			_fcols.setColumn(id, type, name.c_str());
 		}
 		_pos_rows = ftell(_file);
 	}
@@ -522,7 +526,7 @@ namespace Stamina { namespace DT {
 			writeData(&colCount, 4);
 
 			for (unsigned int colIndex = 0; colIndex < colCount; colIndex++) {
-				const Column& col = _fcols.getColumnByIndex(colIndex);
+				const Column& col = *_fcols.getColumnByIndex(colIndex);
 				tColId id = col.getId();
 				writeData(&id, 4);   //id
 				int type = col.getFlags(); 
@@ -596,10 +600,10 @@ namespace Stamina { namespace DT {
 	  
 		//_table->notypecheck=1;  // wylacza sprawdzanie typow ...
       
-		DataRow& rowObj = _table->getRow(row);
+		oDataRow rowObj = _table->getRow(row);
 		
 		// zapiujemy pozycjê wiersza
-		rowObj._filePos = ftell(_file);
+		rowObj->_filePos = ftell(_file);
 
 		// Znacznik rozpoczêcia nowego wiersza
 		if (fgetc(_file) != '\n') {
@@ -628,11 +632,11 @@ namespace Stamina { namespace DT {
 			if (rowSize != rowSize2) 
 				throw DTException(errBadFormat);
             
-			readData(&rowObj._flag, 4);
+			readData(&rowObj->_flag, 4);
 
 			// Sprawdzamy czy flaga jest równa -1 czyli czy element
 			// nie jest oznaczony jako usuniêty
-			if (rowObj._flag == -1) {
+			if (rowObj->_flag == -1) {
 				setFilePosition(rowSize, fromCurrent);
 				// wywo³ywanie rekurencyjne jest potencjalnie niebezpieczne...
 				return resSkipped;
@@ -661,11 +665,11 @@ namespace Stamina { namespace DT {
 			tRowId id;
 			readData(&id, 4, &rowDataLeft);
 			id = DataTable::flagId(id);
-			if (readId && id != rowObj.getId()) {
+			if (readId && id != rowObj->getId()) {
 				if (_table->rowIdExists(id)) {
 					id = _table->getNewRowId();
 				}
-				rowObj.setId(id);
+				rowObj->setId(id);
 			}
 		} else {
 			// w zasadzie nie ma potrzeby przydzielaæ nowego ID, bo jest ju¿ przydzielony przy okazji utworzenia wiersza... Poza tym ka¿dy szanuj¹cy siê DTB zawiera t¹ wartoœæ...
@@ -677,7 +681,7 @@ namespace Stamina { namespace DT {
 
 		// £adujemy dane
 		for (unsigned int colIndex = 0; colIndex < _fcols.getColCount(); colIndex++) {
-			const Column& col = _fcols.getColumnByIndex(colIndex);
+			const Column& col = *_fcols.getColumnByIndex(colIndex);
 
 			// skoro kolumna nie s³u¿y do zapisywania - nie mamy co wczytywaæ...
 			if (col.hasFlag(cflagDontSave)) continue;
@@ -691,7 +695,7 @@ namespace Stamina { namespace DT {
 
 			bool skip = (colId == colNotFound); // Czy OMIN¥Æ dane kolumny?
 
-			const Column& tableCol = _table->getColumns().getColumn(colId);
+			const Column& tableCol = *_table->getColumns().getColumn(colId);
 			if (!skip && (tableCol.hasFlag(cflagDontSave) || tableCol.getType() != col.getType())) {
 				skip = true;
 			}
@@ -717,8 +721,8 @@ namespace Stamina { namespace DT {
 						skipBytes = 4;
 					else {
 						int val;
-						readCryptedData(col, &val, 4);
-						rowObj.set(colId, (DataEntry)val);
+						readCryptedData(&col, &val, 4);
+						tableCol.setInt( rowObj, val, setFromFile );
 					}
 					break;
 				case ctypeInt64:
@@ -726,60 +730,43 @@ namespace Stamina { namespace DT {
 						skipBytes = 8;
 					} else {
 						__int64 val;
-						readCryptedData(col, &val, 8);
-						rowObj.set(colId, (DataEntry)&val, true);
+						readCryptedData(&col, &val, 8);
+						tableCol.setInt64( rowObj, val, setFromFile );
+					}
+					break;
+				case ctypeDouble:
+					if (skip) {
+						skipBytes = 8;
+					} else {
+						double val;
+						readCryptedData(&col, &val, 8);
+						tableCol.setDouble( rowObj, val, setFromFile );
 					}
 					break;
 				case ctypeString: {
-					unsigned int length;
-					readData(&length, 4);
-					if (ftell(_file) + length > _fileSize)
-						throw DTException(errBadFormat);
 					if (skip) {
-						skipBytes = length;
-					} else if (length > 0) {
-						char * buffer = new char [length + 1];
-						buffer[length] = 0;
-						readCryptedData(col, buffer, length);
-						rowObj.set(colId, (DataEntry)buffer, true);
-						delete [] buffer;
+						readData(&skipBytes, 4);
 					} else {
-						rowObj.set(colId, (DataEntry)"", true);
+						tableCol.setString( rowObj, this->readString(&col), setFromFile );
 					}
+
 					break;}
-				case ctypeWideString: {
-					unsigned int length;
-					readData(&length, 4);
-					if (ftell(_file) + length > _fileSize)
-						throw DTException(errBadFormat);
-					if (skip) {
-						skipBytes = length;
-					} else if (length > 0) {
-						char * buffer = new char [length + 2];
-						buffer[length] = 0;
-						buffer[length+1] = 0;
-						readCryptedData(col, buffer, length);
-						rowObj.set(colId, (DataEntry)buffer, true);
-						delete [] buffer;
-					} else {
-						rowObj.set(colId, (DataEntry)L"", true);
-					}
-					break;}
+
 				case ctypeBin: {
-					TypeBin bin;
-					bin.buff = 0;
-					readData(&bin.size, 4); // wczytujemy rozmiar
-					if (ftell(_file) + bin.size > _fileSize)
+					int size;
+					readData(&size, 4); // wczytujemy rozmiar
+					if (ftell(_file) + size > _fileSize)
 						throw DTException(errBadFormat);
 					if (skip) {
-						skipBytes = bin.size;
-					} else if (bin.size > 0) {
-						bin.buff = new char [bin.size];
-						readCryptedData(col, bin.buff, bin.size);
-						rowObj.set(colId, (DataEntry)&bin, true);
-						delete [] bin.buff;
+						skipBytes = size;
+					} else if (size > 0) {
+						ByteBuffer buff(size);
+						readCryptedData(&col, buff.getBuffer(), size);
+						buff.setLength(size);
+						tableCol.setBin( rowObj, buff, setFromFile );
 					} else {
-						rowObj.set(colId, (DataEntry)&bin, true);
+						ByteBuffer buff;
+						tableCol.setBin( rowObj, buff, setFromFile );
 					}
 					break; }
 
@@ -813,7 +800,9 @@ namespace Stamina { namespace DT {
 			if (fputc('\n' , _file) == EOF)
 				throw DTFileException();
 
-			DataRow& rowObj = _table->getRow(row);
+			oDataRow rowObj = _table->getRow(row);
+			ObjLocker l(rowObj);
+			
 
 			unsigned int rowSize = 0;
 
@@ -822,18 +811,18 @@ namespace Stamina { namespace DT {
 				rowSize = 0x7FFFFFFF;
 				writeData(&rowSize, 4);  //rowSize - placeholder
 				rowSize = 0;
-				enRowFlag rowFlags = rowObj.getFlags();
+				enRowFlag rowFlags = rowObj->getFlags();
 				writeData(&rowFlags, 4, &rowSize); // flag
 				unsigned int dataSize = 8; // flag + lastId, na razie nie ma wiêcej
 				writeData(&dataSize, 4, &rowSize);
 				enRowDataFlags flags = rdflagRowId;
 				writeData(&flags, 4, &rowSize);
-				tRowId rowId = rowObj.getId();
+				tRowId rowId = rowObj->getId();
 				rowId = DataTable::unflagId(rowId);
 				writeData(&rowId, 4, &rowSize);
 			}
 			for (unsigned int colIndex =0; colIndex < _fcols.getColCount(); colIndex++) {
-				const Column& col = _fcols.getColumnByIndex(colIndex);
+				const Column& col = *_fcols.getColumnByIndex(colIndex);
 
 				if (col.hasFlag(cflagDontSave)) continue;
 
@@ -841,52 +830,35 @@ namespace Stamina { namespace DT {
 				if (col.isIdUnique()) { 
 					colId = _table->getColumns().getNameId(col.getName().c_str()); 
 				}
-				const Column& tableCol = _table->getColumns().getColumn(colId);
+				const Column& tableCol = *_table->getColumns().getColumn(colId);
 				// nie konwertujemy danych przy zapisywaniu, po prostu wstawiamy puste wartoœci...
 				bool skip = (tableCol.getType() != col.getType());
 
 				switch (col.getType()) {
 					case ctypeInt: {
-						int val = skip ? 0 : (int)rowObj.get(colId);
-						writeCryptedData(col, &val, 4, &rowSize);
+						int val = skip ? 0 : tableCol.getInt(rowObj, getToFile);
+						writeCryptedData(&col, &val, 4, &rowSize);
 						break;}
 					case ctype64: {
-						__int64* val = skip ? 0 : (__int64*)rowObj.get(colId);
-						if (!val) {
-							// zapisujemy 0
-							__int64 null = 0;
-							writeCryptedData(col, &null, 8, &rowSize);
-						} else {
-							writeCryptedData(col, val, 8, &rowSize);
-						}
+						__int64 val = skip ? 0 : tableCol.getInt64(rowObj, getToFile);
+						writeCryptedData(&col, &val, 8, &rowSize);
 						break;}
 					case ctypeString: {
-						char * val = skip ? 0 : (char *)rowObj.get(colId);
-						unsigned int length = (val == 0 ? 0 : strlen(val));
-						writeData(&length, 4, &rowSize);
-						if (val && length > 0) {
-							writeCryptedData(col, val, length, &rowSize);
+						StringRef val;
+						if (!skip) {
+							val = PassStringRef( tableCol.getString(rowObj, getToFile) );
 						}
-						break;}
-					case ctypeWideString: {
-						wchar_t * val = skip ? 0 : (wchar_t *)rowObj.get(colId);
-						unsigned int length = (val == 0 ? 0 : wcslen(val));
-						length *= 2;
-						writeData(&length, 4, &rowSize);
-						if (val && length > 0) {
-							writeCryptedData(col, val, length, &rowSize);
-						}
+						this->writeString(val, &col, &rowSize);
 						break;}
 					case ctypeBin: {
-						TypeBin* val = skip ? 0 : (TypeBin*)rowObj.get(colId);
-						if (val) {
-							writeData(&val->size, 4, &rowSize);
-							if (val->buff && val->size > 0) {
-								writeCryptedData(col, val->buff, val->size, &rowSize);
-							}
-						} else {
-							int size = 0;
-							writeData(&size, 4, &rowSize);
+						ByteBuffer buff;
+						if (!skip) {
+							buff.assignCheapReference( tableCol.getBin(rowObj, getToFile) );
+						}
+						unsigned int size = buff.getLength();
+						writeData(&size, 4, &rowSize);
+						if (size > 0) {
+							writeCryptedData(&col, buff.getBuffer(), size, &rowSize);
 						}
 						break;}
 				}
@@ -1028,8 +1000,8 @@ namespace Stamina { namespace DT {
 		}
 	}
 
-	void FileBin::readCryptedData(const Column& col, void* buffer, int size, unsigned int* decrement) {
-		if (col.hasFlag(cflagXor) || this->hasFileFlag(fflagCryptAll)) {
+	void FileBin::readCryptedData(const Column* col, void* buffer, int size, unsigned int* decrement) {
+		if ((col && col->hasFlag(cflagXor)) || this->hasFileFlag(fflagCryptAll)) {
 			if (this->versionNewCrypt()) {
 				size_t salt = ftell(_file);
 				this->readData(buffer, size, decrement);
@@ -1043,8 +1015,8 @@ namespace Stamina { namespace DT {
 
 	}
 
-	void FileBin::writeCryptedData(const Column& col, void* buffer, int size, unsigned int* increment) {
-		if (col.hasFlag(cflagXor) || this->hasFileFlag(fflagCryptAll)) {
+	void FileBin::writeCryptedData(const Column* col, const void* buffer, int size, unsigned int* increment) {
+		if ((col && col->hasFlag(cflagXor)) || this->hasFileFlag(fflagCryptAll)) {
 			unsigned char* crypted = new unsigned char [size];
 			memcpy(crypted, buffer, size);
 			if (this->versionNewCrypt()) {
@@ -1057,6 +1029,70 @@ namespace Stamina { namespace DT {
 		} else {
 			this->writeData(buffer, size, increment);
 		}
+	}
+
+
+	inline PassStringRef FileBin::readString(const Column* col, unsigned int* decrement) {
+
+		unsigned int length;
+		readData(&length, 4, decrement);
+		if (ftell(_file) + length > _fileSize)
+			throw DTException(errBadFormat);
+
+		String val;
+
+		if (length > 0) {
+			int codePage = GetACP();
+			if (this->versionNewString()) {
+				readData(&codePage, 4, decrement);
+				length -= 4;
+			}
+
+			if (codePage == -1) { //Unicode
+				readCryptedData(col, val.useBuffer<wchar_t>(length / 2), length, decrement);
+				val.releaseBuffer<wchar_t>(length / 2);
+			} else {
+				char * buffer = val.useBuffer<char>(length);
+				readCryptedData(col, buffer, length, decrement);
+				val.releaseBuffer<char>(length);
+				if (codePage == GetACP()) {
+					//val.assignCheapReference( buffer, length);
+				} else {
+					val.assign( toUnicode(buffer, codePage) );
+				}
+			}
+		}
+		return val;
+	}
+
+	inline void FileBin::writeString(const StringRef& val, const Column* col, unsigned int* increment)  {
+		if (versionNewString()) {
+			int codepage;
+			unsigned int length;
+			const void* buffer;
+			if (val.isWide()) {
+				length = val.getDataSize<wchar_t>() * 2;
+				codepage = -1;
+				buffer = val.getData<wchar_t>();
+			} else {
+				length = val.getDataSize<char>();
+				codepage = GetACP();
+				buffer = val.getData<char>();
+			}
+			if (length > 0) length += 4;
+			writeData(&length, 4, increment);
+			if (length > 0) {
+				writeData(&codepage, 4, increment);
+				writeCryptedData(col, buffer, length - 4, increment);
+			}
+		} else {
+			unsigned int length = val.getDataSize<char>();
+			writeData(&length, 4, increment);
+			if (length > 0) {
+				writeCryptedData(col, val.getData<char>(), length, increment);
+			}
+		}
+
 	}
 
 
@@ -1074,7 +1110,7 @@ namespace Stamina { namespace DT {
 		return d;
 	}
 
-	FindFile::Found findLastBackup(const std::string& filename, Date64* time = 0) {
+	FindFile::Found findLastBackup(const StringRef& filename, Date64* time = 0) {
 		FindFileFiltered ff(getFileDirectory(filename, true) + "\\*.bak");
 		ff.setFileOnly();
 		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + RegEx::addSlashes(getFileName(filename)) + ")\\.(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
@@ -1093,7 +1129,7 @@ namespace Stamina { namespace DT {
 	}
 
 
-	void FileBin::backupFile(const std::string& filename, bool move) {
+	void FileBin::backupFile(const StringRef& filename, bool move) {
 		if (filename.empty()) throw DTException(errBadParameter);
 		if (move) {
 			MoveFileEx(filename.c_str(), makeBackupFilename(filename).c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
@@ -1110,24 +1146,24 @@ namespace Stamina { namespace DT {
 	}
 
 	struct BackupFound {
-		BackupFound(const Date64& date = Date64(), const std::string& file=""):date(date), file(file) {
+		BackupFound(const Date64& date = Date64(), const StringRef& file=""):date(date), file(file) {
 		}
-		bool operator == (const std::string& file) const {
+		bool operator == (const StringRef& file) const {
 			return this->file == file;
 		}
 		Date64 date;
-		std::string file;
+		String file;
 	};
 
 	struct FileBackups {
-		std::list<std::string> files; // wszystkie backupy
+		std::list<String> files; // wszystkie backupy
 		std::vector<BackupFound > found; // backupy wg. granic
 	};
 
-	void FileBin::cleanupBackups(const std::string& filename) {
+	void FileBin::cleanupBackups(const StringRef& filename) {
 
 
-		std::map<std::string, FileBackups> files;
+		std::map<String, FileBackups> files;
 		std::vector<Date64> range;
 
 		range.push_back(Time64(true) - (30 * 24 * 60 * 60)); // sprzed miesiaca
@@ -1142,11 +1178,11 @@ namespace Stamina { namespace DT {
 		FileFilter_RegEx& re = *(new FileFilter_RegEx("/^(" + (all ? std::string(".+\\.dtb") : RegEx::addSlashes(::Stamina::getFileName(filename))) + ").(\\d+)-(\\d+)-(\\d+) (\\d+)-(\\d+)-(\\d+).bak$/i"));
 		ff.addFilter(re);
 		while (ff.find()) {
-			FileBackups& file = files[re->getSub(1)];
+			FileBackups& file = files[ StringRef(re->getSub(1)) ];
 			if (file.found.empty()) {
 				file.found.resize(range.size());
 			}
-			file.files.push_back(ff->getFileName());
+			file.files.push_back( StringRef( ff->getFileName() ) );
 			Date64 date = getBackupDate(re.getRE());
 
 			for (unsigned int i = 0; i < range.size(); ++i) {
@@ -1162,9 +1198,9 @@ namespace Stamina { namespace DT {
 		}
 
 		// usuwamy wszystko co jest na liscie plików a nie ma na liœcie zaakceptowanych
-		for (std::map<std::string, FileBackups>::iterator it = files.begin(); it != files.end(); ++it) {
+		for (std::map<String, FileBackups>::iterator it = files.begin(); it != files.end(); ++it) {
 			FileBackups& backups = it->second;
-			for (std::list<std::string>::iterator file = backups.files.begin(); file != backups.files.end(); ++file) {
+			for (std::list<String>::iterator file = backups.files.begin(); file != backups.files.end(); ++file) {
 				if (std::find(backups.found.begin(), backups.found.end(), *file) == backups.found.end()) { // nie ma go na liœcie znalezionych wiêc usuwamy...
 					DeleteFile(file->c_str());
 				}
@@ -1172,7 +1208,7 @@ namespace Stamina { namespace DT {
 		}
 	}
 
-	void FileBin::restoreBackup(const std::string& filename) {
+	void FileBin::restoreBackup(const StringRef& filename) {
 		if (filename.empty()) throw DTException(errBadParameter);
 		if (fileExists(filename.c_str()) == false) throw DTException(errFileNotFound);
 		std::string original = RegEx::doGet("/^(.+\\.dtb).\\d+-\\d+-\\d+ \\d+-\\d+-\\d+.bak$/i", filename.c_str(), 1);
@@ -1186,7 +1222,7 @@ namespace Stamina { namespace DT {
 
 
 
-	bool FileBin::restoreLastBackup(const std::string& filename) {
+	bool FileBin::restoreLastBackup(const StringRef& filename) {
 		// szukamy backupów
 		FindFile::Found found = DT::findLastBackup(filename.empty() ? this->_fileName : filename);
 		if (found.empty()) return false;
@@ -1194,12 +1230,12 @@ namespace Stamina { namespace DT {
 		return true;
 	}
 
-	Date64 FileBin::findLastBackupDate(const std::string& filename) {
+	Date64 FileBin::findLastBackupDate(const StringRef& filename) {
 		Date64 date;
 		DT::findLastBackup(filename.empty() ? this->_fileName : filename, &date);
 		return date;
 	}
-	std::string FileBin::findLastBackupFile(const std::string& filename) {
+	String FileBin::findLastBackupFile(const StringRef& filename) {
 		return DT::findLastBackup(filename.empty() ? this->_fileName : filename).getFileName();
 	}
 

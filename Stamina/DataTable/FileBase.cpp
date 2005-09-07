@@ -42,7 +42,7 @@ namespace Stamina { namespace DT {
 		_headerLoaded = false;
 	}
 
-    enResult FileBase::load (const std::string& fn, enFileOperation operation) {
+    enResult FileBase::load (const StringRef& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
 
 		_table->clearRows();
@@ -64,7 +64,7 @@ namespace Stamina { namespace DT {
     }
 
 
-    enResult FileBase::save (const std::string& fn, enFileOperation operation)
+    enResult FileBase::save (const StringRef& fn, enFileOperation operation)
     {
 		if (!_table) return errNotInitialized;
 
@@ -79,7 +79,7 @@ namespace Stamina { namespace DT {
 			this->writeHeader();
 		    this->writeDescriptor();
 			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
-				if (_table->getRow(i).hasFlag(rflagDontSave) == false) {
+				if (_table->getRow(i)->hasFlag(rflagDontSave) == false) {
 					this->writeRow(i);
 				}
 			}
@@ -92,7 +92,7 @@ namespace Stamina { namespace DT {
     }
 
 
-    enResult FileBase::append (const std::string& fn, enFileOperation operation) {
+    enResult FileBase::append (const StringRef& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
 		
 		_fcols.clear();
@@ -110,7 +110,7 @@ namespace Stamina { namespace DT {
 			}
 			this->seekToEnd();
 			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
-				_table->getRow(i).setId(_table->getNewRowId());
+				_table->getRow(i)->setId(_table->getNewRowId());
 				this->writeRow(i);
 			}
 		} catch (DTException e) {

@@ -25,7 +25,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="3"
-				WarningLevel="4"
+				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"/>
 			<Tool
@@ -105,6 +105,9 @@
 				RelativePath=".\ColumnsDesc.cpp">
 			</File>
 			<File
+				RelativePath=".\ColumnTypes.cpp">
+			</File>
+			<File
 				RelativePath=".\Crypt.cpp">
 			</File>
 			<File
@@ -143,6 +146,12 @@
 				RelativePath=".\Column.h">
 			</File>
 			<File
+				RelativePath=".\ColumnsDesc.h">
+			</File>
+			<File
+				RelativePath=".\ColumnTypes.h">
+			</File>
+			<File
 				RelativePath=".\Crypt.h">
 			</File>
 			<File
@@ -155,13 +164,28 @@
 				RelativePath=".\DT.h">
 			</File>
 			<File
+				RelativePath=".\DTDeprecated.h">
+			</File>
+			<File
 				RelativePath=".\FileBase.h">
 			</File>
 			<File
 				RelativePath=".\FileBin.h">
 			</File>
 			<File
+				RelativePath=".\Find.h">
+			</File>
+			<File
+				RelativePath=".\iColumn.h">
+			</File>
+			<File
+				RelativePath=".\iRow.h">
+			</File>
+			<File
 				RelativePath=".\stdafx.h">
+			</File>
+			<File
+				RelativePath=".\Value.h">
 			</File>
 		</Filter>
 		<Filter

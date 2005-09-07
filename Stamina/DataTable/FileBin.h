@@ -23,7 +23,7 @@ namespace Stamina { namespace DT {
 	const char binRowSeparator = '\n';
 	const char binColumnSeparator = '\n';
 	const char binVersionMaj = '3';
-	const char binVersionMin = '5';
+	const char binVersionMin = '6';
 
 	const __int64 minimumBackupPeriod = 60 * 60; // an hour
 
@@ -88,7 +88,7 @@ namespace Stamina { namespace DT {
 		virtual void reset();
 
 
-		void open (const std::string& fn , enFileMode mode) throw (...);
+		void open (const StringRef& fn , enFileMode mode) throw (...);
 		void close ();
 
 		virtual void readRows(bool skipFailed) throw (...); // wczytuje wiersze
@@ -109,13 +109,13 @@ namespace Stamina { namespace DT {
 			return (_fileFlag & flag) != 0;
 		}
 
-		std::string getOpenedFileName() {
+		String getOpenedFileName() {
 			if (! _temp_fileName.empty())
 				return _temp_fileName;
 			else
 				return _fileName;
 		}
-		std::string getFileName() {
+		String getFileName() {
             return _fileName;
 		}
 		bool isUsingTemp() {
@@ -127,6 +127,12 @@ namespace Stamina { namespace DT {
 			if (_verMaj > '3') return true;
 			if (_verMaj < '3') return false;
 			return _verMin >= '5';
+		}
+
+		inline bool versionNewString() {
+			if (_verMaj > '3') return true;
+			if (_verMaj < '3') return false;
+			return _verMin >= '6';
 		}
 
 		inline void setOldCryptVersion() {
@@ -213,25 +219,22 @@ namespace Stamina { namespace DT {
 				*increment += size;
 		}
 
-		inline std::string readString(unsigned int* decrement = 0) throw(...) {
-			unsigned int size;
-			readData(&size, 4, decrement);
-			if (ftell(_file) + size > _fileSize) throw DTException(errBadFormat);
-			std::basic_string<char> s;
-			readData(stringBuffer(s, size), size, decrement);
-			stringRelease(s, size);
-			return s;
+		PassStringRef readString(const Column* col = 0, unsigned int* decrement = 0) throw(...);
+
+		void writeString(const StringRef& s, const Column* col = 0, unsigned int* increment = 0) throw(...);
+
+		PassStringRef readString(unsigned int* decrement = 0) throw(...) {
+			return readString(0, decrement);
 		}
 
-		inline void writeString(const std::basic_string<char>& s, unsigned int* increment = 0) throw(...) {
-			unsigned int length = s.length();
-			writeData(&length, 4, increment);
-			writeData(s.c_str(), s.length(), increment);
+		void writeString(const StringRef& s, unsigned int* increment = 0) throw(...) {
+			writeString(s, 0, increment);
 		}
 
-		void readCryptedData(const Column& col, void* buffer, int size, unsigned int* decrement = 0) throw(...);
 
-		void writeCryptedData(const Column& col, void* buffer, int size, unsigned int* increment = 0) throw(...);
+		void readCryptedData(const Column* col, void* buffer, int size, unsigned int* decrement = 0) throw(...);
+
+		void writeCryptedData(const Column* col, const void* buffer, int size, unsigned int* increment = 0) throw(...);
 
 
 		inline void updateFileSize() {
@@ -239,29 +242,29 @@ namespace Stamina { namespace DT {
 		}
 
 		/**Creates a backup of specified file*/
-		void backupFile(const std::string& filename, bool move);
+		void backupFile(const StringRef& filename, bool move);
 		/**Creates a backup of the file we are currently operating on...
 		This function automatically determines if backup is really needed, and sets lastBackupTime property.
 		*/
 		void backupFile(bool move = true);
 
-		static std::string makeBackupFilename(const std::string& filename, const Time64& time = Time64(true)) {
+		static String makeBackupFilename(const StringRef& filename, const Time64& time = Time64(true)) {
 			return filename + time.strftime(".%d-%m-%Y %H-%M-%S.bak");
 		}
 
 		/** Removes old backups leaving only few of them.
 		@param filename - If it points to .dtb file, only backups of these file are cleaned. Otherwise it cleans up whole directory.
 		*/
-		static void cleanupBackups(const std::string& filename);
+		static void cleanupBackups(const StringRef& filename);
 
 		/** Restores specified backup file to it's original filename */
-		static void restoreBackup(const std::string& filename);
+		static void restoreBackup(const StringRef& filename);
 
 		/** Restores latest backup of specified filename */
-		bool restoreLastBackup(const std::string& filename = "");
+		bool restoreLastBackup(const StringRef& filename = "");
 
-		Date64 findLastBackupDate(const std::string& filename = "");
-		std::string findLastBackupFile(const std::string& filename = "");
+		Date64 findLastBackupDate(const StringRef& filename = "");
+		String findLastBackupFile(const StringRef& filename = "");
 
 	public:
 
@@ -294,7 +297,7 @@ namespace Stamina { namespace DT {
 		unsigned int _xorSalt;
 
 		bool _temp_enabled;
-		CStdString _temp_fileName; // Podczas uzywania tempa plik z ... tempem :)
+		String _temp_fileName; // Podczas uzywania tempa plik z ... tempem :)
 
 		unsigned int _fileSize;
 

@@ -11,135 +11,100 @@
 #ifndef __DT_COLUMN__
 #define __DT_COLUMN__
 
+#include <boost/function.hpp>
+#include <boost/signal.hpp>
+
+#include "../ObjectImpl.h"
+#include "../StringSTL.h"
+#include "iColumn.h"
+#include "Value.h"
+
+
 namespace Stamina { namespace DT {
 
-	class Column {
+	class Column: public SharedObject<iColumn> {
 	public:
 
-		Column();
+		friend class ColumnsDesc;
 
-		inline enColumnType getType() const {
-			return (enColumnType) (_type & ctypeMask);
-		}
-		inline enColumnFlag getFlags() const {
-			return (enColumnFlag) _type;
+		STAMINA_OBJECT_CLASS(DT::Column, iColumn);
+
+		Column() {
 		}
 
-		inline tColId getId() const {
-			return _id;
+		//virtual iObject* cloneObject();
+
+		virtual DataEntry getDefaultStaticData() const {
+			return 0;
 		}
-
-		inline void setId(tColId id) {
-			_id = id;
-		}
-
-		inline bool isIdUnique() const {
-			return (_id & colIdUniqueFlag) != 0;
-		}
-
-		/** Returns true if type occupies only 4 bytes and can be stored directly (without creating objects)
-		*/
-		inline bool isStaticType() const {
-			return this->getType() == ctypeInt;
-		}
-
-		inline bool empty() const {
-			return this->_type == ctypeUnknown;
-		}
-
-		inline const std::string& getName() const {
-			return _name;
-		}
-		inline void setName(const std::string& name) {
-			_name = name;
-		}
-
-		void setType(enColumnType type, bool resetFlags) {
-			if (resetFlags)
-				_type = type;
-			else
-				_type = (enColumnType)((_type & ~ctypeMask) | type);
-		}
-
-		void setFlag(enColumnFlag flag, bool setting) {
-			if (setting)
-				_type = _type | flag;
-			else
-				_type = (enColumnType) (_type & (~flag));
-		}
-		bool hasFlag(enColumnFlag flag) const {
-			return (_type & flag) != 0;
-		}
-
-		inline DataEntry getDefValue() const {
-			return _def;
-		}
-		inline void setDefValue(DataEntry val) {
-			_def = val;
-		}
-
-	private:
-		enColumnType _type;
-		tColId _id;
-		DataEntry _def; // default
-		std::string _name;  // tekstowy identyfikator
-
-
-	};
-
-	extern const Column emptyColumn;
-
-	class ColumnsDesc {  // Opis typow kolumn
-	public:
-		typedef std::vector<Column> tColumns;
-	public:
-		ColumnsDesc ();
-		operator = (const ColumnsDesc & x);
-
-		int setColumnCount (int count, bool expand = false); // ustawia ilosc kolumn
-		tColId setColumn (tColId id , enColumnType type , DataEntry def=0 , const char * name="");  // ustawia rodzaj danych w kolumnie
-		tColId setUniqueCol (const char * name , enColumnType type , DataEntry def=0);  // ustawia rodzaj danych w kolumnie o podanej nazwie
-
-		inline unsigned int getColCount () const {
-			return _cols.size();
-		}
-		inline unsigned int size() const {
-			return _cols.size();
-		}
-
-		const Column& getColumnByIndex(unsigned int index) const;
-		const Column& getColumn(tColId id) const {
-			return getColumnByIndex(colIndex(id));
-		}
-		const Column& getColumn(const char* name) const {
-			return getColumn(getNameId(name));
-		}
-
-		unsigned int colIndex (tColId id) const; // zwraca index kolumny
-
-		void clear() {
-			_cols.clear();
-		}
-
-		void optimize();
-		int join(const ColumnsDesc& other , bool overwrite); // ³¹czy dwa deskryptory, zwraca liczbê do³¹czonych
-
-		tColId getNewUniqueId(void);
-		tColId getNameId(const char * name) const;
-
-		bool isLoader() const {
-			return _loader;
-		}
-		void setLoader(bool loader) {
-			_loader = loader;
+		virtual void dataDispose(DataEntry data) const {
 		}
 
 	protected:
-		tColumns _cols;
-		bool _loader;
-		//void * table;
-		//int _deftype;
+
+		void init(unsigned int index, tColId id, enColumnFlag flags, const AStringRef& name) {
+			_index = index;
+			_id = id;
+			this->setFlag(flags, true);
+			_name = name;
+		}
+
+		void setIndex(unsigned int index) {
+			_index = index;
+		}
+		void setId(tColId id) {
+			_id = id;
+		}
+
+		virtual void cloneMembers(const iObject* a) {
+			BaseClass::cloneMembers(a);
+			const Column* b = a->castStaticObject<const Column>();
+/*			this->_getHandler = b->_getHandler;
+			this->_setHandler = b->_setHandler;
+			this->_preTrigger = b->_preTrigger;
+			this->_postTrigger = b->_postTrigger;*/
+		}
+
+	public:
+
+		// enResult getHandler (oValue&, const iColumn*, iRow*, enColumnType, GetFlags)
+		// enResult setHandler (oValue&, const iColumn*, iRow*, SetFlags)
+		// void trigger(const iColumn*, iRow*, SetFlags)
+
+		/** Handler for @b get operations on column.
+		@param oValue - in/out value object. Contains the current value in column's type. You can change only the value, or even assign a new value object.
+		@param iColumn - the column being read
+		@param iRow - the row being read
+		@param enColumnType - target value type
+		@param GetFlags - additional flags
+		*/
+		boost::function5< enResult, oValue&, const iColumn*, const iRow*, enColumnType, GetFlags > getHandler;
+		/** Handler for @b set operations on column.
+		@param oValue - in/out value object. Contains the value to be set (can be any of any type!). You can change only the value, or even assign a new value object.
+		@param iColumn - the column being set
+		@param iRow - the row being set
+		@param SetFlags - additional flags
+		*/
+		boost::function4< enResult, oValue&, const iColumn*, iRow*, SetFlags > setHandler;
+
+		/** List of triggers which are called @before setting a new value on column.
+		@param Value - value currently being set
+		@param iColumn - the column being set
+		@param iRow - the row being set
+		@param SetFlags - additional flags
+		*/
+		boost::signal4<void, const Value*, const iColumn*, iRow*, SetFlags> preTrigger;
+
+		/** List of triggers which are called @after setting a new value on column.
+		@param iColumn - the column being set
+		@param iRow - the row being set
+		@param SetFlags - additional flags
+		*/
+		boost::signal3<void, const iColumn*, iRow*, SetFlags> postTrigger;
+
+
 	};
+
 } }
 
 #endif

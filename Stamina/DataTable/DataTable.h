@@ -16,7 +16,6 @@
 
 #include <vector>
 #include <map>
-#include <Stdstring.h>
 #include <Stamina\CriticalSection.h>
 #include <Stamina\MD5.h>
 #include <Stamina\Time64.h>
@@ -24,7 +23,8 @@
 
 #include "DT.h"
 #include "DataRow.h"
-#include "Column.h"
+#include "ColumnsDesc.h"
+#include "Find.h"
 
 #define DT_SETBLANKSBYTYPE
 #define DT_CHECKTYPE
@@ -43,12 +43,13 @@ namespace Stamina { namespace DT {
 
 	class DataTable {
 	public:
-		typedef std::vector <DataRow *> tRows;
-		typedef std::map <std::string, std::string> tParams;
+		typedef std::vector <oDataRow> tRows;
+		typedef std::map <String, String> tParams;
 
 
 		friend class FileBase;
 		friend class FileBin;
+		friend class ColumnsDesc;
 
 	public:
 		DataTable ();
@@ -56,11 +57,13 @@ namespace Stamina { namespace DT {
 
 		// rows
 		tRowId DataTable::getRowId(unsigned int row) const {
+	        LockerCS lock(_cs);
 			if (isRowId(row)) return row;
 			if (row >= this->getRowCount()) return rowNotFound;
 			return flagId(_rows[row]->getId());
 		}
 		tRowId DataTable::getRowPos(tRowId row) const {
+	        LockerCS lock(_cs);
 			if (!isRowId(row)) return row;
 			for (unsigned int i=0; i < _rows.size(); i++)
 				if (_rows[i]->getId() == row) return i;
@@ -80,13 +83,14 @@ namespace Stamina { namespace DT {
 			return DataRow::unflagId(row);
 		}
 
-		tRowId addRow(tRowId id = rowNotFound); // Dodaje wiersz , mozna podac ID
+		oDataRow addRow(tRowId id = rowNotFound); // Dodaje wiersz , mozna podac ID
 
-		tRowId insertRow(unsigned int row , tRowId id = rowNotFound); // wstawia wiersz , mozna podac ID
+		oDataRow insertRow(unsigned int row , tRowId id = rowNotFound); // wstawia wiersz , mozna podac ID
 
 		bool deleteRow(tRowId row);
 
 		inline unsigned int getRowCount() const {
+	        LockerCS lock(_cs);
 			return _rows.size();
 		}
 
@@ -95,6 +99,7 @@ namespace Stamina { namespace DT {
 		void clearRows();
 
 		tRowId getNewRowId() {
+	        LockerCS lock(_cs);
 	        _lastId++;
 			if (_lastId > rowIdMax) _lastId = rowIdMin;
 			// Je¿eli wiersz z tym id ju¿ istnieje - szukamy nowego...
@@ -114,143 +119,129 @@ namespace Stamina { namespace DT {
 		np. Znajduje pierwszy kontakt sieci NET_GG aktywny w ci¹gu ostatniej minuty.
 		dt->findRow(0, -1, &Find::EqInt(CNT_NET, NET_GG), &Find(Find::gt, CNT_ACTIVITY, ValueInt64(_time64(0) - 60000)), 0);
 		*/
-        tRowId findRow(unsigned int startPos, int argCount, ...);
+		oDataRow findRow(unsigned int startPos, int argCount, ...);
 
-		tRowId findRow(unsigned int startPos, int argCount, va_list list);
+		oDataRow findRow(unsigned int startPos, int argCount, va_list list);
 
-		inline tRowId findRow(unsigned int startPos, Find& f1) {
+		inline oDataRow findRow(unsigned int startPos, Find& f1) {
 			return this->findRow(startPos, 1, &f1);
 		}
-		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2) {
+		inline oDataRow findRow(unsigned int startPos, Find& f1, Find& f2) {
 			return this->findRow(startPos, 2, &f1, &f2);
 		}
-		inline tRowId findRow(unsigned int startPos, Find& f1, Find& f2, Find& f3) {
+		inline oDataRow findRow(unsigned int startPos, Find& f1, Find& f2, Find& f3) {
 			return this->findRow(startPos, 3, &f1, &f2, &f3);
 		}
 
 
-		DataRow& getRow(tRowId row) throw(...) {
+		oDataRow getRow(tRowId row) throw(...) {
 			row = this->getRowPos(row);
-			if (row == rowNotFound) throw DTException(errNoRow);
-			return *this->_rows[row];
+			if (row == rowNotFound) return 0; // throw DTException(errNoRow);
+			return this->_rows[row];
 		}
 
+		/*
 		DataEntry get(tRowId row , tColId id) throw(...); // zwraca wartosc w wierszu/kolumnie
 		bool set(tRowId row , tColId col, DataEntry val, bool dropDefault = false) throw(...);
-
+		*/
 
 		// inne
-		inline int getInt(tRowId row , tColId id)  {
-			Value v = Value(ctypeInt);
-			this->getValue(row, id, v);
-			return v.vInt;
+		inline int getInt(tRowId row , tColId id, GetSet flags = gsNone)  {
+			return this->getColumn(id)->getInt( this->getRow(row), flags);
 		}
-		inline bool setInt(tRowId row , tColId id , int val, bool dropDefault = false) {
-			return this->setValue(row, id, ValueInt(val), dropDefault);
-		}
-		inline const char * getCh(tRowId row , tColId id, char* buffer, unsigned int buffSize = 0) {
-			Value v = ValueStr(buffer, buffSize);
-			if (this->getValue(row, id, v))
-				return v.vChar;
-			else
-				return 0;
-		}
-		inline bool setCh(tRowId row , tColId id , const char * val, bool dropDefault = false) {
-			return this->setValue(row, id, ValueStr(val), dropDefault);
-		}
-
-		inline const wchar_t * getWCh(tRowId row , tColId id, wchar_t* buffer, unsigned int buffSize = 0) {
-			Value v = ValueWideStr(buffer, buffSize);
-			if (this->getValue(row, id, v))
-				return v.vWChar;
-			else
-				return 0;
-		}
-		inline bool setWCh(tRowId row , tColId id , const wchar_t * val, bool dropDefault = false) {
-			return this->setValue(row, id, ValueWideStr(val), dropDefault);
-		}
-
-		inline TypeBin getBin(tRowId row , tColId id, const TypeBin& val ) {
-			Value v = ValueBin(val);
-			if (!this->getValue(row, id, v)) {
-				TypeBin b;
-				b.buff = 0;
-				return b;
-			} else {
-				return v.vBin;
+		inline bool setInt(tRowId rowId , tColId id , int val, GetSet flags = gsNone) {
+			oRow row = this->getRow(rowId);
+			if (row) {
+				return this->getColumn(id)->setInt(row , val, flags);
 			}
+			return row;
 		}
-		inline bool setBin(tRowId row , tColId id , void * val , size_t size, bool dropDefault = false) {
-			return this->setValue(row, id, ValueBin(val, size), dropDefault);
+		inline String getString(tRowId row , tColId id, GetSet flags = getCopy) {
+			return PassStringRef( this->getColumn(id)->getString( this->getRow(row), flags ) );
 		}
-		inline bool setBin(tRowId row , tColId id , const TypeBin& val, bool dropDefault = false) {
-			return this->setValue(row, id, ValueBin(val), dropDefault);
-		}
-
-		inline __int64 get64(tRowId row , tColId id) {
-			Value v = Value(ctypeInt64);
-			this->getValue(row, id, v);
-			return v.vInt64;
-		}
-		inline bool set64(tRowId row , tColId id , __int64 val, bool dropDefault = false) {
-			return this->setValue(row, id, ValueInt64(val), dropDefault);
-		}
-
-		inline std::string getStr(tRowId row , tColId id) {
-			Value v = ValueStr(0, -1); // this way we will get string duplicate
-			if (this->getValue(row, id, v)) {
-				std::string s = v.vChar;
-				free(v.vChar);
-				return s;
-			} else {
-				return "";
+		inline bool setString(tRowId rowId , tColId id , const StringRef& val, GetSet flags = gsNone) {
+			oRow row = this->getRow(rowId);
+			if (row) {
+				return this->getColumn(id)->setString(row, val, flags);
 			}
-		}
-		inline bool setStr(tRowId row , tColId id , const std::string& val, bool dropDefault = false) {
-			return setCh(row, id, val.c_str(), dropDefault);
+			return row;
 		}
 
-		inline std::wstring getWStr(tRowId row , tColId id) {
-			Value v = ValueWideStr(0, -1); // this way we will get string duplicate
-			if (this->getValue(row, id, v)) {
-				std::wstring s = v.vWChar;
-				free(v.vWChar);
-				return s;
-			} else {
-				return L"";
+		inline ByteBuffer getBin(tRowId row , tColId id, GetSet flags = getCopy) {
+			ByteBuffer b;
+			b.swap( this->getColumn(id)->getBin( this->getRow(row), flags ) );
+			return b;
+		}
+		inline bool setBin(tRowId rowId , tColId id , const ByteBuffer& val, GetSet flags = gsNone) {
+			oRow row = this->getRow(rowId);
+			if (row) {
+				return this->getColumn(id)->setBin(row, val, flags);
 			}
+			return row;
 		}
-		inline bool setWStr(tRowId row , tColId id , const std::wstring& val, bool dropDefault = false) {
-			return setWCh(row, id, val.c_str(), dropDefault);
+
+		inline __int64 get64(tRowId row , tColId id, GetSet flags = gsNone) {
+			return this->getColumn(id)->getInt64( this->getRow(row), flags );
+		}
+		inline bool set64(tRowId rowId , tColId id , __int64 val, GetSet flags = gsNone) {
+			oRow row = this->getRow(rowId);
+			if (row) {
+				return this->getColumn(id)->setInt64(row , val, flags );
+			}
+			return row;
+		}
+
+		inline double getDouble(tRowId row , tColId id, GetSet flags = gsNone) {
+			return this->getColumn(id)->getDouble( this->getRow(row), flags );
+		}
+		inline bool setDouble(tRowId rowId , tColId id , double val, GetSet flags = gsNone) {
+			oRow row = this->getRow(rowId);
+			if (row) {
+				return this->getColumn(id)->setDouble(row , val, flags );
+			}
+			return row;
 		}
 
 
-		const ColumnsDesc& getColumns() {
+
+		inline const ColumnsDesc& getColumns() {
 			return this->_cols;
 		}
 
+		inline Column* getColumn(tColId colId) const {
+			return this->_cols.getColumn(colId);
+		}
+
+		inline Column* getColumn(const StringRef& name) const {
+			return this->_cols.getColumn(name);
+		}
+
 		void clearColumns() {
+			if (_rows.size() > 0) return;
 			this->_cols.clear();
 		}
 
 		void mergeColumns(const ColumnsDesc& columns) {
+			if (_rows.size() > 0) return;
 			this->_cols.join(columns, false);
 		}
 
-		inline tColId setColumn (tColId id , enColumnType type , DataEntry def=0 , const char * name="") {
-			return _cols.setColumn(id, type, def, name);
+		inline oColumn setColumn (tColId id , enColumnType type , const AStringRef& name = AStringRef()) {
+			if (_rows.size() > 0) return oColumn();
+			return _cols.setColumn(id, type, name);
 		}
-		inline tColId setUniqueCol (const char * name , enColumnType type , DataEntry def=0) {
-			return _cols.setUniqueCol(name, type, def);
+		inline oColumn setUniqueCol (const AStringRef& name , enColumnType type) {
+			if (_rows.size() > 0) return oColumn();
+			return _cols.setUniqueCol(name, type);
 		}
 
-		inline tColId getColumnId(const char* name) {
+		inline tColId getColumnId(const AStringRef& name) {
 			return this->_cols.getNameId(name);
 		}
 
 
 		int checkColType(tColId id , enColumnType type) {
-			return this->_cols.getColumn(id).getType() == type;
+			return this->_cols.getColumn(id)->getType() == type;
 		}
 
 		bool idExists(int id) {
@@ -261,10 +252,12 @@ namespace Stamina { namespace DT {
 		}
 
 		void setChanged() {
+	        LockerCS lock(_cs);
 			_changed = true;
 		}
 
 		bool isChanged() {
+	        LockerCS lock(_cs);
 			return _changed;
 		}
 
@@ -284,30 +277,32 @@ namespace Stamina { namespace DT {
 			buffer = -1 size = 0		 - the @a buffer is replaced with the internal data pointer (it's READ ONLY and it's not thread-safe! you MUST lock the row first!). size is also being returned.
 			buffer = * size = #		 - the data is copied into the @a buffer
 */
-		bool getValue(tRowId row , tColId col , Value& value);
+		//bool getValue(tRowId row, tColId col, Value& value);
 		
 		/** Sets the value using type conversion.
 		*/
-		bool setValue(tRowId row , tColId col , const Value& value, bool dropDefault=false);
+		//bool setValue(tRowId row, tColId col, const Value& value, bool dropDefault=false);
 
 		inline void setXor1Key(char* key) {
+	        LockerCS lock(_cs);
 			_xor1_key = (unsigned char*) key;
 		}
 		inline const unsigned char* getXor1Key() {
 			return _xor1_key;
 		}
 
-		static MD5Digest createPasswordDigest(const std::string& pass) {
-			return MD5Digest(pass);
+		static MD5Digest createPasswordDigest(const StringRef& pass) {
+			return MD5Digest(pass.a_str());
 		}
 
 		/**Generates password digest*/
-		void setPassword(const std::string& pass) {
-			setPasswordDigest(createPasswordDigest(pass));
+		void setPassword(const StringRef& pass) {
+			setPasswordDigest(createPasswordDigest(pass.a_str()));
 		}
 
 		/**Sets password digest*/
 		void setPasswordDigest(const MD5Digest& digest) {
+	        LockerCS lock(_cs);
 			this->_passwordDigest = digest;
 			this->_changed = true;
 		}
@@ -316,31 +311,37 @@ namespace Stamina { namespace DT {
 			return this->_passwordDigest;
 		}
 
-		inline bool paramExists(const std::string& name) {
+		inline bool paramExists(const StringRef& name) {
+	        LockerCS lock(_cs);
 			return _params.find(name) != _params.end();
 		}
 
-		inline CStdString getParam(const std::string& name) {
+		inline String getParam(const StringRef& name) {
+	        LockerCS lock(_cs);
 			if (!paramExists(name)) return "";
 			return _params[name];
 		}
 
-		inline const void setParam(const std::string& name, const std::string& value) {
+		inline const void setParam(const StringRef& name, const StringRef& value) {
+	        LockerCS lock(_cs);
 			_params[name] = value;
 			_changed = true;
 		}
 
-		inline void resetParam(const std::string& name) {
+		inline void resetParam(const StringRef& name) {
+	        LockerCS lock(_cs);
 			_changed = true;
 			_params.erase(name);
 		}
 
 		inline void resetParams() {
+	        LockerCS lock(_cs);
 			_changed = true;
 			_params.clear();
 		}
 
-		const tParams getParamsMap() {
+		const tParams& getParamsMap() {
+	        LockerCS lock(_cs);
 			return _params;
 		}
 
