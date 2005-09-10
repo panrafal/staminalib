@@ -31,21 +31,21 @@ namespace Stamina {
 			return oImage();
         ext++;
 		if (!stricmp(ext, "ico")) {
-			return Image::loadIcon32(filename, loadParams.size, loadParams.bits);
+			return Image::loadIcon32(filename, loadParams.size.w, loadParams.bits);
 		} else if (!stricmp(ext, "bmp")) {
 			return new Bitmap(filename, loadParams.transparent);
 		}
-		return new ImageIL(filename);
+		return new ImageIL(filename, loadParams);
 	}
 
 	oImage loadImageFromResource(HINSTANCE inst, const char* resType, const char* resId, int imageType, loadImageParams loadParams) {
 		if (imageType == IMAGE_ICON) 
-			return Image::loadIcon32(inst, resId, loadParams.size, loadParams.bits);
+			return Image::loadIcon32(inst, resId, loadParams.size.w, loadParams.bits);
 //			return new Icon(inst, resId, loadParams.size, loadParams.bits);
 		else if (imageType == IMAGE_BITMAP)
 			return new Bitmap(inst, resId, loadParams.transparent);
 		else {
-			return new ImageIL(inst, resType, resId);
+			return new ImageIL(inst, resType, resId, loadParams);
 		}
 	}
 
@@ -58,16 +58,26 @@ namespace Stamina {
 		
 		int imageType = (!stricmp(url[3].c_str(),"bmp"))?IMAGE_BITMAP:((!stricmp(url[3].c_str(),"ico"))?IMAGE_ICON:-1);
 //		if (!stricmp(url[3].c_str(),"ico")) {
-			CStdString params = "&" + url[4];
-			CStdString::size_type start;
+		CStdString params = "&" + url[4];
+		CStdString::size_type start;
+		if (!loadParams.size) {
 			start = params.find("&size=");
-			if (!loadParams.size && start != -1) 
-				loadParams.size = atoi(params.c_str() + start + strlen("&size="));
-			start = params.find("&bits=");
-			if (!loadParams.bits && start != -1) 
-				loadParams.bits = atoi(params.c_str() + start + strlen("&bits="));
-			if (params.find("&trans=1") != -1) 
-				loadParams.transparent = true;
+			if (start != -1) {
+				loadParams.size = Size(atoi(params.c_str() + start + strlen("&size=")));
+			} else {
+				start = params.find("&w=");
+				if (start != -1)
+					loadParams.size.w = atoi(params.c_str() + start + strlen("&w="));
+				start = params.find("&h=");
+				if (start != -1)
+					loadParams.size.h = atoi(params.c_str() + start + strlen("&h="));
+			}
+		}
+		start = params.find("&bits=");
+		if (!loadParams.bits && start != -1) 
+			loadParams.bits = atoi(params.c_str() + start + strlen("&bits="));
+		if (params.find("&trans=1") != -1) 
+			loadParams.transparent = true;
 //		}
 
         if (url[1]=="file") {
@@ -106,7 +116,7 @@ namespace Stamina {
 
 
 
-	ImageIL::ImageIL(const char* filename) {
+	ImageIL::ImageIL(const char* filename, loadImageParams params) {
 	    ILuint imgID;
 		ilInit();
 		ilGenImages(1, &imgID);
@@ -114,19 +124,19 @@ namespace Stamina {
 		ilEnable(IL_FORMAT_SET); 
 		ilSetInteger(IL_FORMAT_MODE, IL_RGBA);
 		ilLoadImage((ILstring)filename);
-		this->setImage(imgID);
+		this->setImage(imgID, params);
 		ilDeleteImages(1, &imgID);
 	}
-	ImageIL::ImageIL(HINSTANCE inst, const char* resType, const char* resId) {
+	ImageIL::ImageIL(HINSTANCE inst, const char* resType, const char* resId, loadImageParams params) {
 		int dataSize=0;
 		HGLOBAL rsrc;
 		void * data = loadResourceData(inst, resId, resType , rsrc, &dataSize);
 		S_ASSERT(data);
-		this->setImage(data, dataSize);
+		this->setImage(data, dataSize, params);
 		FreeResource(rsrc);
 	}
 
-	void ImageIL::setImage(void* pixels, unsigned int dataSize) {
+	void ImageIL::setImage(void* pixels, unsigned int dataSize, loadImageParams params) {
 		S_ASSERT(pixels);
 		ILuint imgID;
 		ilInit();
@@ -136,15 +146,35 @@ namespace Stamina {
 		ilSetInteger(IL_FORMAT_MODE, IL_RGBA);
 		int ilType = IL_TYPE_UNKNOWN;
 		ilLoadL(ilType, pixels, dataSize);
-		this->setImage(imgID);
+		this->setImage(imgID, params);
 		ilDeleteImages(1, &imgID);
 	}
 
-	void ImageIL::setImage(unsigned int ilid) {
+	void ImageIL::setImage(unsigned int ilid, loadImageParams params) {
 		ILuint imgID = ilid;
 		ilBindImage(imgID);
 		int width = ilGetInteger(IL_IMAGE_WIDTH);
 		int height = ilGetInteger(IL_IMAGE_HEIGHT);
+		int newWidth = width;
+		int newHeight = height;
+		if (params.size.w != 0) {
+			newWidth = params.size.w;
+			if (params.size.h == 0) {
+				newHeight = ((float)newWidth / width) * height;
+			}
+		}
+		if (params.size.h != 0) {
+			newHeight = params.size.h;
+			if (params.size.w == 0) {
+				newWidth = ((float)newHeight / height) * width;
+			}
+		}
+		if (newWidth != width || newHeight != height) {
+			height = newHeight;
+			width = newWidth;
+			iluImageParameter(ILU_FILTER, ILU_BILINEAR);
+			iluScale(width, height, 1);
+		}
 		// pusta bitmapa jako maska...
 		//ii.hbmMask = CreateBitmap(width,height,1,1,NULL);
 		void * bmpData;

@@ -18,8 +18,8 @@ namespace Stamina {
 
 	struct loadImageParams {
 		loadImageParams() : size(0), bits(0), transparent(0) {}
-		loadImageParams(short size, char bits) : size(size), bits(bits), transparent(false) {}
-		short size;
+		loadImageParams(Size size, char bits) : size(size), bits(bits), transparent(false) {}
+		Size size;
 		char bits;
 		bool transparent;
 	};
@@ -31,15 +31,15 @@ namespace Stamina {
 	class ImageIL: public Bitmap32 {
 	public:
 		//Bitmap32(const char* iconfile, int size);
-		ImageIL(const char* filename);
-		ImageIL(HINSTANCE inst, const char* resType, const char* resId);
-		ImageIL(unsigned int ilid) {setImage(ilid);}
-		ImageIL(void* pixels, unsigned int dataSize) {
-			setImage(pixels, dataSize);
+		ImageIL(const char* filename, loadImageParams params);
+		ImageIL(HINSTANCE inst, const char* resType, const char* resId, loadImageParams params);
+		ImageIL(unsigned int ilid, loadImageParams params) {setImage(ilid, params);}
+		ImageIL(void* pixels, unsigned int dataSize, loadImageParams params) {
+			setImage(pixels, dataSize, params);
 		}
 	protected:
-		void setImage(unsigned int ilid);
-		void setImage(void* pixels, unsigned int dataSize);
+		void setImage(unsigned int ilid, loadImageParams params);
+		void setImage(void* pixels, unsigned int dataSize, loadImageParams params);
 
 	};
 
