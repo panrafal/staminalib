@@ -16,7 +16,6 @@
 #include "Helpers.h"
 
 namespace Stamina {
-	using std::string;
 
 	Internet::Internet(HINTERNET session) {
 		_hSession = session;
@@ -34,8 +33,8 @@ namespace Stamina {
 		InternetSetOption(_hSession , INTERNET_OPTION_SEND_TIMEOUT , (void*)&timeout , 4);
 	}
 
-	oRequest Internet::handlePostWithRedirects(const std::string& url, const std::string& headers, const std::string& data, const char* referer, const char** acceptTypes, int flags) {
-		std::string location = url;
+	oRequest Internet::handlePostWithRedirects(const StringRef& url, const StringRef& headers, const StringRef& data, const char* referer, const char** acceptTypes, int flags) {
+		String location = url;
 		oConnection connection;
 		oRequest request;
 		while (1) {
@@ -48,7 +47,7 @@ namespace Stamina {
 			request->sendThrowable(headers, data);
 			int status = request->getStatusCode();
 			if (status == 301 || status == 302) {
-				string newLocation = request->getLocation();
+				String newLocation = request->getLocation();
 				if (newLocation.empty() == false) {
 					location = combineUrl(newLocation, location);
 					continue; // jeszcze raz...
@@ -60,35 +59,48 @@ namespace Stamina {
 	}
 
 
-	string Internet::getUrlProtocol(const string& url) {
-		CStdString protocol = RegEx::doGet("/^(\\w+):/", url.c_str(), 1);
-		return protocol.ToLower();
+	String Internet::getUrlProtocol(const StringRef& url) {
+		String protocol = RegEx::doGet("/^(\\w+):/", url.c_str(), 1);
+		return protocol.toLower();
 	}
-	string Internet::getUrlHost(const string& url) {
+	String Internet::getUrlHost(const StringRef& url) {
 		return RegEx::doGet("#^\\w+:(?://(?:[^/@]+@)?|[^/@]+@)([^/@:?&]+)#", url.c_str(), 1);
 
 	}
-	string Internet::getUrlQuery(const string& url) {
+	String Internet::getUrlQuery(const StringRef& url) {
 		return RegEx::doGet("#^\\w+://[^/]+(/.+)#", url.c_str(), 1);
 	}
 
-	int Internet::getUrlPort(const string& url) {
-		return 80;
+	int Internet::getUrlPort(const StringRef& url) {
+		Stamina::RegEx regex;
+		if (regex.match("#:([0-9])#", url.c_str()))
+			return Stamina::chtoint( regex[1].c_str() );
+		else {
+			String protocol = getUrlProtocol(url);
+			if(protocol == "http")
+				return 80;
+			else if(protocol == "ftp")
+				return 21;
+			else if(protocol == "https")
+				return 443;
+		}
+		return -1;
 	}
 
-	std::string Internet::combineUrl(const std::string& url, const std::string& parent) {
+	String Internet::combineUrl(const StringRef& url, const StringRef& parent) {
 		Stamina::RegEx regex;
 		if (url.empty() || regex.match("#^\\w+://#", url.c_str())) {
 			return url;
 		}
+
 		// wyci¹gamy poszczególne elementy URLa
 		if (!regex.match("#^(\\w+://[^/]+/)([^\\?]+/)?([^\\?/]*)(\\?.*)?$#", parent.c_str()))
 			return url;
-		if (url[0] == '.' && (url.length() < 2 || url[1] != '.')) {
+		if (url.a_str()[0] == '.' && (url.length() < 2 || url.a_str()[1] != '.')) {
 			// (http://..../) + (katalog/) + url bez kropki
 			return regex[1] + regex[2] + url.substr(1);
-		} else if (url[0] == '/') {
-			// (http://..../) + url bez kreki
+		} else if (url.a_str()[0] == '/') {
+			// (http://..../) + url bez kreski
 			return regex[1] + url.substr(1);
 		} else {
 			// (http://..../) + (katalog/) + url
@@ -105,7 +117,7 @@ namespace Stamina {
 		this->_hConnect = 0;
 	}
 
-	Connection::Connection(const oInternet& internet, Type type, const string& host, int port, const char* user, const char* password) {
+	Connection::Connection(const oInternet& internet, Type type, const StringRef& host, int port, const char* user, const char* password) {
 		this->init();
 		this->_type = type;
 		this->_host = host;
@@ -119,14 +131,14 @@ namespace Stamina {
 		}
 	}
 	
-	Connection::Connection(const oInternet& internet, const string& url)  {
+	Connection::Connection(const oInternet& internet, const StringRef& url)  {
 		this->init();
-		CStdString server = url;
-		server.ToLower();
+		String server = url;
+		server.makeLower();
 		if (server.substr(0,7) != "http://") {
 			throw ExceptionBadUrl("Protocol: " + server);
 		}
-		server = url.substr(7 , url.find('/' , 8)-7);
+		server = url.substr(7 , url.find("/" , 8) - 7);
         this->_host = server;
 		this->_type = typeHttp;
 		this->_port = 80;
@@ -149,14 +161,14 @@ namespace Stamina {
 		return;
 	}
 
-	Connection::Type Connection::getConnectionType(const string& protocol) {
+	Connection::Type Connection::getConnectionType(const StringRef& protocol) {
 		if (protocol == "http") {
 			return typeHttp;
 		}
 		return typeUnknown;
 	}
 
-	bool Connection::isCompatible(const string& url) {
+	bool Connection::isCompatible(const StringRef& url) {
 		return isCompatible( getConnectionType( Internet::getUrlProtocol(url) ), Internet::getUrlHost(url), Internet::getUrlPort(url) );
 	}
 
@@ -165,7 +177,7 @@ namespace Stamina {
 
 
 
-	Request::Request(const oConnection& connection, const std::string& uri, Type type, const char* version, const char* referer, const char** acceptTypes, int flags) {
+	Request::Request(const oConnection& connection, const StringRef& uri, Type type, const char* version, const char* referer, const char** acceptTypes, int flags) {
 		this->_uri = RegEx::doReplace("#^[a-z]+://[^/]+#i" , "", uri.c_str() );
 		this->_type = type;
 		this->_connection = connection;
@@ -191,7 +203,7 @@ namespace Stamina {
 		if (_hRequest) InternetCloseHandle(_hRequest);
 	}
 
-	bool Request::send(const std::string& headers, const std::string& data) {
+	bool Request::send(const StringRef& headers, const StringRef& data) {
 		return HttpSendRequest(_hRequest, headers.c_str(), headers.length(), (void*)data.c_str(), data.length())!=0;
 	}
 
@@ -204,14 +216,14 @@ namespace Stamina {
 		return 0;
 	}
 
-	std::string Request::getStatusText() {
+	String Request::getStatusText() {
 		return this->getInfoString(HTTP_QUERY_STATUS_TEXT, 100);
 	}
 
-	std::string Request::getInfoString(int type, DWORD size) {
-		string txt;
-		if (HttpQueryInfo(_hRequest , type , Stamina::stringBuffer(txt, size) , &size , 0)) {
-			stringRelease(txt, size);
+	String Request::getInfoString(int type, DWORD size) {
+		String txt;
+		if (HttpQueryInfo(_hRequest , type , txt.useBuffer<char>(size) , &size , 0)) {
+			txt.releaseBuffer<char>(size);
 			return txt;
 		} else {
 			if (GetLastError()==ERROR_INSUFFICIENT_BUFFER) {
@@ -222,10 +234,10 @@ namespace Stamina {
 		}
 	}
 
-	std::string Request::getHeaderString(const std::string& header, DWORD size) {
-          string txt = header;
-          if (HttpQueryInfo(_hRequest , HTTP_QUERY_CUSTOM , Stamina::stringBuffer(txt, size) , &size , 0)) {
-               stringRelease(txt, size);
+	String Request::getHeaderString(const StringRef& header, DWORD size) {
+          String txt = header;
+		  if (HttpQueryInfo(_hRequest , HTTP_QUERY_CUSTOM , txt.useBuffer<char>(size) , &size , 0)) {
+			  txt.releaseBuffer<char>(size);
                return txt;
           } else {
                if (GetLastError()==ERROR_INSUFFICIENT_BUFFER) {
@@ -247,7 +259,7 @@ namespace Stamina {
 	}
 
 
-	std::string Request::getLocation() {
+	String Request::getLocation() {
 		return getInfoString(HTTP_QUERY_LOCATION);
 	}
 
@@ -262,8 +274,8 @@ namespace Stamina {
 	}
 
 
-	std::string Request::getResponse()  {
-		string response;
+	String Request::getResponse()  {
+		String response;
 		char buff [501];
 		int read;
 		do {
@@ -273,7 +285,7 @@ namespace Stamina {
 			}
 			buff[read] = 0;
 			if (read) {
-				response.append(buff, read);
+				response.append(StringRef(buff, read));
 			}
 		} while (read);
 
