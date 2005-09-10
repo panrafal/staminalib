@@ -42,10 +42,10 @@ namespace Stamina {
 	/* Scoped locking of iLockable */
 	template <class TLO> class LockerTmpl {
 	public:
-		__inline LockerTmpl(TLO* lo):_lo(lo) {
+		__inline LockerTmpl(const TLO* lo):_lo(const_cast<TLO*>(lo)) {
 			_lo->lock();
 		}
-		__inline LockerTmpl(TLO& lo):_lo(&lo) {
+		__inline LockerTmpl(const TLO& lo):_lo(&const_cast<TLO&>(lo)) {
 			_lo->lock();
 		}
 		__inline ~LockerTmpl(){
