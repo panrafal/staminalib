@@ -74,6 +74,10 @@ namespace Stamina { namespace Memory {
 	inline wchar_t* allocBuffer<wchar_t>(unsigned int& size) {
 		return sm_allocBuffer16(size);
 	}
+	template <>
+	inline unsigned char* allocBuffer<unsigned char>(unsigned int& size) {
+		return (unsigned char*)sm_allocBuffer8(size);
+	}
 
 	template <>
 	inline void freeBuffer<char>(char* buff, unsigned int size) {
@@ -82,6 +86,10 @@ namespace Stamina { namespace Memory {
 	template <>
 	inline void freeBuffer<wchar_t>(wchar_t* buff, unsigned int size) {
 		sm_freeBuffer16(buff, size);
+	}
+	template <>
+	inline void freeBuffer<unsigned char>(unsigned char* buff, unsigned int size) {
+		sm_freeBuffer8((char*)buff, size);
 	}
 
 
