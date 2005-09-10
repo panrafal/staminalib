@@ -22,6 +22,7 @@
 #include "LibInstance.h"
 #include "ObjectPtr.h"
 #include "Version.h"
+#include "Memory.h"
 
 #ifdef STAMINA_DEBUG
 	#include <list>
@@ -106,6 +107,8 @@ namespace Stamina {
 		const Version _version;
 	};
 #define STAMINA_OBJECT_CLASS_DEFINE(TYPE, NAME, BASE, VERSION) \
+	typedef TYPE ObjectClass;\
+	typedef BASE BaseClass;\
 	static ::Stamina::ObjectClassInfo& staticClassInfo() {\
 	static ::Stamina::ObjectClassInfo oci = ::Stamina::ObjectClassInfo(NAME, sizeof(TYPE), &BASE::staticClassInfo(), VERSION);\
 		return oci;\
@@ -117,6 +120,13 @@ namespace Stamina {
 #define STAMINA_OBJECT_CLASS(TYPE, BASE) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, ::Stamina::Version())
 	
 #define STAMINA_OBJECT_CLASS_VERSION(TYPE, BASE, VERSION) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, VERSION)
+
+#define STAMINA_OBJECT_CLONEABLE()\
+	virtual iObject* cloneObject() const {\
+		iObject* obj = new ObjectClass();\
+		obj->cloneMembers(this);\
+		return obj;\
+	}
 
 	class String; // forward declaration
 
@@ -151,7 +161,19 @@ namespace Stamina {
 			return staticClassInfo();
 		}
 
-		virtual String toString() const = 0;
+		virtual String toString() const;
+
+		virtual iObject* cloneObject() const {
+			S_DEBUG_ERROR("not cloneable!");
+			return 0;
+		}
+
+	public:
+
+		virtual void cloneMembers(const iObject* b) {
+		}
+
+	public:
 
 		/** Static class information */
 		static ObjectClassInfo& staticClassInfo() {
@@ -164,6 +186,14 @@ namespace Stamina {
 		}
 		bool isSameLibInstance(const iObject& obj) {
 			return this->getClass().getLibInstance() == obj.getClass().getLibInstance();
+		}
+
+		template <class TO> TO* castStaticObject() {
+			return static_cast<TO*>(this);
+		}
+
+		template <class TO> TO* castStaticObject() const {
+			return static_cast<TO*>(this);
 		}
 
 		template <class TO> TO* castObject() {
@@ -188,6 +218,14 @@ namespace Stamina {
 			}
 		}
 
+		void *operator new( size_t size) {
+			return Memory::malloc(size);
+		}
+
+		void operator delete( void * buff ) {
+			Memory::free(buff);
+		}
+
 
 	private:
 
@@ -204,9 +242,9 @@ namespace Stamina {
 	class iLockableObject: public iObject {
 	public:
 	    /** Blokuje dostêp do obiektu */
-		virtual void __stdcall lock() const =0;
+		virtual void __stdcall lock() const {}
 		/** Odblokowuje dostêp do obiektu */
-		virtual void __stdcall unlock() const =0;
+		virtual void __stdcall unlock() const {}
 
 		virtual ~iLockableObject() {};
 
@@ -257,6 +295,9 @@ namespace boost {
 		p->release();
 	}
 };
+
+#include "String.h"
+
 
 
 #endif

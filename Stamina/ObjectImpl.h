@@ -16,7 +16,6 @@
 
 #include "Object.h"
 #include "CriticalSection.h"
-#include "String.h"
 
 
 
@@ -26,10 +25,6 @@ namespace Stamina {
 	template <class OI /**Object interface*/> class Object: public OI {
 	public:
 
-		virtual String toString() const {
-			return strRet("<null>");
-		}
-
 	};
 
 
@@ -38,7 +33,7 @@ namespace Stamina {
 	@param OIMP - Object implementation (iObject)
 	@param TCS - locker class to use (needs functions lock() and unlock())
 	*/
-	template <class OI, class OIMP = Object<OI> , class TCS = Stamina::CriticalSection> class LockableObject: public OIMP {
+	template <class OI, class TCS = Stamina::CriticalSection, class OIMP = Object<OI> > class LockableObject: public OIMP {
 	public:
 		void __stdcall lock() const {
 			const_cast<LockableObject*>(this)->_cs.lock();
@@ -59,7 +54,8 @@ namespace Stamina {
 	@param IO - object's interface
 	@param LO - Lockable object implementation
 	*/
-	template <class OI, class LO = LockableObject<OI> /*Locker Obj*/> class SharedObject: public LO {
+	template <class OI, class LO = LockableObject<OI> /*Locker Obj*/> 
+	class SharedObject: public LO {
 	public:
 		SharedObject() {
 			this->_useCount=1; ///< trzyma sam siebie...
@@ -111,6 +107,11 @@ namespace Stamina {
 			LockerTmpl<LO>(this);
 			return this->_useCount;
 		}
+		/** The object won't be ever deleted automatically. Use ONLY for heap allocated objects! */
+		void disableRefCount() {
+			_useCount = 0;
+		}
+
 	private:
 		/** Dopóki obiekt nie jest niszczony ma _useCount >= 1 */
 		volatile unsigned int _useCount;

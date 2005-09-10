@@ -15,6 +15,61 @@
 namespace Stamina {
 
 	/** Class for handling static objects (no reference counting!, without iSharedObj implemented) */
+	template <class T> class StaticObj {
+	public:
+		StaticObj() {
+			_obj.disableRefCount();
+		}
+
+		template <typename A1> StaticObj(A1 a1):T(a1) {
+			_obj.disableRefCount();
+		}
+
+		const T * get() const {
+			return &this->_obj;
+		}
+		T * get() {
+			return &this->_obj;
+		}
+
+		operator T * () const {
+			return &this->_obj;
+		}
+
+		operator T * () {
+			return &this->_obj;
+		}
+
+
+		const T * operator -> () const {
+			S_ASSERT(this->_obj != 0);
+			return this->get();
+		}
+		T * operator -> () {
+			S_ASSERT(this->_obj != 0);
+			return this->get();
+		}
+
+		const T & operator * () const {
+			return *this->get();
+		}
+		T & operator * () {
+			return *this->get();
+		}
+
+		bool operator == (const T * b) const {
+			return &this->_obj == b;
+		}
+		bool operator != (const T * b) const {
+			return &this->_obj != b;
+		}
+	private:
+		T _obj;
+
+	};
+
+
+	/** Class for handling static objects (no reference counting!, without iSharedObj implemented) */
 	template <class T> class StaticPtr {
 	public:
 		StaticPtr(T & obj) {
@@ -45,6 +100,9 @@ namespace Stamina {
 		T * get() const {
 			return this->_obj;
 		}
+		operator T * () const {
+			return this->_obj;
+		}
 		T * operator -> () const {
 			S_ASSERT(this->_obj != 0);
 			return this->get();
@@ -53,6 +111,12 @@ namespace Stamina {
 			return *this->get();
 		}
 		operator bool () const {
+			return this->_obj != 0;
+		}
+		bool operator ! () const {
+			return this->_obj == 0;
+		}
+		bool isValid() const {
 			return this->_obj != 0;
 		}
 		bool operator == (const T * b) const {
