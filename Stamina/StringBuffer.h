@@ -46,9 +46,34 @@ namespace Stamina {
 		const static unsigned int lengthUnknown = 0xFFFFFFFF;
 		const static unsigned int lengthDiscarded = 0xFFFFFFFE;
 		const static unsigned int wholeData = 0xFFFFFFFF;
+
+		class PassBuffer: public StringBuffer<CHAR> {
+		public:
+			PassBuffer(const StringBuffer<CHAR>& b):StringBuffer<CHAR>() {
+				this->swap(const_cast<StringBuffer<CHAR>&>(b));
+			}
+		};
+
+		class BufferRef: public StringBuffer<CHAR> {
+		public:
+			BufferRef(const StringBuffer<CHAR>& b):StringBuffer<CHAR>() {
+				this->assignCheapReference(b);
+			}
+		};
+
+
 	public:
 		inline StringBuffer(): _size(0), _buffer(0), _length(0) {
 		}
+
+		inline StringBuffer(const StringBuffer& b): _size(0), _buffer(0), _length(0) {
+			this->assign(b);
+		}
+
+		inline StringBuffer(const PassBuffer& pass): _size(0), _buffer(0), _length(0) {
+			this->swap(const_cast<PassBuffer&>(pass));
+		}
+
 
 		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _length(0) {
 			resize(initialSize, 0);
@@ -80,19 +105,47 @@ namespace Stamina {
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
 		*/
 		inline void assignCheapReference(const CHAR* data, unsigned int length = lengthUnknown) {
-			S_ASSERT(data);
+			//S_ASSERT(data);
 			this->reset();
 			this->_buffer = (CHAR*)data;
 			this->_length = length;
 		}
 
+		inline void assignCheapReference(const StringBuffer<CHAR>& b) {
+			this->assignCheapReference( b.getBuffer(), b.getLength() );
+		}
+
 		/** Makes a copy of data */
 		inline void assign(const CHAR* data, unsigned int size) {
-			S_ASSERT(data);
+//			S_ASSERT(data);
 			S_ASSERT(size <= maxBufferSize);
 			this->makeRoom(size, 0);
-			copy(_buffer, data, size);
+			if (data) {
+				copy(_buffer, data, size);
+			}
 			markValid(size);
+		}
+
+		inline void assign(const StringBuffer<CHAR>& b) {
+			this->assign( b.getBuffer(), b.getLength() );
+		}
+
+		int compare(const StringBuffer<CHAR>& b) {
+			int r;
+			int l = min((this->getLength()), (b.getLength()));
+
+			r = memcmp(this->getString(), b.getString(), l);
+			if (r == 0) {
+				if ((this->getLength()) > (b.getLength())) 
+					return 1;
+				else if ((this->getLength()) < (b.getLength())) 
+					return -1;
+			}
+			return r;
+		}
+
+		bool operator == (const StringBuffer<CHAR>& b) {
+			return compare(b) == 0;
 		}
 
 		/** Calculates the number of bytes needed to store @a newSize of data. It only expands current buffer size. */
@@ -543,15 +596,30 @@ namespace Stamina {
 		::wmemmove(to, from, count);
 	}
 
-
 	inline unsigned int StringBuffer<wchar_t>::len(const wchar_t* str) {
 		return wcslen(str);
 	}
 
 
+
+	inline void StringBuffer<unsigned char>::copy(unsigned char* to, const unsigned char* from, unsigned int count) {
+		::memcpy(to, from, count);
+	}
+
+	inline void StringBuffer<unsigned char>::move(unsigned char* to, const unsigned char* from, unsigned int count) {
+		::memmove(to, from, count);
+	}
+
+	inline unsigned int StringBuffer<unsigned char>::len(const unsigned char* str) {
+		return 0;
+	}
+
+
+
 	template StringBuffer<char>;
 	template StringBuffer<wchar_t>;
 
+	typedef StringBuffer<unsigned char> ByteBuffer;
 
 };
 

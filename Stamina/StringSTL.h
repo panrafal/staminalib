@@ -51,6 +51,10 @@ namespace Stamina {
 			this->forceType();
 			assignCheapReference(str);
 		}
+		StringRefSTL(const StringRefSTL& str) {
+			this->forceType();
+			assignCheapReference(str);
+		}
 		StringRefSTL(const char* ch, unsigned size = lengthUnknown) {
 			assignCheapReference(ch, size);
 			this->forceType();
@@ -94,7 +98,7 @@ namespace Stamina {
 
 
 
-		const CHAR* c_str() {
+		const CHAR* c_str() const {
 			return this->str<CHAR>();
 		}
 
@@ -134,17 +138,20 @@ namespace Stamina {
 		StringSTL(const StringRef& str) {
 			assign(str);
 		}
+		StringSTL(const StringSTL& str) {
+			assign(str);
+		}
 
-		inline StringSTL(PassStringRef& pass):__super(pass) {
+		inline StringSTL(const PassStringRef& pass):__super(pass) {
 		}
 
 		inline StringSTL& operator = (const StringRef& b) {
-			__super::operator = (b);
+			StringRefSTL<CHAR>::operator = (b);
 			return *this;
 		}
 
 		inline StringSTL& operator = (const PassStringRef& pass) {
-			__super::operator = (pass);
+			StringRefSTL<CHAR>::operator = (pass);
 			return *this;
 		}
 

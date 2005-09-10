@@ -140,6 +140,17 @@ public:
 		CPPUNIT_ASSERT( s.isWide() == isWide() );
 		CPPUNIT_ASSERT( s.getLength() == 3 );
 		}
+		{
+		String s (testString(L"¹bæ"));
+
+		const String a = s;
+		CPPUNIT_ASSERT( s.str<CHAR>() != a.str<CHAR>() );
+		
+		String b;
+		b = s;
+		CPPUNIT_ASSERT( s.str<CHAR>() != b.str<CHAR>() );
+
+		}
 	}
 
 	void testType() {
@@ -232,8 +243,8 @@ public:
 
 	}
 
-	String testPassRef1(const StringRef& a, const StringRef& b) {
-		return PassStringRef( a + b );
+	PassStringRef testPassRef1(const StringRef& a, const StringRef& b) {
+		return a + b;
 	}
 	String testPassRef2(StringRef a, int cut) {
 		if (cut) {
@@ -249,7 +260,7 @@ public:
 			String b = "BB";
 			a = PassStringRef(b);
 			CPPUNIT_ASSERT( a == "BB" );
-			CPPUNIT_ASSERT( b == "AA" );
+			CPPUNIT_ASSERT( b.empty() == true );
 		}
 		{
 			char* c = "Hello";
@@ -268,8 +279,10 @@ public:
 		{
 			String a = "Hello";
 			String b = " world!";
-			CPPUNIT_ASSERT_EQUAL( String("Hello world!") , testPassRef1(a, b) );
-			CPPUNIT_ASSERT_EQUAL( String("Hello world!") , testPassRef1(a, b) );
+			String c = testPassRef1(a, b);
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!") , c );
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!") , String(testPassRef1(a, b)) );
+			CPPUNIT_ASSERT_EQUAL( String("Hello world!") , String(testPassRef1(a, b)) );
 		}
 	}
 

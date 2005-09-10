@@ -95,23 +95,23 @@ protected:
 	CPPUNIT_TEST( timeInsert );
 	CPPUNIT_TEST( timeReplace );*/
 
-	CPPUNIT_TEST( timeChangeCase );
+/*	CPPUNIT_TEST( timeChangeCase );
 	CPPUNIT_TEST( timeEqual );
 	CPPUNIT_TEST( timeCompare );
 	CPPUNIT_TEST( timeCompare_noCase );
 	CPPUNIT_TEST( timeFindChar );
 	CPPUNIT_TEST( timeFind );
-	CPPUNIT_TEST( timeFind_noCase );
+	CPPUNIT_TEST( timeFind_noCase );*/
 
 //	CPPUNIT_TEST(  );
 	
-/*	CPPUNIT_TEST( timePassByReference );
+	CPPUNIT_TEST( timePassByReference );
 	CPPUNIT_TEST( timePassOtherByReference );
 	CPPUNIT_TEST( timePassPointerByReference );
 	CPPUNIT_TEST( timePassAndModify );
 	CPPUNIT_TEST( timeReturn );
 	CPPUNIT_TEST( timeConditionalReturn );
-	CPPUNIT_TEST( timeComplex );*/
+	CPPUNIT_TEST( timeComplex );
 	
 //	CPPUNIT_TEST(  );
 //	CPPUNIT_TEST(  );

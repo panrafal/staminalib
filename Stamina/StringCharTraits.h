@@ -71,10 +71,10 @@ namespace Stamina {
 	public:
 
 		inline static tCharacter getLower(const tChar* ch) {
-			return tolower(*ch);
+			return (tCharacter)tolower(*ch);
 		}
 		inline static tCharacter getUpper(const tChar* ch) {
-			return toupper(*ch);
+			return (tCharacter)toupper(*ch);
 
 		}
 

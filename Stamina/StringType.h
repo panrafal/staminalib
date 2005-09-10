@@ -31,7 +31,7 @@ namespace Stamina {
 		typedef tChar CHAR;
 		typedef typename CT::tCharacter tCharacter;
 		typedef typename CT::tCharacterBuffer tCharacterBuffer;
-		const static unsigned notFound = -1;
+		const static unsigned notFound = 0xFFFFFFFF;
 
 		class ConstIterator {
 		public:

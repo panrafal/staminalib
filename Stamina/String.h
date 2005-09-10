@@ -146,15 +146,11 @@ namespace Stamina {
 
 		@warning Don't use it as a variable type! It should be used only as a proxy!
 		*/
-		class PassStringRef {
+		class PassStringRef: public StringRef {
 		public:
-			friend class StringRef;
-
-			PassStringRef(StringRef& str):_str(str) {
-				//str->swapBuffers(const_cast<StringRef&>(str));
+			PassStringRef(const StringRef& str):StringRef() {
+				this->swapBuffers(const_cast<StringRef&>(str));
 			}
-		private:
-			StringRef& _str;
 		};
 
 		inline StringRefT() {
@@ -163,10 +159,10 @@ namespace Stamina {
 			_flags = 0;
 		}
 
-		inline StringRefT(PassStringRef& pass) {
+		inline StringRefT(const PassStringRef& pass) {
 			_length = lengthUnknown;
 			_flags = 0;
-			this->swapBuffers(pass._str);
+			this->swapBuffers(const_cast<PassStringRef&>(pass));
 		}
 
 		inline StringRefT(const StringRef& str) {
@@ -231,8 +227,8 @@ namespace Stamina {
 		}
 
 		inline StringRef& operator = (const PassStringRef& pass) {
-			//this->swapBuffers(const_cast<StringRef&>(str));
-			this->swapBuffers(pass._str);
+			this->swapBuffers(const_cast<PassStringRef&>(pass));
+			//this->swapBuffers(pass._str);
 			return *this;
 		}
 /*
@@ -322,6 +318,26 @@ namespace Stamina {
 			return this->findChars(b) != notFound;
 		}
 
+		// 
+
+		operator std::string () const {
+			return this->a_string();
+		}
+
+		operator std::wstring () const {
+			return this->w_string();
+		}
+
+		inline std::string a_string() const {
+			prepareType<char>();
+			return std::string(this->getData<char>(), this->getDataSize<char>());
+		}
+
+		inline std::string w_string() const {
+			prepareType<wchar_t>();
+			return std::wstring(this->getData<wchar_t>(), this->getDataSize<wchar_t>());
+		}
+
 		//
 
 		virtual String toString() const;
@@ -350,6 +366,9 @@ namespace Stamina {
 			return getLength();
 		}
 
+		inline unsigned int size() const {
+			return getLength();
+		}
 
 
 		// ------ Ansi Unicode buffers
@@ -1111,15 +1130,24 @@ namespace Stamina {
 
 		StringT() {}
 
-		StringT(const StringRefT<TYPE>& str) {
+		StringT(const StringRefT<TYPE>& str):StringRefT<TYPE>() {
 			assign(str);
 		}
 
-		inline StringT(PassStringRef& pass):StringRefT<TYPE>(pass) {
+		StringT(const StringT& str):StringRefT<TYPE>() {
+			assign(str);
+		}
+
+		inline StringT(const PassStringRef& pass):StringRefT<TYPE>(pass) {
 		}
 
 		inline StringT& operator = (const StringRef& b) {
-			StringRefT<TYPE>::operator = (b);
+			assign(b);
+			return *this;
+		}
+
+		inline StringT& operator = (const StringT& b) {
+			assign(b);
 			return *this;
 		}
 
@@ -1137,15 +1165,24 @@ namespace Stamina {
 
 		String() {}
 
-		String(const StringRef& str) {
+		String(const StringRef& str):StringRefT<stACP>() {
 			assign(str);
 		}
 
-		inline String(PassStringRef& pass):StringRef(pass) {
+		String(const String& str):StringRefT<stACP>() { // copy constructor
+			assign(str);
+		}
+
+		inline String(const PassStringRef& pass):StringRef(pass) {
+		}
+
+		inline String& operator = (const String& b) {
+			assign(b);
+			return *this;
 		}
 
 		inline String& operator = (const StringRef& b) {
-			StringRef::operator=(b);
+			assign(b);
 			return *this;
 		}
 
@@ -1153,6 +1190,7 @@ namespace Stamina {
 			StringRef::operator = (pass);
 			return *this;
 		}
+
 	};
 
 
@@ -1205,6 +1243,33 @@ namespace Stamina {
 		stream.write(str.getData<CharType>(), str.getDataSize<CharType>());
 		return stream;
 	}
+
+	inline String operator+ (const char* a, const StringRef& b) {
+		String s = a;
+		a += b;
+		return PassStringRef( s );
+	}
+	inline String operator+ (const StringRef& a, const char* b) {
+		return PassStringRef( a + StringRef(b) );
+	}
+
+	template<typename _Elem, typename _Traits, typename _Ax>
+	inline String operator+ (const std::basic_string<_Elem, _Traits, _Ax> a, const StringRef& b) {
+		String s = a;
+		return PassStringRef( s + b );
+	}
+
+	template<typename _Elem, typename _Traits, typename _Ax>
+	inline String operator+ (const StringRef& a, const std::basic_string<_Elem, _Traits, _Ax> b) {
+		return PassStringRef( a + StringRef(b) );
+	}
+
+
+	inline String iObject::toString() const {
+		return strRet( this->getClass().getName() );
+	}
+
+
 
 
 }

@@ -36,12 +36,15 @@ class TestStringBuffer : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testReset );
 	CPPUNIT_TEST( testSwap );
 	CPPUNIT_TEST( testReplace );
+	CPPUNIT_TEST( testPassBuffer );
+	CPPUNIT_TEST( testBufferRef );
 
 	CPPUNIT_TEST_SUITE_END();
 
 protected:
 
 	typedef std::basic_string<CHAR> tString;
+	typedef StringBuffer<CHAR> tBuffer;
 
 public:
 
@@ -958,6 +961,47 @@ protected:
 		}
 	}
 
+
+	void testBufferRef() {
+		{ // szybka konwersja
+			tString txt = mediumString();
+			tBuffer test(txt.c_str());
+			tBuffer::BufferRef r(test);
+			CPPUNIT_ASSERT_EQUAL( mediumString(), tString(r.getString()) );
+			CPPUNIT_ASSERT( r.getBuffer() == test.getBuffer() );
+			r.makeUnique();
+			CPPUNIT_ASSERT_EQUAL( mediumString(), tString(r.getString()) );
+			CPPUNIT_ASSERT( r.getBuffer() != test.getBuffer() );
+		}
+	}
+
+	typename tBuffer::PassBuffer testPassRef1() {
+		tString txt = mediumString();
+		tBuffer b(txt.c_str());
+		b.makeUnique();
+		return b;
+	}
+
+	void testPassBuffer() {
+		{
+			tString as = shortString();
+			tString bs = mediumString();
+			tBuffer a(as.c_str());
+			tBuffer b(bs.c_str());
+			a = tBuffer::PassBuffer(b);
+			CPPUNIT_ASSERT_EQUAL( mediumString(), tString(a.getString()) );
+			CPPUNIT_ASSERT( b.getLength() == 0 );
+		}
+		{
+			tString txt = mediumString();
+			tBuffer a = tBuffer::PassBuffer(tBuffer( txt.c_str() ));
+			CPPUNIT_ASSERT( a.getBuffer() == txt.c_str() );
+		}
+		{
+			tBuffer a = testPassRef1();
+			CPPUNIT_ASSERT_EQUAL( mediumString(), tString(a.getString()) );
+		}
+	}
 
 
 };
