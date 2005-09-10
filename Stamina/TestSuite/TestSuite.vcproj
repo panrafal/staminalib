@@ -204,30 +204,9 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\Test\TestString.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="TRUE">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\Test\TestStringBuffer.cpp">
+				RelativePath="..\DataTable\Test\TestFileBin.cpp">
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="TRUE">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
 					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"/>
@@ -237,41 +216,12 @@
 				RelativePath="..\Test\TestStringResults.txt">
 			</File>
 			<File
-				RelativePath="..\Test\TestStringType.cpp">
+				RelativePath="..\DataTable\Test\TestTable.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="TRUE">
+					Name="Debug|Win32">
 					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="TRUE">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\Test\TimeString.cpp">
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="TRUE">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\Test\TimeStringBuffer.cpp">
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="TRUE">
-					<Tool
-						Name="VCCLCompilerTool"/>
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -286,22 +236,6 @@
 				ParseFiles="FALSE">
 				<File
 					RelativePath="..\DataTable\Test\TestCrypt.cpp">
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="TRUE">
-						<Tool
-							Name="VCCLCompilerTool"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\DataTable\Test\TestFileBin.cpp">
 					<FileConfiguration
 						Name="Debug|Win32"
 						ExcludedFromBuild="TRUE">
@@ -349,13 +283,43 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\DataTable\Test\TestTable.cpp">
+					RelativePath="..\Test\TestString.cpp">
 					<FileConfiguration
 						Name="Debug|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Test\TestStringBuffer.cpp">
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Test\TestStringType.cpp">
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -383,11 +347,34 @@
 				<File
 					RelativePath="..\Test\TestVersionControl.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Test\TimeString.cpp">
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Test\TimeStringBuffer.cpp">
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="Release|Win32"

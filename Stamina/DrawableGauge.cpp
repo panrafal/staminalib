@@ -28,7 +28,7 @@ namespace Stamina {
 			opts.source.right = max(0, (opts.source.getWidth()-2*_margin)*part) + _margin + rightMargin;
 			_gauge->drawStretched(dc, Rect(rc.getPos(), Size((rc.getWidth()-2*_margin)*part + _margin + rightMargin, rc.getHeight())), &opts);
 		}
-		if (_thumb && _showThumb) {
+		if (_thumb == true && _showThumb == true) {
 			int margin = ceil((float)_thumb->getSize().w / 2);
 			float part = (float)(_thumbPos - _min) / (_max - _min);
 			_thumb->drawCentered(dc, Rect(Point((rc.getWidth()-2*margin)*part + margin + rc.left, rc.top), Size(1, rc.getHeight())));
@@ -37,7 +37,7 @@ namespace Stamina {
 
 	bool DrawableGaugeBasic::onMouseDown(int vkey, const Point& pt) {
 		bool hit = this->hitTest(pt);
-		if (hit && ((vkey & mouseButtons) == mouseLButton) && _thumb && _showThumb) {
+		if (hit && ((vkey & mouseButtons) == mouseLButton) && _thumb.isValid() && _showThumb) {
 			this->onMouseMove(vkey | mouseCaptured, pt);
 		}
 		return hit;
@@ -52,7 +52,7 @@ namespace Stamina {
 			} else {
 				DrawableControl::getTipTarget()->detachControl(this);
 			}
-		} else if ((vkey == (mouseLButton | mouseCaptured)) && hit && _thumb && _showThumb) {
+		} else if ((vkey == (mouseLButton | mouseCaptured)) && hit && _thumb.isValid() && _showThumb) {
 			// ustawiamy thumb
 			int margin = _thumb->getSize().w / 2;
 			float part = (float)(pt.x - this->_rect.left - margin) / (this->_rect.getWidth() - 2*margin);

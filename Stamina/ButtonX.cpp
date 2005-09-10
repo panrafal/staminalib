@@ -159,20 +159,20 @@ namespace Stamina {
 			int textStyle = 0;
 			switch (style & BS_CENTER) {
 				case BS_LEFT:
-					pt.x = ((imgAside && this->_image) ? (imageSize.w + this->_iconMargin) : 0) + 2;
+					pt.x = ((imgAside && this->_image.isValid()) ? (imageSize.w + this->_iconMargin) : 0) + 2;
 					ptImg.x = 2;
 					textStyle = DT_LEFT;
 					break;
 				case BS_RIGHT:
 					pt.x = clientRc.width() - textRc.width() - 2;
-					if (!imgAside && _image) {
+					if (!imgAside && _image.isValid()) {
 						ptImg.x = clientRc.width() - imageSize.w - 2;
 					}
 					textStyle = DT_RIGHT;
 					break;
 				default:
-					pt.x = (clientRc.right - textRc.right + ((imgAside && this->_image) ? (imageSize.w + this->_iconMargin) : 0))/2;
-					if (!imgAside && _image) 
+					pt.x = (clientRc.right - textRc.right + ((imgAside && this->_image.isValid()) ? (imageSize.w + this->_iconMargin) : 0))/2;
+					if (!imgAside && _image.isValid()) 
 						ptImg.x = clientRc.getCenter().x - imageSize.w / 2;
 					textStyle = DT_CENTER;
 					break;

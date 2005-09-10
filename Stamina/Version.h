@@ -10,22 +10,24 @@
  *  $Id$
  */
 
+#include <string.h>
+
 namespace Stamina {
 
 	class Version {
 	public:
 
 		inline Version(int version = 0) {
-			this->major = ((version)>>28)&0xF;
-			this->minor = ((version)>>20)&0xFF;
-			this->release = ((version)>>12)&0xFF;
-			this->build = ((version))&0xFFF;
+			this->major = (short)( ((version)>>28)&0xF );
+			this->minor = (short)( ((version)>>20)&0xFF );
+			this->release = (short)( ((version)>>12)&0xFF );
+			this->build = (short)( ((version))&0xFFF );
 		}
 		inline Version(int high, int low) {
-			this->major = high >> 16;
-			this->minor = high & 0xFFFF;
-			this->release = low >> 16;
-			this->build = low & 0xFFFF;
+			this->major = (short)( high >> 16 );
+			this->minor = (short)( high & 0xFFFF );
+			this->release = (short)( low >> 16 );
+			this->build = (short)( low & 0xFFFF );
 		}
 		inline Version(short major, short minor, short release, short build) {
 			this->major = major;

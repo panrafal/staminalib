@@ -118,9 +118,9 @@ namespace Stamina {
 			int cy;	
 			int h;
 		};
-		Size() {
-			this->w = 0;
-			this->h = 0;
+		Size(int size = 0) {
+			this->w = size;
+			this->h = size;
 		}
 		Size(int w, int h) {
 			this->w = w;

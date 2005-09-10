@@ -130,7 +130,7 @@ namespace Stamina { namespace Unique {
 
 		bool idInRange(tRangeId rangeId, tId id) {
 			oRange range = getRange(rangeId);
-			if (!range) return false;
+			if (range == false) return false;
 			return range->containsId(id);
 		}
 
@@ -169,23 +169,23 @@ namespace Stamina { namespace Unique {
 
 	inline tId getId(tDomainId domainId, const StringRef& name) {
 		oDomain domain = instance()->getDomain(domainId);
-		if (!domain) return idNotFound;
+		if (domain == false) return idNotFound;
 		return domain->getId(name);
 	}
 	inline StringRef getName(tDomainId domainId, tId id) {
 		oDomain domain = instance()->getDomain(domainId);
-		if (!domain) return "";
+		if (domain == false) return "";
 		return domain->getName(id);
 	}
 
 	inline bool registerId(tDomainId domainId, tId id, const StringRef& name) {
 		oDomain domain = instance()->getDomain(domainId);
-		if (!domain) return idNotFound;
+		if (domain == false) return idNotFound;
 		return domain->registerId(id, name);
 	}
 	inline tId registerName(tDomainId domainId, const StringRef& name, tRangeId range = rangeDefault) {
 		oDomain domain = instance()->getDomain(domainId);
-		if (!domain) return idNotFound;
+		if (domain == false) return idNotFound;
 		return domain->registerName(name, range);
 	}
 

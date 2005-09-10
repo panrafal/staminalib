@@ -75,7 +75,7 @@ namespace Stamina {
 
 	/** Looks for an argument in programs arguments list
 	@param find Name to find with special character (ie. "/find" "-help" "-?" etc.)
-	@param getValue Returns the value of an argument (ie. "/find=VALUE"
+	@param getValue Returns the value of an argument (ie. "/find=VALUE")
 	@param def Default value to return if nothing is found...
 	@return Returns found argument or it's value
 	*/
@@ -111,10 +111,10 @@ namespace Stamina {
 	}
 */
 	inline char charToLower(char ch) {
-		return tolower(ch);
+		return (char)tolower(ch);
 	}
 	inline wchar_t charToLower(wchar_t ch) {
-		return towlower(ch);
+		return (wchar_t)towlower(ch);
 	}
 
 	template <class STR>

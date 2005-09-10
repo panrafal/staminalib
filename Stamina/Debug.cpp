@@ -20,7 +20,7 @@
 namespace Stamina {
 
 	void debugDumpObjects(const oLogger logger, LogLevel level) {
-		S_ASSERT(logger);
+		S_ASSERT(logger.isValid());
 #ifdef STAMINA_DEBUG
 		if (!logger || !debugObjects || !debugObjectsCS) return;
 		Locker locker ( *debugObjectsCS );

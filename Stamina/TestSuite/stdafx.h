@@ -21,6 +21,10 @@
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TestRunner.h> 
 
+#include <boost/function.hpp>
+#include <boost/signal.hpp>
+
+
 //#include <Stamina/VersionControl.h>
 
 // TODO: reference additional headers your program requires here

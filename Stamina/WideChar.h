@@ -62,12 +62,14 @@ namespace Stamina {
 		return stream << keepMultiByte(txt);
 	}
 
+	/*
 	inline bool operator == (const std::string& a, const std::wstring& b) {
 		return toUnicode(a) == b;
 	}
 	inline bool operator == (const std::wstring& a, const std::string& b) {
 		return a == toUnicode(b);
 	}
+	*/
 
 
 

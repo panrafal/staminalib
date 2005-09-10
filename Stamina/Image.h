@@ -21,11 +21,17 @@ namespace Stamina {
 
 	typedef SharedPtr<class Image> oImage;
 
-
+	/** Draws simple gradient.
+	@warning Now angle can be only 0 or 90.
+	*/
 	void drawSimpleGradient(HDC dc, int color1, int color2, const Rect& rect
 		, short angle = 0 /// 0 - 90 
 		, unsigned short midpoint = 0x80 /// 0 - 0xFF
 		);
+
+	/** Draws simple gradient.
+	@warning Now angle can be only 0 or 90.
+	*/
 	void drawSimpleGradient(HBITMAP bmp, int color1, int color2, const Rect& rect,  short angle = 0, short midpoint = 0x80);
 	HBRUSH createSimpleGradientBrush(int color1, int color2, const Size& size, short angle = 0, short midpoint = 0x80);
 
@@ -58,7 +64,8 @@ namespace Stamina {
 	}
 
 
-
+	/** Represents an Image.
+	*/
 	class Image: public SharedObject<iImage> {
 	public:
 		enum DrawMask {
@@ -77,6 +84,8 @@ namespace Stamina {
 			stateHidden,
 		};
 
+		/** Drawing Options.
+		*/
 		class DrawOpts {
 		public:
 

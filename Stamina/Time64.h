@@ -22,6 +22,8 @@ namespace Stamina {
 
 	class Date64;
 
+	/** Wrapper for _time64_t
+	*/
 	class Time64 {
 
 	public:                 
@@ -29,30 +31,48 @@ namespace Stamina {
 
 	public:
 
-		// Constructors
+		/** Constructors
+		@param current True - time points to now, false - points to 0.
+		*/
 		Time64(bool current = false) {
 			if (current)
 				sec = _time64(0);
 			else
 				sec = 0;
 		}
+
+		/** Constructor
+		*/
 		inline Time64(const struct tm& timer) {
 			from_tm(timer);
 		}
+
+		/** Constructor
+		*/
 		inline Time64(time_t timer) {
 			from_time_t(timer);
 		}
+
+		/** Constructor
+		*/
 		inline Time64(__int64 timer) {
 			from_int64(timer);
 		}
 #ifdef _WINDOWS_
+		/** Constructor
+		*/
 		inline Time64(const SYSTEMTIME &timer) {
 			from_systemtime(timer);
 		}
+
+		/** Constructor
+		*/
 		inline Time64(const FILETIME &timer) {
 			from_filetime(timer);
 		}
 #endif
+		/** Constructor
+		*/
 		inline Time64(const Date64& timer) {
 			from_date64(timer);
 		}
@@ -145,6 +165,9 @@ namespace Stamina {
 			sec = _time64(0);
 		}
 
+		/** Calculates seconds from 1 January 1970 to days, 
+		how many days elapsed since then.
+		*/
 		int toDays() const {
 			return (int)floor((float)this->sec / (60*60*24));
 		}
@@ -167,6 +190,8 @@ namespace Stamina {
 
 // Klasa z wydzielonymi czesciami czasu...
 
+	/** Represents date.
+	*/
 	class Date64 {
 	public:                 // Maska do porownan to #FFFFFFFFFFFF
 
@@ -189,29 +214,47 @@ namespace Stamina {
 		//  int operator=(int n) {return 3;}
 		//  bool operator > (sTime64 & t) {return 1;}
 
+		/** Constructor
+		@param currnet True - time points to now, false - points to 0.
+		*/
 		Date64(bool current = false) {
 			if (current)
 				from_time_t(time(0));
 			else
 				from_int64(0);
 		}
+
+		/** Constructor
+		*/
 		Date64(const struct tm& timer) {
 			from_tm(timer);
 		}
+
+		/** Constructor
+		*/
 		Date64(time_t timer) {
 			from_time_t(timer);
 		}
+
+		/** Constructor
+		*/
 		Date64(__int64 timer) {
 			from_int64(timer);
 		}
 #ifdef _WINDOWS_
+		/** Constructor
+		*/
 		Date64(const SYSTEMTIME& timer) {
 			from_systemtime(timer);
 		}
+		/** Constructor
+		*/
 		Date64(const FILETIME& timer) {
 			from_filetime(timer);
 		}
 #endif
+		/** Constructor
+		*/
 		Date64(const Time64& timer) {
 			from_time64_t(timer.sec);
 		}

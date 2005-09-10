@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <string>
+#include "String.h"
 
 #define EXCEPTION_PURE_VIRTUAL_CALL 0xE0006001
 
@@ -28,7 +28,7 @@ namespace Stamina {
 	class Exception {
 	public:
 
-		virtual std::string getReason() = 0;
+		virtual String getReason() = 0;
 
 	private:
 	};
@@ -36,10 +36,10 @@ namespace Stamina {
 	class ExceptionString {
 	public:
 
-		ExceptionString(const std::string& reason):_reason(reason) {
+		ExceptionString(const StringRef& reason):_reason(reason) {
 		}
 
-		std::string getReason() {
+		String getReason() {
 			return _reason;
 		}
 		bool hasReason() {
@@ -47,7 +47,7 @@ namespace Stamina {
 		}
 
 	private:
-		std::string _reason;
+		String _reason;
 	};
 
 

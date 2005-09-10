@@ -14,6 +14,8 @@
 
 namespace Stamina {
 
+	/** Image interface.
+	*/
 	class iImage: public iSharedObject {
 	public:
 

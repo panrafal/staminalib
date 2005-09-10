@@ -35,6 +35,8 @@ namespace Stamina {
 	// =========================================================================
 
 	// struktura do bezposredniej obslugi blokowania dostepu
+	/** Simple class to direct use of blocking access.
+	*/
 	class CriticalSection_w32:public Lock {
 	public:
 		CRITICAL_SECTION cs;
@@ -51,6 +53,8 @@ namespace Stamina {
 
 	};
 
+	/** Empty Critical section class.
+	*/
 	class CriticalSection_blank:public Lock {
 	public:
 		__inline void lock() {} 
@@ -60,6 +64,8 @@ namespace Stamina {
 	};
 
 	// struktura do bezposredniej obslugi blokowania dostepu
+	/** Class to direct use of blocking access.
+	*/
 	class CriticalSection_:public Lock {
 	public:
 		CriticalSection_();
@@ -80,6 +86,9 @@ namespace Stamina {
 
 
 	// Domyœlnie robi timeout...
+
+	/** Critical section with time-outs.
+	*/
 	class CriticalSection_to: public CriticalSection_ {
 	public:
 		char * place;
@@ -89,6 +98,8 @@ namespace Stamina {
 
 
 	// Z zabezpieczeniem na windowsowe komunikaty...
+	/** Critical Section whith protection from windows messages.
+	*/
 	typedef void (*tWMProcess)(void);
 	class CriticalSection_WM: public CriticalSection_ {
 	private:
@@ -100,6 +111,7 @@ namespace Stamina {
 
 	};
 
+	/** @todo what is CriticalSection_WM_cond ?? */
 	class CriticalSection_WM_cond: public CriticalSection_WM {
 	private:
 	public:
