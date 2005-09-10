@@ -34,7 +34,7 @@ namespace Stamina {
 			return "";
 		}
 
-		static VersionControl* instance() {
+		__declspec(dllexport) static VersionControl* instance() {
 			static VersionControl vcInstance;
 			return &vcInstance;		
 		}
