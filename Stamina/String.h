@@ -639,7 +639,20 @@ namespace Stamina {
 
 		// ------ basic modification
 
+		inline bool equalBuffers(const StringRef& str) {
+			return ( this->getDataBuffer<char>().equalBuffers(str.getDataBuffer<char>())
+				|| this->getDataBuffer<wchar_t>().equalBuffers(str.getDataBuffer<wchar_t>()));
+		}
+		inline bool equalActiveBuffers(const StringRef& str) {
+			if (isWide()) {
+				return this->getDataBuffer<wchar_t>().equalBuffers(str.getDataBuffer<wchar_t>());
+			} else {
+                return this->getDataBuffer<char>().equalBuffers(str.getDataBuffer<char>());
+			}
+		}
+
 		inline void assign(const StringRef& str) {
+			if (this->equalBuffers(str)) return;
 			clear();
 			matchTypes(str);
 			this->_length = str.getKnownLength() ;
@@ -659,6 +672,7 @@ namespace Stamina {
 		}
 
 		inline void assignCheapReference(const StringRef& str) {
+			if (this->equalBuffers(str)) return;
 			clear();
 			matchTypes(str);
 //			if (isWide())
@@ -719,6 +733,12 @@ namespace Stamina {
 
 		inline void insert(unsigned int pos, const StringRef& str) {
 			matchTypes(str);
+			if (equalActiveBuffers(str)) {
+				StringRef _str (str);
+				_str.makeUnique();
+				this->insert(pos, _str);
+				return;
+			}
 			if (isWide())
 				_w.insertInRange(getDataPos<wchar_t>(pos), str.getData<wchar_t>(), str.getDataSize<wchar_t>());
 			else
@@ -741,6 +761,14 @@ namespace Stamina {
 
 		inline void replace(unsigned int charPos, const StringRef& str, unsigned int count = lengthUnknown) {
 			matchTypes(str);
+
+			if (equalActiveBuffers(str)) {
+				StringRef _str (str);
+				_str.makeUnique();
+				this->replace(charPos, _str, count);
+				return;
+			}
+
 			if (count > this->getLength() || charPos + count > this->getLength()) count = this->getLength() - charPos;
 			if (isWide()) {
 				unsigned int pos = getDataPos<wchar_t>(charPos);
@@ -809,6 +837,14 @@ namespace Stamina {
 			matchCompare(replace, ignoreCase);
 			unsigned c = 0;
 
+			if (equalActiveBuffers(find) || equalActiveBuffers(replace)) {
+				StringRef _find (find);
+				_find.makeUnique();
+				StringRef _replace (replace);
+				_replace.makeUnique();
+				return this->replace(_find, _replace, start, ignoreCase, skip, limit, count);
+			}
+
 			unsigned int found = this->find(find, start, ignoreCase, skip, count);
 			if ((found - start) > count) return 0;
 			count -= found - start;
@@ -842,6 +878,16 @@ namespace Stamina {
 			resetKnownLength();
 			matchTypes(from);
 			matchCompare(from, ignoreCase);
+
+			if (equalActiveBuffers(from), equalActiveBuffers(to)) {
+				StringRef _from (from);
+				_from.makeUnique();
+				StringRef _to (to);
+				_to.makeUnique();
+				this->replaceChars(_from, _to, ignoreCase, keepCase, swapMatch, limit);
+				return;
+			}
+
 			if (isWide()) {
 				from.prepareType<wchar_t>();
 				to.prepareType<wchar_t>();
@@ -1249,10 +1295,11 @@ namespace Stamina {
 		s += b;
 		return PassStringRef( s );
 	}
+	/*
 	inline String operator+ (const StringRef& a, const char* b) {
 		return PassStringRef( a + StringRef(b) );
 	}
-
+	*/
 	template<typename _Elem, typename _Traits, typename _Ax>
 	inline String operator+ (const std::basic_string<_Elem, _Traits, _Ax> a, const StringRef& b) {
 		String s = a;

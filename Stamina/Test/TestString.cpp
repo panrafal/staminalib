@@ -44,6 +44,9 @@ public:
 	typedef wchar_t Other;
 };
 
+const wchar_t * const strLong = L"012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+const wchar_t * const strMed = L"abcdefghijklmnopqrstuwxyz";
+
 
 template <class CHARTYPE>
 class TestString : public CPPUNIT_NS::TestFixture
@@ -239,6 +242,11 @@ public:
 			CPPUNIT_ASSERT( s.getData<char>() != test.getData<char>() );
 			CPPUNIT_ASSERT( s.getData<wchar_t>() != test.getData<wchar_t>() );
 			CPPUNIT_ASSERT( s.isWide() == isWide() );
+		}
+		{
+			String a ("Hello");
+			a.assignCheapReference(a);
+			CPPUNIT_ASSERT_EQUAL( String("Hello"), a );
 		}
 
 	}
@@ -492,6 +500,11 @@ public:
 			a = testString(L"Aaa");
 			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
 		}
+		{ // podwójne przypisanie
+			String a = testString("Hello");
+            a = a;
+			CPPUNIT_ASSERT_EQUAL(String("Hello"), a);
+		}
 	}
 
 	void testAppend() {
@@ -511,7 +524,7 @@ public:
 		}
 		{
 			String a ("Hello ");
-			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), a + "world!" );
+			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), StringRef(a + "world!") );
 			CPPUNIT_ASSERT_EQUAL( String("Hello "), a );
 		}
 		{ // StringRef
@@ -520,6 +533,26 @@ public:
 			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
 			a.append( testString(L"Aaa") );
 			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+		{
+			String a (testString(strLong));
+			String _a = a;
+			String b (testString(strMed));
+			String _b = b;
+			String c = a + b;
+			CPPUNIT_ASSERT_EQUAL( String(_a + _b), c );
+			b = b + a;
+			CPPUNIT_ASSERT_EQUAL( String(_b + _a), b );
+			b = _b;
+			a = b + a;
+			CPPUNIT_ASSERT_EQUAL( String(_b + _a), a );
+			a = _a;
+			a = "aaaa" + a;
+			CPPUNIT_ASSERT_EQUAL( String("aaaa" + std::string(_a.a_str())), a  );
+			a = _a;
+			a.append(a);
+			CPPUNIT_ASSERT_EQUAL( String(_a + _a), a );
+
 		}
 	}
 
@@ -539,6 +572,16 @@ public:
 			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
 			a.prepend( testString(L"Aaa") );
 			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+		{
+			String a (testString(strLong));
+			String _a = a;
+			String b (testString(strMed));
+			String _b = b;
+			b.prepend(b);
+			CPPUNIT_ASSERT_EQUAL( String(_b + _b), b );
+			a.prepend(a);
+			CPPUNIT_ASSERT_EQUAL( String(_a + _a), a );
 		}
 	}
 
@@ -570,6 +613,12 @@ public:
 			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
 			a.insert( 2, testString(L"Aaa") );
 			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+		{
+			tString _a = testString(strLong);
+			String a (_a);
+			a.insert(10, a);
+			CPPUNIT_ASSERT_EQUAL( String( _a.substr(0, 10) + _a + _a.substr(10) ) , a );
 		}
 
 	}
@@ -690,6 +739,24 @@ public:
 			a.replace( "l", "L" );
 			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
 		}
+		{
+			String a( testString(strLong) );
+			String _a = a;
+			a.replace( a, a );
+			CPPUNIT_ASSERT_EQUAL( _a, a );
+
+			String b = _a;
+			b.replace("01234", _a);
+
+			a = _a;
+			a.replace("01234", a);
+			CPPUNIT_ASSERT_EQUAL( b, a );
+
+			a = _a;
+			a.replace(2, a);
+			CPPUNIT_ASSERT_EQUAL( String(_a.substr(0, 2) + _a), a );
+
+		}
 	}
 
 	void testReplaceChars() {
@@ -706,6 +773,8 @@ public:
 			CPPUNIT_ASSERT_EQUAL( String("xxyyzzAXCYEZGH"), a );
 			a.replaceChars("xyz", "_", true, true, false, 8);
 			CPPUNIT_ASSERT_EQUAL( String("______A_C_EZGH"), a );
+			a.replaceChars("_", "");
+			CPPUNIT_ASSERT_EQUAL( String("ACEZGH"), a );
 		}
 		{ // StringRef
 			tString test = testString(L"Hello");
@@ -713,6 +782,16 @@ public:
 			CPPUNIT_ASSERT( a.str<CHAR>() == test.c_str() );
 			a.replaceChars( "l", "L" );
 			CPPUNIT_ASSERT( a.str<CHAR>() != test.c_str() );
+		}
+		{
+			String a( testString(strMed) );
+			String _a = a;
+			a.replaceChars(a, a);
+			CPPUNIT_ASSERT_EQUAL(_a, a);
+
+			a = _a;
+			a.replaceChars(a, "");
+			CPPUNIT_ASSERT_EQUAL(String(), a);
 		}
 
 	}

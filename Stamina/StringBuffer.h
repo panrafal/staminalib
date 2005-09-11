@@ -144,6 +144,10 @@ namespace Stamina {
 			return r;
 		}
 
+		bool equalBuffers(const StringBuffer<CHAR>& b) {
+			return  (_buffer != 0 && _buffer == b._buffer);
+		}
+
 		bool operator == (const StringBuffer<CHAR>& b) {
 			return compare(b) == 0;
 		}
@@ -214,10 +218,14 @@ namespace Stamina {
 			if (dataSize == 0) return;
 			S_ASSERT(dataSize <= maxBufferSize);
 			S_ASSERT(dataSize + getLength() <= maxBufferSize);
+			const CHAR* oldBuffer = _buffer;
 			makeRoom(getLength() + dataSize);
 			S_ASSERT(_buffer != 0);
 			S_ASSERT(data != 0);
 			S_ASSERT(getBufferSize() >= dataSize + getLength());
+			if (data == oldBuffer) {
+				data = _buffer;
+			}
 			copy(_buffer + getLength(), data, dataSize);
 			markValid(getLength() + dataSize);
 		}
@@ -229,6 +237,7 @@ namespace Stamina {
 			unsigned currentLength = getLength();
 			S_ASSERT(dataSize <= maxBufferSize);
 			S_ASSERT(dataSize + currentLength <= maxBufferSize);
+			const CHAR* oldBuffer = _buffer;
 			if (isValid()) {
 				moveRight(0, dataSize); // wywoluje makeroom
 			} else {
@@ -237,6 +246,9 @@ namespace Stamina {
 			S_ASSERT(_buffer != 0);
 			S_ASSERT(data != 0);
 			S_ASSERT(getBufferSize() >= dataSize + currentLength);
+			if (data == oldBuffer) {
+				data = _buffer + dataSize;
+			}
 			copy(_buffer, data, dataSize);
 			markValid(currentLength + dataSize);
 		}
@@ -245,6 +257,7 @@ namespace Stamina {
 		@param pos The position where to insert the data. Can be beyond currently allocated data!
 
 		@warning This function allows to insert data at virtually any location. It automatically expands the buffer, leaving completely random data between insert position and the end of previous data. Use with caution!
+		@warning You CANNOT insert data that comes from the same buffer!
 		*/
 		inline void insert(unsigned int pos, const CHAR* data, unsigned int dataSize) {
 			if (dataSize == 0) return;
@@ -275,6 +288,9 @@ namespace Stamina {
 			insert(pos, data, dataSize);
 		}
 
+		/**
+		@warning You CANNOT substitute with data that comes from the same buffer!
+		*/
 		inline void replace(unsigned int pos, unsigned int count, const CHAR* data, unsigned int dataSize) {
 			if (dataSize == 0) {
 				this->erase(pos, count);
