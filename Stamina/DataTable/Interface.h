@@ -25,6 +25,8 @@ namespace Stamina { namespace DT {
 		virtual bool handleFailedSave(FileBase* file, DTException* exception, int retry)=0;
 		virtual bool handleFailedAppend(FileBase* file, DTException* exception, int retry)=0;
 
+		virtual void showFileMessage(FileBase* file, const StringRef& message, const StringRef& title, bool error)=0;
+
 	};
 
 	typedef SharedPtr<iInterface> oInterface;

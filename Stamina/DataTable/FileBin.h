@@ -193,7 +193,7 @@ namespace Stamina { namespace DT {
 
 
 		/**Creates a backup of specified file*/
-		void backupFile(const StringRef& filename, bool move);
+		static void backupFile(const StringRef& filename, bool move);
 		/**Creates a backup of the file we are currently operating on...
 		This function automatically determines if backup is really needed, and sets lastBackupTime property.
 		*/

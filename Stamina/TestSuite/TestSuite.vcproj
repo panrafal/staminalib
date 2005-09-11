@@ -206,8 +206,7 @@
 			<File
 				RelativePath="..\DataTable\Test\TestFileBin.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="TRUE">
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"/>
 				</FileConfiguration>
@@ -285,7 +284,8 @@
 				<File
 					RelativePath="..\Test\TestString.cpp">
 					<FileConfiguration
-						Name="Debug|Win32">
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>

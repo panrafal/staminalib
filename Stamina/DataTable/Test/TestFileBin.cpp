@@ -1,9 +1,11 @@
 #include <stdafx.h>
 #include <list>
+#include <ostream>
 #include <cppunit/extensions/HelperMacros.h>
 #include <Stamina/VersionControl.h>
 #include "..\DataTable.h"
 #include "..\FileBin.h"
+#include "..\InterfaceBasic.h"
 #include <Stamina\MD5.h>
 #include <Stamina\Helpers.h>
 #include <Stamina\WideChar.h>
@@ -12,6 +14,8 @@ using namespace Stamina;
 using namespace Stamina::DT;
 
 using std::string;
+using std::cout;
+using std::endl;
 
 #include <Stamina\Console.h>
 #include <Stamina\FindFile.h>
@@ -38,6 +42,7 @@ class TestFileBin : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST( testBackup );
 	CPPUNIT_TEST( testBackupCleanupDirectory );
 	CPPUNIT_TEST( testBackupCleanupFile );
+	CPPUNIT_TEST( testInterface );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -705,6 +710,102 @@ protected:
 	}
 
 	void testFileLockers() {
+	}
+
+	class Interface_test: public DT::Interface_passList {
+	public:
+
+		Interface_test() {
+			passAsked = 0;
+		}
+
+		void showFileMessage(FileBase* file, const StringRef& _message, const StringRef& _title, bool error) {
+			String msg;
+			msg = error ? L"Wyst¹pi³ b³¹d w pliku " : L"Wyst¹pi³ problem z plikiem ";
+			msg += "\"" + file->getFilename() + "\"\r\n\r\n";
+			msg += _message; 
+
+			String title = _title;
+			title += " (" + Stamina::getFileName(file->getFilename()) + ")";
+
+			std::cout << endl << title << endl  << msg << endl;
+		}
+
+		virtual bool handleFailedLoad(FileBase* file, DTException* e, int retry) {
+			cout << "handleFailedLoad(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+			return __super::handleFailedLoad(file, e, retry);
+		}
+		virtual bool handleFailedSave(FileBase* file, DTException* e, int retry) {
+			cout << "handleFailedSave(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+			return __super::handleFailedSave(file, e, retry);
+		}
+		virtual bool handleFailedAppend(FileBase* file, DTException* e, int retry) {
+			cout << "handleFailedAppend(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+			return __super::handleFailedAppend(file, e, retry);
+		}
+
+		virtual bool handleRestoreBackup(FileBin* file, DTException* e, int retry) {
+			cout << "handleRestoreBackup(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+			return __super::handleRestoreBackup(file, e, retry);
+		}
+
+		virtual MD5Digest askForPassword(FileBase* file, int retry) {
+			passAsked ++;
+			return DataTable::createPasswordDigest(password);
+		}
+
+		int passAsked;
+		String password;
+
+	};
+
+	void testInterface() {
+		createFile("testInterface");
+		std::string filename = this->getFileName("testInterface");
+
+		FileBin::backupFile(filename, false);
+
+		FILE* f = fopen(filename.c_str(), "a");
+		// dopisujemy bzdury zeby popsuc...
+		fwrite(filename.c_str(), 1, filename.size(), f);
+		fclose(f);
+
+		DataTable dt;
+		dt.setPassword(password);
+		FileBin fb(dt);
+		fb.makeBackups = true;
+		
+		enResult result;
+		result = fb.loadAll(filename);
+		CPPUNIT_ASSERT(result == DT::errBadFormat);
+
+		Interface_test* iface = new Interface_test();
+		oInterface oface = iface;
+		iface->password = password;
+		iface->disableRefCount();
+		dt.setInterface(iface);
+		dt.setPassword("z³e has³o");
+
+		result = fb.loadAll(filename);
+		CPPUNIT_ASSERT(result == DT::success);
+
+		dt.setPassword("z³e has³o");
+
+		result = fb.loadAll(filename);
+		CPPUNIT_ASSERT(result == DT::success);
+
+		CPPUNIT_ASSERT_EQUAL((int)1, iface->passAsked);
+
+		dt.setPassword("z³e has³o");
+		dt.setInterface(0);
+
+		result = fb.append(filename);
+		CPPUNIT_ASSERT(result == DT::errNotAuthenticated);
+
+		dt.setInterface(iface);
+		result = fb.append(filename);
+		CPPUNIT_ASSERT(result == DT::success);
+		
 	}
 
 };

@@ -13,11 +13,24 @@
 
 namespace Stamina { namespace DT {
 
-	class Interface_basic: public iInterface {
+	class Interface_basic: public SharedObject<iInterface> {
 
 	public:
 
-		bool handleMessageErrors(FileBase* file, DTException* e) {
+		void showFileMessage(FileBase* file, const StringRef& _message, const StringRef& _title, bool error) {
+			String msg;
+			msg = error ? L"Wyst¹pi³ b³¹d w pliku " : L"Wyst¹pi³ problem z plikiem ";
+			msg += "\"" + file->getFilename() + "\"\r\n\r\n";
+			msg += _message; 
+
+			String title = _title;
+			title += " (" + getFileName(file->getFilename()) + ")";
+
+			MessageBoxW(0, msg.w_str(), title.w_str(), MB_OK | (error ? MB_ICONERROR : MB_ICONWARNING));
+		}
+
+
+		bool handleMessageErrors(FileBase* file, DTException* e, const StringRef& title) {
 			String msg;
 			switch (e->errorCode) {
 				case DT::errBadFormat: msg = L"Z³y format pliku"; break;
@@ -28,6 +41,9 @@ namespace Stamina { namespace DT {
 				case DT::errFileNotFound: msg = L"Plik nie zosta³ znaleziony"; break;
 				case DT::errWriteError: msg = L"B³¹d zapisu"; break;
 			}
+			if (msg.empty() == false) {
+				this->showFileMessage(file, msg, title, true);
+			}
 			return false;
 		}
 
@@ -37,10 +53,10 @@ namespace Stamina { namespace DT {
 			} else if (file->getClass() >= FileBin::staticClassInfo()) {
 				FileBin* fb = file->castObject<FileBin>();
 				if (e->errorCode == DT::errBadFormat && fb->makeBackups) {
-					return this->handleRestoreBackup(file, e, retry);
+					return this->handleRestoreBackup(fb, e, retry);
 				}
 			}
-			return handleMessageErrors(file, e);
+			return handleMessageErrors(file, e, "B³¹d podczas wczytywania pliku");
 		}
 
 		virtual bool handleFailedSave(FileBase* file, DTException* e, int retry) {
@@ -48,7 +64,7 @@ namespace Stamina { namespace DT {
 				return this->handleNotAuthenticated(file, retry);
 			} else {
 			}
-			return handleMessageErrors(file, e);
+			return handleMessageErrors(file, e, "B³¹d podczas zapisywania pliku");
 		}
 
 		virtual bool handleFailedAppend(FileBase* file, DTException* e, int retry) {
@@ -60,7 +76,7 @@ namespace Stamina { namespace DT {
 					return this->handleRestoreBackup(fb, e, retry);
 				}
 			}
-			return handleMessageErrors(file, e);
+			return handleMessageErrors(file, e, "B³¹d podczas dopisywania do pliku");
 		}
 
 
@@ -107,18 +123,18 @@ namespace Stamina { namespace DT {
 			return false;
 		}
 
-		virtual MD5Digest askForPassword(FileBase* file) {
+		virtual MD5Digest askForPassword(FileBase* file, int retry) {
 			return MD5Digest();
 		}
 
-		void addPassword(const StringRef& pass, int retry) {
+		void addPassword(const StringRef& pass) {
 			MD5Digest digest = DataTable::createPasswordDigest(pass);
 			if (std::find(_digests.begin(), _digests.end(), digest) == _digests.end()) {
 				_digests.push_back(digest);
 			}
 		}
 
-		tDigest& getDigests() {
+		tDigests& getDigests() {
 			return _digests;
 		}
 
@@ -126,7 +142,7 @@ namespace Stamina { namespace DT {
 
 		tDigests _digests;
 
-	}
+	};
 
 
 } } 
