@@ -25,16 +25,20 @@
 namespace Stamina {
 
 
-	class Exception {
+	class Exception: public iObject {
 	public:
+
+		STAMINA_OBJECT_CLASS(Stamina::Exception, iObject);
 
 		virtual String getReason() = 0;
 
 	private:
 	};
 
-	class ExceptionString {
+	class ExceptionString: public Exception {
 	public:
+
+		STAMINA_OBJECT_CLASS(Stamina::ExceptionString, Exception);
 
 		ExceptionString(const StringRef& reason):_reason(reason) {
 		}

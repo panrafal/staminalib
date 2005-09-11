@@ -122,6 +122,7 @@ namespace Stamina {
 #define STAMINA_OBJECT_CLASS_VERSION(TYPE, BASE, VERSION) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, VERSION)
 
 #define STAMINA_OBJECT_CLONEABLE()\
+	const static bool isCloneable = true;\
 	virtual iObject* cloneObject() const {\
 		iObject* obj = new ObjectClass();\
 		obj->cloneMembers(this);\

@@ -119,6 +119,9 @@ namespace Stamina {
 		bool isValid() const {
 			return this->_obj != 0;
 		}
+		bool empty() const {
+			return this->_obj == 0;
+		}
 		bool operator == (const T * b) const {
 			return this->_obj == b;
 		}

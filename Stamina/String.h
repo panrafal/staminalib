@@ -1246,7 +1246,7 @@ namespace Stamina {
 
 	inline String operator+ (const char* a, const StringRef& b) {
 		String s = a;
-		a += b;
+		s += b;
 		return PassStringRef( s );
 	}
 	inline String operator+ (const StringRef& a, const char* b) {
