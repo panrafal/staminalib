@@ -179,6 +179,12 @@
 				RelativePath=".\iColumn.h">
 			</File>
 			<File
+				RelativePath=".\Interface.h">
+			</File>
+			<File
+				RelativePath=".\InterfaceBasic.h">
+			</File>
+			<File
 				RelativePath=".\iRow.h">
 			</File>
 			<File

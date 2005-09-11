@@ -63,6 +63,10 @@ namespace Stamina { namespace DT {
 			_writeFailed = state;
 		}
 
+		virtual Version getVersion() {
+			return Version();
+		}
+
 		/**Loads data from specified file.
 		Uses only column descriptor from assigned table.
 		*/
@@ -115,6 +119,33 @@ namespace Stamina { namespace DT {
 			return _recreating;
 		}
 
+		inline DataTable* getDT() {
+			return _table;
+		}
+
+		String getFilename() {
+			return _fileName;
+		}
+
+		virtual enFileMode getFileMode() {
+			return _opened;
+		}
+
+		virtual bool isOpened() {
+			return getFileMode() != fileClosed;
+		}
+
+		/**Checks table's password digest with file's one*/
+		virtual bool isAuthenticated() {
+			return true;
+		}
+
+		/**Runs whole authentication procedure. Should be called after loading descriptor*/
+		virtual void authenticate() throw (...) {
+			if (!this->isAuthenticated()) throw DTException(errNotAuthenticated);
+		}
+
+
 	protected:
 
 		/**Reads row from current position in file and stores it under @a row
@@ -147,23 +178,6 @@ namespace Stamina { namespace DT {
 		virtual void seekToBeginning()=0;
 		virtual void seekToEnd()=0;
 
-		virtual enFileMode getFileMode() {
-			return _opened;
-		}
-
-		virtual bool isOpened() {
-			return getFileMode() != fileClosed;
-		}
-
-		/**Checks table's password digest with file's one*/
-		virtual bool isAuthenticated() {
-			return true;
-		}
-
-		/**Runs whole authentication procedure. Should be called after loading descriptor*/
-		virtual void authenticate() throw (...) {
-			if (!this->isAuthenticated()) throw DTException(errNotAuthenticated);
-		}
 
 
 	protected:
@@ -179,6 +193,9 @@ namespace Stamina { namespace DT {
 
 	class DTFileException: public DTException {
 	public:
+
+		STAMINA_OBJECT_CLASS(DT::DTFileException, DTException);
+
 		DTFileException():DTException((enError)(errFileError | errno)) {
 		
 		}

@@ -140,6 +140,10 @@ namespace Stamina { namespace DT {
 			_verMin = '4';
 		}
 
+		virtual Version getVersion() {
+			return Version(_verMaj, _verMin, 0, 0);
+		}
+
 
 		public:
 
@@ -186,6 +190,33 @@ namespace Stamina { namespace DT {
 		unsigned int getStoredRowsCount() {
 			return _storedRowsCount;
 		}
+
+
+		/**Creates a backup of specified file*/
+		void backupFile(const StringRef& filename, bool move);
+		/**Creates a backup of the file we are currently operating on...
+		This function automatically determines if backup is really needed, and sets lastBackupTime property.
+		*/
+		void backupFile(bool move = true);
+
+		static String makeBackupFilename(const StringRef& filename, const Time64& time = Time64(true)) {
+			return filename + time.strftime(".%d-%m-%Y %H-%M-%S.bak");
+		}
+
+		/** Removes old backups leaving only few of them.
+		@param filename - If it points to .dtb file, only backups of these file are cleaned. Otherwise it cleans up whole directory.
+		*/
+		static void cleanupBackups(const StringRef& filename);
+
+		/** Restores specified backup file to it's original filename */
+		static void restoreBackup(const StringRef& filename);
+
+		/** Restores latest backup of specified filename */
+		bool restoreLastBackup(const StringRef& filename = "");
+
+		Date64 findLastBackupDate(const StringRef& filename = "");
+		String findLastBackupFile(const StringRef& filename = "");
+
 
 	protected:
 
@@ -241,30 +272,7 @@ namespace Stamina { namespace DT {
 			_fileSize = _filelength(_file->_file);
 		}
 
-		/**Creates a backup of specified file*/
-		void backupFile(const StringRef& filename, bool move);
-		/**Creates a backup of the file we are currently operating on...
-		This function automatically determines if backup is really needed, and sets lastBackupTime property.
-		*/
-		void backupFile(bool move = true);
 
-		static String makeBackupFilename(const StringRef& filename, const Time64& time = Time64(true)) {
-			return filename + time.strftime(".%d-%m-%Y %H-%M-%S.bak");
-		}
-
-		/** Removes old backups leaving only few of them.
-		@param filename - If it points to .dtb file, only backups of these file are cleaned. Otherwise it cleans up whole directory.
-		*/
-		static void cleanupBackups(const StringRef& filename);
-
-		/** Restores specified backup file to it's original filename */
-		static void restoreBackup(const StringRef& filename);
-
-		/** Restores latest backup of specified filename */
-		bool restoreLastBackup(const StringRef& filename = "");
-
-		Date64 findLastBackupDate(const StringRef& filename = "");
-		String findLastBackupFile(const StringRef& filename = "");
 
 	public:
 

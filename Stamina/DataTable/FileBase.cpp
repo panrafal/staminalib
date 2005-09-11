@@ -44,21 +44,27 @@ namespace Stamina { namespace DT {
 
     enResult FileBase::load (const StringRef& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
-
-		_table->clearRows();
-
-		try {
-			this->open(fn , fileRead);
-			this->readDescriptor();
-			if (operation & loadColumns) {
-				this->mergeLoadedColumns();
+		int i = 0;
+		do {
+			
+			_table->clearRows();
+			try {
+				this->open(fn , fileRead);
+				this->readDescriptor();
+				if (operation & loadColumns) {
+					this->mergeLoadedColumns();
+				}
+				this->readRows(false);
+				break;
+			} catch (DTException& e) {
+				close();
+				if (_table->getInterface().empty() || _table->getInterface()->handleFailedLoad(this, &e, i) == false) {
+					return e.errorCode;
+				}
+	            i++;
 			}
-			/*TODO: przywracanie backupów*/
-			this->readRows(false);
-		} catch (DTException e) {
-			close();
-			return e.errorCode;
-		}
+		} while (1);
+
 		close();
 		return success;
     }
@@ -68,25 +74,33 @@ namespace Stamina { namespace DT {
     {
 		if (!_table) return errNotInitialized;
 
-		this->setColumns(_table->getColumns());
+		int i = 0;
 
-		try {
-			this->open(fn , fileWrite);
-			LockerDT lock(_table, allRows);
-			if (operation & saveOldCryptVersion && this->getClass() >= FileBin::staticClassInfo()) {
-				this->castObject<FileBin>()->setOldCryptVersion();
-			}
-			this->writeHeader();
-		    this->writeDescriptor();
-			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
-				if (_table->getRow(i)->hasFlag(rflagDontSave) == false) {
-					this->writeRow(i);
+		do {
+			this->setColumns(_table->getColumns());
+			try {
+				this->open(fn , fileWrite);
+				LockerDT lock(_table, allRows);
+				if (operation & saveOldCryptVersion && this->getClass() >= FileBin::staticClassInfo()) {
+					this->castObject<FileBin>()->setOldCryptVersion();
 				}
+				this->writeHeader();
+				this->writeDescriptor();
+				for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
+					if (_table->getRow(i)->hasFlag(rflagDontSave) == false) {
+						this->writeRow(i);
+					}
+				}
+				break;
+			} catch (DTException e) {
+				this->close();
+				if (_table->getInterface().empty() || _table->getInterface()->handleFailedSave(this, &e, i) == false) {
+					return e.errorCode;
+				}
+				i++;
 			}
-		} catch (DTException e) {
-			this->close();
-			return e.errorCode;
-		}
+		} while (1);
+
 		this->close();
 		return success;
     }
@@ -95,28 +109,35 @@ namespace Stamina { namespace DT {
     enResult FileBase::append (const StringRef& fn, enFileOperation operation) {
 		if (!_table) return errNotInitialized;
 		
-		_fcols.clear();
-	    
-		try {
-			this->open(fn , fileAppend);
-			if (this->isCreatingNewFile()) {
-				_fcols = _table->getColumns();
-				//_table->lastId = DT_ROWID_MIN;
-				this->seekToBeginning();
-				this->writeHeader();
-				this->writeDescriptor();
-			} else {
-				this->readDescriptor();
+	    int i = 0;
+		do {
+			_fcols.clear();
+			try {
+				this->open(fn , fileAppend);
+				if (this->isCreatingNewFile()) {
+					_fcols = _table->getColumns();
+					//_table->lastId = DT_ROWID_MIN;
+					this->seekToBeginning();
+					this->writeHeader();
+					this->writeDescriptor();
+				} else {
+					this->readDescriptor();
+				}
+				this->seekToEnd();
+				for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
+					_table->getRow(i)->setId(_table->getNewRowId());
+					this->writeRow(i);
+				}
+				break;
+			} catch (DTException e) {
+				this->close();
+				if (_table->getInterface().empty() || _table->getInterface()->handleFailedSave(this, &e, i) == false) {
+					return e.errorCode;
+				}
+				i++;
 			}
-			this->seekToEnd();
-			for (unsigned int i=0; i < _table->getRowCount() ; i ++) {
-				_table->getRow(i)->setId(_table->getNewRowId());
-				this->writeRow(i);
-			}
-		} catch (DTException e) {
-			this->close();
-			return e.errorCode;
-		}
+		} while (1);
+
 	    this->close();
 		return success;
 	}

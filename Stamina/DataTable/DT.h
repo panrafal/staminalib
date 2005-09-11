@@ -160,6 +160,9 @@ namespace Stamina { namespace DT {
 
 	class DTException: public Stamina::Exception {
 	public:
+
+		STAMINA_OBJECT_CLASS(DT::DTException, Exception);
+
 		DTException(enError errorCode):errorCode(errorCode) {
 		}
 		enError errorCode;

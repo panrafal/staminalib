@@ -25,6 +25,7 @@
 #include "DataRow.h"
 #include "ColumnsDesc.h"
 #include "Find.h"
+#include "Interface.h"
 
 #define DT_SETBLANKSBYTYPE
 #define DT_CHECKTYPE
@@ -41,8 +42,11 @@ namespace Stamina { namespace DT {
 	const ModuleVersion dataTableVersion (versionModule, "DataTable", Version(3,0,0,0));
 	STAMINA_REGISTER_VERSION(DataTable, dataTableVersion);
 
-	class DataTable {
+	class DataTable: public Object<iObject> {
 	public:
+
+		STAMINA_OBJECT_CLASS(DT::DataTable, iObject);
+
 		typedef std::vector <oDataRow> tRows;
 		typedef std::map <String, String> tParams;
 
@@ -359,6 +363,15 @@ namespace Stamina { namespace DT {
 			_timeLastBackup = time;
 		}
 
+		const oInterface& getInterface() const {
+			return _interface;
+		}
+
+		void setInterface(const oInterface& iface) {
+			_interface = iface;
+		}
+		
+
 	private:
 		tRows _rows;
 		int _size;
@@ -377,6 +390,8 @@ namespace Stamina { namespace DT {
 		Time64 _timeModified;
 		Time64 _timeLastBackup;
 	
+		oInterface _interface;
+
 		/**Additional parameters*/
 		tParams _params;
 		
