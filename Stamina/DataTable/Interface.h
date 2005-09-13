@@ -19,11 +19,18 @@ namespace Stamina { namespace DT {
 
 		STAMINA_OBJECT_CLASS(DT::iInterface, iSharedObject);
 
+		enum Result {
+			retry,
+			fail,
+			quiet = 0x100,
+			failQuiet = fail | quiet,
+		};
+
 	public:
 
-		virtual bool handleFailedLoad(FileBase* file, DTException* exception, int retry)=0;
-		virtual bool handleFailedSave(FileBase* file, DTException* exception, int retry)=0;
-		virtual bool handleFailedAppend(FileBase* file, DTException* exception, int retry)=0;
+		virtual Result handleFailedLoad(FileBase* file, DTException* exception, int retry)=0;
+		virtual Result handleFailedSave(FileBase* file, DTException* exception, int retry)=0;
+		virtual Result handleFailedAppend(FileBase* file, DTException* exception, int retry)=0;
 
 		virtual void showFileMessage(FileBase* file, const StringRef& message, const StringRef& title, bool error)=0;
 

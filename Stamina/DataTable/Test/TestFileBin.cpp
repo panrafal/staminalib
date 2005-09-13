@@ -731,20 +731,20 @@ protected:
 			std::cout << endl << title << endl  << msg << endl;
 		}
 
-		virtual bool handleFailedLoad(FileBase* file, DTException* e, int retry) {
+		virtual Result handleFailedLoad(FileBase* file, DTException* e, int retry) {
 			cout << "handleFailedLoad(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedLoad(file, e, retry);
 		}
-		virtual bool handleFailedSave(FileBase* file, DTException* e, int retry) {
+		virtual Result handleFailedSave(FileBase* file, DTException* e, int retry) {
 			cout << "handleFailedSave(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedSave(file, e, retry);
 		}
-		virtual bool handleFailedAppend(FileBase* file, DTException* e, int retry) {
+		virtual Result handleFailedAppend(FileBase* file, DTException* e, int retry) {
 			cout << "handleFailedAppend(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedAppend(file, e, retry);
 		}
 
-		virtual bool handleRestoreBackup(FileBin* file, DTException* e, int retry) {
+		virtual Result handleRestoreBackup(FileBin* file, DTException* e, int retry) {
 			cout << "handleRestoreBackup(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
 			return __super::handleRestoreBackup(file, e, retry);
 		}

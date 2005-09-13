@@ -1,0 +1,1 @@
+xcopy ..\..\lib\SMemory*.dll . /D /Y
