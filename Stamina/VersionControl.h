@@ -30,7 +30,7 @@ namespace Stamina {
 
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::VersionControl, iObject, Version(1,0,0,0));
 
-		virtual String toString() const {
+		virtual String toString(iStringFormatter* format=0) const {
 			return "";
 		}
 

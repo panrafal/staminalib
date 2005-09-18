@@ -340,7 +340,7 @@ namespace Stamina {
 
 		//
 
-		virtual String toString() const;
+		virtual String toString(iStringFormatter* format=0) const;
 
 		// STL like functions
 
@@ -1260,7 +1260,7 @@ namespace Stamina {
 	}
 
 	template<class TYPE>
-	inline String StringRefT<TYPE>::toString() const {
+	inline String StringRefT<TYPE>::toString(iStringFormatter* format=0) const {
 		this->prepareType<wchar_t>();
 		return String::PassStringRef( String::StringRef( this->str<wchar_t>(), this->getKnownDataSize<wchar_t>() ) );
 	}
@@ -1312,7 +1312,7 @@ namespace Stamina {
 	}
 
 
-	inline String iObject::toString() const {
+	inline String iObject::toString(iStringFormatter* format) const {
 		return strRet( this->getClass().getName() );
 	}
 

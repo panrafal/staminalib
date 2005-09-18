@@ -8,6 +8,8 @@
  *  $Id$
  */
 
+#include "stdafx.h"
+
 #include <windows.h>
 #include <commctrl.h>
 #include <stdstring.h>

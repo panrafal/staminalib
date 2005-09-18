@@ -31,8 +31,8 @@ namespace Stamina {
 		STAMINA_OBJECT_CLASS(Stamina::Exception, iObject);
 
 		virtual String getReason() const = 0;
-		virtual String toString() const {
-			return iObject::toString();
+		virtual String toString(iStringFormatter* f = 0) const {
+			return iObject::toString(f);
 		}
 
 	private:
@@ -52,7 +52,7 @@ namespace Stamina {
 		bool hasReason() const {
 			return !_reason.empty();
 		}
-		virtual String toString() const {
+		virtual String toString(iStringFormatter* format=0) const {
 			return getReason();
 		}
 

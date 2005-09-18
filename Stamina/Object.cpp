@@ -7,7 +7,7 @@
  *
  *  $Id$
  */
-
+#include "stdafx.h"
 #include <boost\crc.hpp>
 
 #include "Helpers.h"

@@ -130,6 +130,7 @@ namespace Stamina {
 	}
 
 	class String; // forward declaration
+	class iStringFormatter;
 
 	/** Basic object interface */
 	class iObject {
@@ -162,7 +163,7 @@ namespace Stamina {
 			return staticClassInfo();
 		}
 
-		virtual String toString() const;
+		virtual String toString(iStringFormatter* format=0) const;
 
 		virtual iObject* cloneObject() const {
 			S_DEBUG_ERROR("not cloneable!");

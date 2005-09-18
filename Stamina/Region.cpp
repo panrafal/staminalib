@@ -8,7 +8,7 @@
  *  $Id$
  */
 
-#include <windows.h>
+#include "stdafx.h"
 #include "Region.h"
 
 namespace Stamina {
