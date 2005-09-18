@@ -167,7 +167,7 @@ namespace Stamina { namespace DT {
 		}
 		enError errorCode;
 
-		String getReason() {
+		virtual String getReason() const {
 			return "DTException";
 		}
 	};

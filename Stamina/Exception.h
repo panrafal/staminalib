@@ -30,7 +30,10 @@ namespace Stamina {
 
 		STAMINA_OBJECT_CLASS(Stamina::Exception, iObject);
 
-		virtual String getReason() = 0;
+		virtual String getReason() const = 0;
+		virtual String toString() const {
+			return iObject::toString();
+		}
 
 	private:
 	};
@@ -43,11 +46,14 @@ namespace Stamina {
 		ExceptionString(const StringRef& reason):_reason(reason) {
 		}
 
-		String getReason() {
+		virtual String getReason() const {
 			return _reason;
 		}
-		bool hasReason() {
+		bool hasReason() const {
 			return !_reason.empty();
+		}
+		virtual String toString() const {
+			return getReason();
 		}
 
 	private:

@@ -232,9 +232,6 @@ namespace Stamina {
 
 		virtual void zzPlaceHolder_iObject1() {}
 		virtual void zzPlaceHolder_iObject2() {}
-		virtual void zzPlaceHolder_iObject3() {}
-		virtual void zzPlaceHolder_iObject4() {}
-		virtual void zzPlaceHolder_iObject5() {}
 
 	};
 

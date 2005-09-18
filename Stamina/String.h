@@ -1295,11 +1295,11 @@ namespace Stamina {
 		s += b;
 		return PassStringRef( s );
 	}
-	/*
+	
 	inline String operator+ (const StringRef& a, const char* b) {
 		return PassStringRef( a + StringRef(b) );
 	}
-	*/
+	
 	template<typename _Elem, typename _Traits, typename _Ax>
 	inline String operator+ (const std::basic_string<_Elem, _Traits, _Ax> a, const StringRef& b) {
 		String s = a;
