@@ -60,7 +60,8 @@ namespace Stamina {
 
 		_state = stConnecting;
 
-		_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, NULL);
+		//_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, NULL);
+		createSocket();
 
 		if (_socket != INVALID_SOCKET)
 		{
@@ -80,10 +81,12 @@ namespace Stamina {
 				server.sin_family = AF_INET;
 				server.sin_port = htons( _port );
 
-				setsockopt(_socket,SOL_SOCKET,SO_KEEPALIVE,(const char*)&option,sizeof(option));
+				/*setsockopt(_socket,SOL_SOCKET,SO_KEEPALIVE,(const char*)&option,sizeof(option));
 				long option = 60*1000;
 				setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&option, sizeof(option));
 				setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO,(char*)&option, sizeof(option));
+				*/
+				setSocketOption();
 				
 				if ((_event = WSACreateEvent()) == (HANDLE)-1 ||
                     WSAEventSelect(_socket, _event, FD_ACCEPT|FD_CONNECT|FD_WRITE|FD_READ|FD_CLOSE) == SOCKET_ERROR ||
@@ -98,5 +101,34 @@ namespace Stamina {
 		else
 			onError(WSAGetLastError());
 		return 0;
+	}
+	
+	unsigned Socket::loop() {
+		DWORD wr;
+		WSANETWORKEVENTS nev = {0};
+		while(_state != stOffile && _state != stDisconnecting) {
+			wr = WaitForSingleObject(_event, -1);
+			
+			if(wr!=WAIT_OBJECT_0)
+				return 0;
+
+			WSAEnumNetworkEvents(_socket, _event, &nev);
+			if (nev.lNetworkEvents & FD_READ)
+				onRead();
+			else if (nev.lNetworkEvents & FD_ACCEPT)
+				onAccept();
+			else if (nev.lNetworkEvents & FD_CONNECT) {
+				_state = stConnected;
+				onConnected();
+			}
+			else if (nev.lNetworkEvents & FD_WRITE)
+				onWrite();
+			else if (nev.lNetworkEvents & FD_CLOSE) {
+				_state = stOffline;
+				onClose();
+			}
+			else
+				onError(nev.iErrorCode);
+		}
 	}
 };

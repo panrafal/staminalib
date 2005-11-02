@@ -59,18 +59,26 @@ namespace Stamin {
 		State getState() const;
 	public:
 		boost::signal1<void, int> onError;
+		boost::signal0<void> onRead;
+		boost::signal0<void> onWrite;
+		boost::signal0<void> onAccept;
+		boost::signal0<void> onClose;
+		boost::signal0<void> onConnected;
+	protected:
+		virtual void createSocket() = 0;
+		virtual void setSocketOption() = 0;
 	protected:
 		HANDLE _event;
 		ThreadRunnerStore* _threads;
 		State _state;
 		CriticalSection_w32 _critical;
+		SOCKET _socket; 
 	private:
 		unsigned connecting();
 		unsigned loop();
 	private:
 		String _host;
 		int _port;
-		SOCKET _socket; 
 	};
 };
 
