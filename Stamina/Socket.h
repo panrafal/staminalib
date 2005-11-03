@@ -23,6 +23,7 @@
 
 namespace Stamin {
 
+	/** Interface for socket*/
 	class iSocket: public iObject {
 	public:
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSocket, iObject, Version(0,1,0,0));
@@ -30,16 +31,22 @@ namespace Stamin {
 		virtual bool Send(const void* data, int size) = 0;
 	};
 
+	/** Main socket object */
 	class Socket: public iSocket {
 	public:
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::Socket, iSocket, Version(0,1,0,0));
 
+		/**
+		@param major - winsock's major ver
+		@param minor - winsock's minor ver
+		*/
 		Socket(int major = 2, int minor = 2);
 
 		virtual ~Socket() {
 			WSACleanup();
 		}
 		
+		/** Connection state */
 		enum State {
 			stOffline,
 			stConnecting,
@@ -49,24 +56,30 @@ namespace Stamin {
 
 		enum Error {
 			erNone,
-			erInvalidThread		// Can't create thread
+			erInvalidThread		/// Can't create thread
 		};
 	public:
+		/** Tries to establish connection
+		@param host - host's address
+		@param port - host's port
+		*/
 		bool Connect(const StringRef& host, int port);
 
 		String getHost() const;
 		int getPort() const;
 		State getState() const;
-	public:
-		boost::signal1<void, int> onError;
-		boost::signal0<void> onRead;
-		boost::signal0<void> onWrite;
-		boost::signal0<void> onAccept;
-		boost::signal0<void> onClose;
-		boost::signal0<void> onConnected;
 	protected:
+		/**
+		*/
 		virtual void createSocket() = 0;
 		virtual void setSocketOption() = 0;
+
+		virtual void onError(int error) = 0;
+		virtual void onRead() = 0;
+		virtual void onWrite() = 0;
+		virtual void onAccept() = 0;
+		virtual void onClose() = 0;
+		virtual void onConnected() = 0;
 	protected:
 		HANDLE _event;
 		ThreadRunnerStore* _threads;
