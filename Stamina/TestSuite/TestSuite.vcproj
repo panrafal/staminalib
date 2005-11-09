@@ -205,11 +205,6 @@
 			</File>
 			<File
 				RelativePath="..\DataTable\Test\TestFileBin.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\Test\TestStringResults.txt">
@@ -291,8 +286,7 @@
 							AdditionalIncludeDirectories=""/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Release|Win32">
 						<Tool
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
@@ -306,8 +300,7 @@
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Release|Win32">
 						<Tool
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
@@ -321,8 +314,7 @@
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Release|Win32">
 						<Tool
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>

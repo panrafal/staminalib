@@ -524,7 +524,7 @@ public:
 		}
 		{
 			String a ("Hello ");
-			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), StringRef(a + "world!") );
+			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), StringRef(a + String("world!")) );
 			CPPUNIT_ASSERT_EQUAL( String("Hello "), a );
 		}
 		{ // StringRef
