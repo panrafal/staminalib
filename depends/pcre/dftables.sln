@@ -1,0 +1,37 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dftables", "dftables.vcproj", "{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcretest", "pcretest.vcproj", "{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lib", "lib.vcproj", "{AD6F3331-A6BD-48DC-ABDE-CF36C2A6132C}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Debug.ActiveCfg = Debug|Win32
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Debug.Build.0 = Debug|Win32
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Release.ActiveCfg = Release|Win32
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Release.Build.0 = Release|Win32
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Debug.ActiveCfg = Debug|Win32
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Debug.Build.0 = Debug|Win32
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Release.ActiveCfg = Release|Win32
+		{47B1E688-D9F1-4C97-8CE4-5CDCFB01E5E4}.Release.Build.0 = Release|Win32
+		{AD6F3331-A6BD-48DC-ABDE-CF36C2A6132C}.Debug.ActiveCfg = Debug|Win32
+		{AD6F3331-A6BD-48DC-ABDE-CF36C2A6132C}.Debug.Build.0 = Debug|Win32
+		{AD6F3331-A6BD-48DC-ABDE-CF36C2A6132C}.Release.ActiveCfg = Release|Win32
+		{AD6F3331-A6BD-48DC-ABDE-CF36C2A6132C}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
