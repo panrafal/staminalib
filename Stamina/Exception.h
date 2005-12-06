@@ -61,4 +61,14 @@ namespace Stamina {
 	};
 
 
+	class ExceptionDeprecated: public ExceptionString {
+	public:
+		STAMINA_OBJECT_CLASS(Stamina::ExceptionDeprecated, ExceptionString);
+
+		ExceptionDeprecated(const StringRef& reason):ExceptionString(reason) {
+		}
+
+	};
+
+
 };

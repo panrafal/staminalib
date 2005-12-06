@@ -19,6 +19,7 @@
 
 namespace Stamina {
 
+	/**  */
 	class iQueueFunction {
 	public:
 		virtual bool queueFunction(PAPCFUNC callback, void* param, bool force) = 0;

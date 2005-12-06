@@ -14,6 +14,15 @@
 #include <crtdbg.h>
 
 #define S_ASSERT(a) _ASSERTE(a)
+
+
+
+#ifdef _DEBUG
+#define S_ASSERT_RUN(a) _ASSERTE(a)
+#else
+#define S_ASSERT_RUN(a) a
+#endif
+
 #ifdef _DEBUG
 #define S_ASSERT_MSG(a, msg) _ASSERT_BASE(a, msg)
 #else
@@ -22,7 +31,11 @@
 
 #define S_DEBUG_ERROR(msg) S_ASSERT_MSG(false, msg)
 
+#ifdef _DEBUG
 #define S_ERROR(msg) _ASSERT_BASE(false, msg)
+#else
+#define S_ERROR(msg) MessageBox(0, msg, "S_ERROR!", MB_OK | MB_ICONEXCLAMATION)
+#endif
 
 #if 0
 //#ifdef _DEBUG

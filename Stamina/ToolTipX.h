@@ -209,7 +209,7 @@ namespace Stamina { namespace ToolTipX {
 	};
 
 
-	class ToolTip: LockableObject<iLockableObject> {
+	class ToolTip: public LockableObject<iLockableObject> {
 	public:
 		STAMINA_OBJECT_CLASS(ToolTipX::ToolTip, iLockableObject);
 

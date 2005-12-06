@@ -135,7 +135,7 @@ namespace ListWnd
 
 	InView ListView::isInView(oItem itemObj) {
 		ObjLocker lock(this);
-        S_ASSERT(itemObj);
+		S_ASSERT(itemObj.isValid());
 		/*Lepiej przewin¹æ siê nie da, wiêc musimy pozwalaæ na czêœciowe*/
 		/*if (this->getScrollPos() == item->getPos()) {
 			canBePartial = true;

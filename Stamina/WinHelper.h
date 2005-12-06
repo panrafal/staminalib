@@ -30,6 +30,8 @@ namespace Stamina {
 		return getInstance();
 	}
 
+
+
 	int parseScrollRequest(HWND hwnd, short bar, short trackPos, short request, short line);
 	
 	bool getKeyState(int vkey);

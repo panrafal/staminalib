@@ -295,7 +295,7 @@ namespace ListWnd
 		lv->lockPaint();
 		lv->lockRefresh();
 		ItemList::iterator it = _items.begin();
-		if (lv->getActiveItem() && lv->getActiveItem()->getEntry() == entry)
+		if (lv->getActiveItem().isValid() && lv->getActiveItem()->getEntry() == entry)
 			lv->setActiveItem(oItem(0));
 		while (it != _items.end()) {
 			if ((*it)->getEntry() == entry) {

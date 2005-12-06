@@ -149,7 +149,7 @@ namespace ListWnd
 			}
 			if (item) {
 				itemHit = item->getRect().contains(itemPos);
-				if (shift && oldActive) {
+				if (shift && oldActive.isValid()) {
 					ItemWalk::walk(this
 						, boost::bind(Item::setSelected
 							, boost::bind(oItem::get, _1)

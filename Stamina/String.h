@@ -29,7 +29,7 @@ namespace Stamina {
 
 	};
 
-	/** Universal String class. Transparently supports both MultiByte(template specified CorePage) and WideChar (UTF-16) encodings at the same time.
+	/** Universal String class. Transparently supports both MultiByte(template specified CodePage) and WideChar (UTF-16) encodings at the same time.
 	Default codepage is CP_ACP (default system codepage).
 
 	All positions refer to character positions - ie. in polish word "≥Ûdü" a letter 'd' is in UTF-8 stored at byte 4, however it's real character position is 2
@@ -41,7 +41,7 @@ namespace Stamina {
 	@code
 
 	String fun(const StringRef& ref, StringRef quick) {
-		// _both_ 'ref' and 'quick' are passed without copying data! It's almost as fast as using direct pointers to data, however leaves you with plenty of function to play with. Keep in mind, that conversion buffers are also referenced!
+		// _both_ 'ref' and 'quick' are passed without copying data! It's almost as fast as using direct pointers to data, however leaves you with plenty of functionality to play with. Keep in mind, that conversion buffers are also referenced!
 		printf("Referenced const ref: %s", ref.a_str());
 		printf("Referenced quick: %s", quick.a_str());
 		// Here is where the magic goes. 'quick' holds an reference to data, as long as you don't try to modify it. If You do modify, a local copy is allocated - so the referenced string is still safe and left unchanged.
@@ -145,6 +145,7 @@ namespace Stamina {
 		The best way to use it safely is to declare static Strings and function arguments as const. Then it just won't compile.
 
 		@warning Don't use it as a variable type! It should be used only as a proxy!
+		@warning Use with QUADRUPLE caution!
 		*/
 		class PassStringRef: public StringRef {
 		public:
@@ -866,9 +867,9 @@ namespace Stamina {
 			return c;
 		}
 
-		/** Replaces characters found in @a from with according characters in @to (or with last character @a to, or removes them) 
+		/** Replaces characters found in @a from with according characters in @a to (or with last character @a to, or removes them) 
 
-		@warning You CAN'T use character pairs in from/to values if @a to representation takes more bytes per character than @a from (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @to to use Wide type instead.
+		@warning You CAN'T use character pairs in from/to values if @a to representation takes more bytes per character than @a from (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @a to to use Wide type instead.
 		
 		It's always safe to erase (when @a to is empty) multi byte characters.
 		It's always safe to replace characters into smaller types (ie. special language-specific characters into ANSI)
