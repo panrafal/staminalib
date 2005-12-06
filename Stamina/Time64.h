@@ -329,6 +329,7 @@ namespace Stamina {
 		}
 
 
+
 		// Functions
 		void strftime(char *strDest,size_t maxsize,const char *format) const;
 #ifdef _STRING_

@@ -1235,8 +1235,8 @@ namespace Stamina { namespace DT {
 		DT::findLastBackup(filename.empty() ? this->_fileName : filename, &date);
 		return date;
 	}
-	String FileBin::findLastBackupFile(const StringRef& filename) {
-		return DT::findLastBackup(filename.empty() ? this->_fileName : filename).getFileName();
+	String FileBin::findLastBackupFile(const StringRef& filename, Date64* date) {
+		return DT::findLastBackup(filename.empty() ? this->_fileName : filename, date).getFileName();
 	}
 
 

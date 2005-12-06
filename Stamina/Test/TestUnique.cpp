@@ -92,7 +92,7 @@ protected:
 
 		CPPUNIT_ASSERT_EQUAL( rangeStatic, domain->inRange(domain->getId("range"), iRange::typeBoth)->getRangeId() );
 
-		CPPUNIT_ASSERT( domain->inRange(domain->getId("range"), iRange::typeUnique) == range );
+		CPPUNIT_ASSERT( domain->inRange(domain->getId("range"), iRange::typeUnique).get() == range );
 
 	}
 

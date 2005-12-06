@@ -58,7 +58,7 @@ namespace Stamina { namespace DT {
 				break;
 			} catch (DTException& e) {
 				close();
-				if (_table->getInterface().empty() || _table->getInterface()->handleFailedLoad(this, &e, i) == false) {
+				if (_table->getInterface().empty() || (_table->getInterface()->handleFailedLoad(this, &e, i) & iInterface::fail)) {
 					return e.errorCode;
 				}
 	            i++;

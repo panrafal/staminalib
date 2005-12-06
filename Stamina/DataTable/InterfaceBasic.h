@@ -29,20 +29,44 @@ namespace Stamina { namespace DT {
 			MessageBoxW(0, msg.w_str(), title.w_str(), MB_OK | (error ? MB_ICONERROR : MB_ICONWARNING));
 		}
 
+		Result confirmFileError(FileBase* file, const StringRef& message, const StringRef& _title, DTException* e) {
+			String msg;
+			msg = L"Wyst¹pi³ b³¹d w pliku ";
+			msg += "\"" + file->getFilename() + "\"\r\n\r\n";
+			msg += message; 
+			msg += L"\r\n\r\nMo¿esz ponowiæ próbê, zignorowaæ dane zawarte w pliku, lub wyjœæ z programu.";
+
+			String title = _title;
+			title += " (" + getFileName(file->getFilename()) + ")";
+
+			int r = MessageBoxW(0, msg.w_str(), title.w_str(), MB_ABORTRETRYIGNORE | MB_ICONERROR | MB_DEFBUTTON2);
+			switch (r) {
+				case IDIGNORE:
+					return iInterface::fail;
+				case IDABORT:
+					throw e;
+			}
+			return iInterface::retry;
+		}
 
 		Result handleMessageErrors(FileBase* file, DTException* e, const StringRef& title) {
 			String msg;
+			bool confirm = true;
 			switch (e->errorCode) {
 				case DT::errBadFormat: msg = L"Z³y format pliku"; break;
 				case DT::errBadParameter: msg = L"Z³y parametr"; break;
 				case DT::errBadType: msg = L"Z³y typ"; break;
 				case DT::errBadVersion: msg = L"Nieobs³ugiwana wersja pliku - "; msg += file->getVersion().getString(); break;
 				case DT::errFileError: msg = L"B³¹d systemu plików - "; msg += inttostr(e->errorCode & ~DT::errFileError); break;
-				case DT::errFileNotFound: msg = L"Plik nie zosta³ znaleziony"; break;
+				//case DT::errFileNotFound: msg = L"Plik nie zosta³ znaleziony"; break;
 				case DT::errWriteError: msg = L"B³¹d zapisu"; break;
 			}
 			if (msg.empty() == false) {
-				this->showFileMessage(file, msg, title, true);
+				if (confirm) {
+					return this->confirmFileError(file, msg, title, e);
+				} else {
+					this->showFileMessage(file, msg, title, true);
+				}
 			}
 			return iInterface::fail;
 		}
@@ -99,6 +123,10 @@ namespace Stamina { namespace DT {
 	public:
 
 		typedef std::list<MD5Digest> tDigests;
+
+		Interface_passList() {
+			this->addPassword("");
+		}
 
 	public:
 

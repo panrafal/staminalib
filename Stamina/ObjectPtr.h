@@ -42,11 +42,9 @@ namespace Stamina {
 
 
 		const T * operator -> () const {
-			S_ASSERT(this->_obj != 0);
 			return this->get();
 		}
 		T * operator -> () {
-			S_ASSERT(this->_obj != 0);
 			return this->get();
 		}
 

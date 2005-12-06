@@ -15,6 +15,7 @@
 #include <io.h>
 #include "FileBase.h"
 #include <Stamina\Helpers.h>
+#include <Stamina\FindFileFiltered.h>
 
 namespace Stamina { namespace DT {
 
@@ -215,7 +216,7 @@ namespace Stamina { namespace DT {
 		bool restoreLastBackup(const StringRef& filename = "");
 
 		Date64 findLastBackupDate(const StringRef& filename = "");
-		String findLastBackupFile(const StringRef& filename = "");
+		String findLastBackupFile(const StringRef& filename = "", Date64* date = 0);
 
 
 	protected:
@@ -238,8 +239,12 @@ namespace Stamina { namespace DT {
 			if (fread(buffer, size, 1, _file) < 1) {
 				throw DTFileException();
 			}
-			if (decrement)
+			if (decrement) {
+				if (*decrement < size) {
+					throw DTException(errBadFormat);
+				}
 				*decrement -= size;
+			}
 		}
 
 		inline void writeData(const void* buffer, int size, unsigned int* increment = 0) throw(...) {

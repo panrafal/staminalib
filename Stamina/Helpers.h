@@ -193,12 +193,16 @@ namespace Stamina {
 	@return number of deleted files/dirs
 	*/
 	int removeDirTree(const std::string& path);
+
 	/**Creates all missing directories on provided path.
 	@return number of created directories
 	*/
 	int createDirectories(const std::string& path);
 
-	/** Returns the name of last path part */
+	/** Returns the name of last path part 
+
+	ie. "bar.html" from "/foor/bar.html"
+	*/
 	inline std::string getFileName(const std::string& path) {
 		return path.substr(path.find_last_of("\\/") + 1);
 	}

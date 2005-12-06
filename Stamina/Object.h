@@ -154,6 +154,9 @@ namespace Stamina {
 			}
 		}
 #else 
+		iObject() {
+		}
+
 		virtual ~iObject() {};
 #endif
 
@@ -224,8 +227,16 @@ namespace Stamina {
 			return Memory::malloc(size);
 		}
 
+		void *operator new( size_t size, void* ptr) {
+			return ptr;
+		}
+
 		void operator delete( void * buff ) {
 			Memory::free(buff);
+		}
+
+		void operator delete( void * buff, void* ) {
+			return;
 		}
 
 
