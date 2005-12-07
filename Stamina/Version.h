@@ -103,11 +103,11 @@ namespace Stamina {
 			}
 			if (elements > 2 || release || build) {
 				s += ".";
-				s += itoa(minor, buff, 10);
+				s += itoa(release, buff, 10);
 			}
 			if (elements > 3 || build) {
 				s += ".";
-				s += itoa(minor, buff, 10);
+				s += itoa(build, buff, 10);
 			}
 			return s;
 		}

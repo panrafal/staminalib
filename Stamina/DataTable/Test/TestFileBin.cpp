@@ -637,7 +637,7 @@ protected:
 		backup = fb.findLastBackupFile();
 		CPPUNIT_ASSERT(backup.empty() == false);
 		// sprawdzamy wyszukiwanie najnowszych...
-		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - 120).strftime(".%d-%m-%Y %H-%M-%S.bak")).c_str(), false);
+		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - 120).strftime(".%Y-%m-%d %H-%M-%S.bak")).c_str(), false);
 		CPPUNIT_ASSERT_EQUAL(String(backup), fb.findLastBackupFile());
 
 		// przywracanie
@@ -675,7 +675,7 @@ protected:
 		remove.push_back(Time64(true) - (12 * 60 * 60)); // sprzed 6 godzin
 		remove.push_back(Time64(true) - 1000); // najnowsze
 
-		std::string format = getFileName("testCleanup") + ".%d-%m-%Y %H-%M-%S.bak";
+		std::string format = getFileName("testCleanup") + ".%Y-%m-%d %H-%M-%S.bak";
 
 		for (tList::iterator it = keep.begin(); it != keep.end(); it++) {
 			CopyFile("TestFileBinOld.dtb", it->strftime(format.c_str()).c_str() , false);
@@ -684,8 +684,8 @@ protected:
 			CopyFile("TestFileBinOld.dtb", it->strftime(format.c_str()).c_str() , false);
 		}
 
-		std::string testAll1 = getFileName("testCleanupAll") + ".10-06-2001 12-00-00.bak";
-		std::string testAll2 = getFileName("testCleanupAll") + ".09-06-2001 12-00-00.bak";
+		std::string testAll1 = getFileName("testCleanupAll") + ".2001-06-10 12-00-00.bak";
+		std::string testAll2 = getFileName("testCleanupAll") + ".2001-06-09 12-00-00.bak";
 		CopyFile("TestFileBinOld.dtb", testAll1.c_str(), false);
 		CopyFile("TestFileBinOld.dtb", testAll2.c_str(), false);
 
@@ -731,21 +731,21 @@ protected:
 			std::cout << endl << title << endl  << msg << endl;
 		}
 
-		virtual Result handleFailedLoad(FileBase* file, DTException* e, int retry) {
-			cout << "handleFailedLoad(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleFailedLoad(FileBase* file, DTException& e, int retry) {
+			cout << "handleFailedLoad(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedLoad(file, e, retry);
 		}
-		virtual Result handleFailedSave(FileBase* file, DTException* e, int retry) {
-			cout << "handleFailedSave(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleFailedSave(FileBase* file, DTException& e, int retry) {
+			cout << "handleFailedSave(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedSave(file, e, retry);
 		}
-		virtual Result handleFailedAppend(FileBase* file, DTException* e, int retry) {
-			cout << "handleFailedAppend(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleFailedAppend(FileBase* file, DTException& e, int retry) {
+			cout << "handleFailedAppend(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedAppend(file, e, retry);
 		}
 
-		virtual Result handleRestoreBackup(FileBin* file, DTException* e, int retry) {
-			cout << "handleRestoreBackup(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleRestoreBackup(FileBin* file, DTException& e, int retry) {
+			cout << "handleRestoreBackup(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleRestoreBackup(file, e, retry);
 		}
 

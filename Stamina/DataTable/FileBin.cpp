@@ -1101,9 +1101,9 @@ namespace Stamina { namespace DT {
 
 	Date64 getBackupDate(const RegEx& re) {
 		Date64 d;
-		d.day = atoi(re[2].c_str());
+		d.year = atoi(re[2].c_str());
 		d.month = atoi(re[3].c_str());
-		d.year = atoi(re[4].c_str());
+		d.day = atoi(re[4].c_str());
 		d.hour = atoi(re[5].c_str());
 		d.min = atoi(re[6].c_str());
 		d.sec = atoi(re[7].c_str());
@@ -1214,7 +1214,7 @@ namespace Stamina { namespace DT {
 		std::string original = RegEx::doGet("/^(.+\\.dtb).\\d+-\\d+-\\d+ \\d+-\\d+-\\d+.bak$/i", filename.c_str(), 1);
 		// plik nie jest backupem zadnego dtb
 		if (original.empty()) throw DTException(errBadParameter);
-		std::string target = original + Date64(true).strftime(".%m-%d-%Y %H-%M-%S.restored");
+		std::string target = original + Date64(true).strftime(".%Y-%m-%d %H-%M-%S.restored");
 		MoveFileEx(original.c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
 		MoveFileEx(filename.c_str(), original.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
 

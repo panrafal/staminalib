@@ -58,7 +58,8 @@ namespace Stamina { namespace DT {
 				break;
 			} catch (DTException& e) {
 				close();
-				if (_table->getInterface().empty() || (_table->getInterface()->handleFailedLoad(this, &e, i) & iInterface::fail)) {
+				_table->clearRows();
+				if (_table->getInterface().empty() || (_table->getInterface()->handleFailedLoad(this, e, i) & iInterface::fail)) {
 					return e.errorCode;
 				}
 	            i++;
@@ -94,7 +95,7 @@ namespace Stamina { namespace DT {
 				break;
 			} catch (DTException e) {
 				this->close();
-				if (_table->getInterface().empty() || _table->getInterface()->handleFailedSave(this, &e, i) == false) {
+				if (_table->getInterface().empty() || _table->getInterface()->handleFailedSave(this, e, i) == false) {
 					return e.errorCode;
 				}
 				i++;
@@ -131,7 +132,7 @@ namespace Stamina { namespace DT {
 				break;
 			} catch (DTException e) {
 				this->close();
-				if (_table->getInterface().empty() || _table->getInterface()->handleFailedSave(this, &e, i) == false) {
+				if (_table->getInterface().empty() || _table->getInterface()->handleFailedSave(this, e, i) == false) {
 					return e.errorCode;
 				}
 				i++;

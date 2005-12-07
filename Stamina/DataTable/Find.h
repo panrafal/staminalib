@@ -26,12 +26,16 @@ namespace Stamina { namespace DT {
 			eq, neq, gt, gteq, lt, lteq
 		};
 
-		inline Find(Operation operation, const oColumn& col, const oValue& value):operation(operation), col(col), value(value) {}
+		inline Find(Operation operation, const oColumn& col, const oValue& value):operation(operation), col(col), value(value) {
+			S_ASSERT(col.isValid());
+		}
 
 		static inline Find EqStr(const oColumn& col, const StringRef& str) {
+			S_ASSERT(col.isValid());
 			return Find(eq, col, new Value_stringRef(str));
 		}
 		static inline Find EqInt(const oColumn& col, int value) {
+			S_ASSERT(col.isValid());
 			return Find(eq, col, new Value_int(value));
 		}
 

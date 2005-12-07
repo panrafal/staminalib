@@ -28,12 +28,12 @@ namespace Stamina { namespace DT {
 
 	public:
 
-		virtual Result handleFailedLoad(FileBase* file, DTException* exception, int retry)=0;
-		virtual Result handleFailedSave(FileBase* file, DTException* exception, int retry)=0;
-		virtual Result handleFailedAppend(FileBase* file, DTException* exception, int retry)=0;
+		virtual Result handleFailedLoad(FileBase* file, DTException& exception, int retry)=0;
+		virtual Result handleFailedSave(FileBase* file, DTException& exception, int retry)=0;
+		virtual Result handleFailedAppend(FileBase* file, DTException& exception, int retry)=0;
 
 		virtual void showFileMessage(FileBase* file, const StringRef& message, const StringRef& title, bool error)=0;
-		virtual Result confirmFileError(FileBase* file, const StringRef& message, const StringRef& title, DTException* e)=0;
+		virtual Result confirmFileError(FileBase* file, const StringRef& message, const StringRef& title, DTException& e)=0;
 
 	};
 

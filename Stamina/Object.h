@@ -26,16 +26,18 @@
 
 #ifdef STAMINA_DEBUG
 	#include <list>
+	#include <vector>
 	#include "CriticalSection.h"
 #endif
 
 namespace Stamina {
 
 #ifdef STAMINA_DEBUG
-	extern std::list<class iObject*>* debugObjects;
-	extern CriticalSection* debugObjectsCS;
+	typedef std::list<class iObject*> tDebugObjects;
+	extern tDebugObjects* debugObjects;
+	//extern CriticalSection* debugObjectsCS;
+	extern Lock* debugObjectsCS;
 #endif
-
 
 
 	class ObjectClassInfo {
@@ -137,21 +139,25 @@ namespace Stamina {
 	public:
 
 #ifdef STAMINA_DEBUG
+
 		iObject() {
-			if (debugObjectsCS) {
+/*			if (debugObjectsCS) {
 				Locker locker(*debugObjectsCS);
 				if (debugObjects) {
 					debugObjects->push_back(this);
 				}
 			}
+			*/
 		}
 		virtual ~iObject() {
+			/*
 			if (debugObjectsCS) {
 				Locker locker (*debugObjectsCS);
 				if (debugObjects) {
 					debugObjects->remove(this);
 				}
 			}
+			*/
 		}
 #else 
 		iObject() {
@@ -278,9 +284,34 @@ namespace Stamina {
 		virtual bool __stdcall isValid() =0;
 		virtual bool __stdcall isDestroyed() =0;
 		virtual unsigned int __stdcall getUseCount() =0;
-		virtual ~iSharedObject() {};
 
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSharedObject, iLockableObject, Version(0,1,0,0));
+
+
+#ifdef STAMINA_DEBUG
+
+		iSharedObject() {
+			if (debugObjectsCS) {
+				Locker locker(*debugObjectsCS);
+				if (debugObjects) {
+					debugObjects->push_back(this);
+				}
+			}
+		}
+		virtual ~iSharedObject() {
+			if (debugObjectsCS) {
+				Locker locker (*debugObjectsCS);
+				if (debugObjects) {
+					debugObjects->remove(this);
+				}
+			}
+		}
+#else 
+		iSharedObject() {
+		}
+
+		virtual ~iSharedObject() {};
+#endif
 
 	private:
 

@@ -88,11 +88,23 @@ namespace Stamina { namespace DT {
 		}
 
 		operator tRowId() const {
+			return getId();
+		}
+
+		operator int() const {
+			return getId();
+		}
+
+		tRowId getId() const {
 			if (this->get()) {
 				return this->get()->getId();
 			} else {
 				return rowNotFound;
 			}
+		}
+		
+		bool isFound() const {
+			return getId() != rowNotFound;
 		}
 
 	};

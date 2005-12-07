@@ -20,7 +20,7 @@ namespace Stamina { namespace DT {
 	class DataTable;
 
 
-	class DataRow: public SharedObject<iRow> {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
+	class DataRow: public SharedObject<iRow, LockableObject<iRow, CriticalSection_simple> > {  // Wiersz w tabeli ... Zawiera tylko wartosci kolumn
 		friend class ColumnsDesc;
 		friend class FileBin;
 	public:

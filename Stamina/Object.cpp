@@ -13,6 +13,7 @@
 #include "Helpers.h"
 
 #include "ObjectImpl.h"
+#include "Mutex.h"
 
 
 
@@ -34,8 +35,8 @@ namespace Stamina {
 
 
 #ifdef STAMINA_DEBUG
-	std::list<class iObject*>* debugObjects = new std::list<class iObject*>;
-	CriticalSection* debugObjectsCS = new CriticalSection;
+	tDebugObjects* debugObjects = new tDebugObjects();
+	Lock* debugObjectsCS = new SimpleMutex();
 
 	class __initializer {
 	public:

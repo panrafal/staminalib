@@ -36,4 +36,27 @@ namespace Stamina {
         volatile LONG _occupied;
 	};
 
+	class SimpleMutex: public Lock {
+	public:
+		__inline SimpleMutex() {
+			_occupied = 0;
+		}
+		void lock() {
+			while (InterlockedCompareExchange(&_occupied, 1, 0) == 1) {
+				Sleep(1);
+			}
+		}
+		void unlock() {
+			InterlockedCompareExchange(&_occupied, 0, 1);
+		}
+		bool canAccess() {
+			return _occupied != 1;
+		}
+		int getLockCount() {
+			return _occupied;
+		}
+	private:
+        volatile LONG _occupied;
+	};
+
 };

@@ -14,6 +14,7 @@
 
 #include <windows.h>
 #include "Lock.h"
+#include "Assert.h"
 /*
 cCriticalSection to bardzo prosta, obiektowa, niekoniecznie szybsza
 wersja obslugi sekcji krytycznych. Dodatkowa opcja, jest mozliwosc
@@ -52,6 +53,38 @@ namespace Stamina {
 		int getLockCount() {return cs.LockCount;}
 
 	};
+
+	class CriticalSection_simple: public Lock {
+	public:
+		__inline CriticalSection_simple() {
+			_occupied = 0;
+			_thread = 0;
+		}
+		void lock() {
+			LONG current = GetCurrentThreadId();
+			LONG result;
+			while ((result = InterlockedCompareExchange(&_thread, current, 0)) != current && result != 0){
+				Sleep(1);
+			}
+			InterlockedIncrement(&_occupied);
+		}
+		void unlock() {
+			if (InterlockedDecrement(&_occupied) == 0) {
+				LONG current = GetCurrentThreadId();
+				S_ASSERT_RUN( InterlockedCompareExchange(&_thread, 0, current) == current );
+			}
+		}
+		bool canAccess() {
+			return _occupied != 1;
+		}
+		int getLockCount() {
+			return _occupied;
+		}
+	private:
+        volatile LONG _occupied;
+		volatile LONG _thread;
+	};
+
 
 	/** Empty Critical section class.
 	*/
