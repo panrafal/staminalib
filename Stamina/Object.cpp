@@ -37,6 +37,7 @@ namespace Stamina {
 #ifdef STAMINA_DEBUG
 	tDebugObjects* debugObjects = new tDebugObjects();
 	Lock* debugObjectsCS = new SimpleMutex();
+	volatile long debugObjectsCount = 0;
 
 	class __initializer {
 	public:

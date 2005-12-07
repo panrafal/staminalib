@@ -34,7 +34,7 @@ namespace Stamina { namespace DT {
 			if (r == IDIGNORE) {
 				return iInterface::fail;
 			} else if (r == IDABORT) {
-				exit(0);
+				abort();
 			}
 			return iInterface::retry;
 		}
@@ -67,9 +67,13 @@ namespace Stamina { namespace DT {
 				case DT::errBadType: msg = L"Z³y typ"; break;
 				case DT::errNotAuthenticated: msg = L"Z³e has³o!"; break;
 				case DT::errBadVersion: msg = L"Nieobs³ugiwana wersja pliku - "; msg += file->getVersion().getString(); break;
-				case DT::errFileError: msg = L"B³¹d systemu plików - "; msg += inttostr(e.errorCode & ~DT::errFileError); break;
 				//case DT::errFileNotFound: msg = L"Plik nie zosta³ znaleziony"; break;
 				case DT::errWriteError: msg = L"B³¹d zapisu"; break;
+				default:
+					if (e.errorCode & errFileError) {
+						msg = L"B³¹d systemu plików - "; msg += inttostr(e.errorCode & ~DT::errFileError);			
+					}
+
 			}
 			if (msg.empty() == false) {
 				if (confirm) {
@@ -89,7 +93,7 @@ namespace Stamina { namespace DT {
 				}
 			} else if (file->getClass() >= FileBin::staticClassInfo()) {
 				FileBin* fb = file->castObject<FileBin>();
-				if (e.errorCode == DT::errBadFormat && fb->makeBackups) {
+				if ((e.errorCode == DT::errBadFormat || e.errorCode & DT::errFileError) && fb->makeBackups) {
 					return this->handleRestoreBackup(fb, e, retry);
 				}
 			}
@@ -117,7 +121,7 @@ namespace Stamina { namespace DT {
 				FileBin* fb = file->castObject<FileBin>();
 				if (e.errorCode == DT::errBadFormat && fb->makeBackups) {
 					Result res = this->handleRestoreBackup(fb, e, retry);
-					if (res == iInterface::failQuiet) {
+					if (res == iInterface::failQuiet || res == iInterface::retry) {
 						return res;
 					}
 				}

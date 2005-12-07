@@ -36,4 +36,9 @@ namespace Stamina {
 		OutputDebugString(txt);
 	}
 
+	void LoggerFile::logMsg(LogLevel level, const char* module, const char* where, const char* msg) {
+		fprintf(_file, "%s::%s - %s\n", module, where, msg);
+	}
+
+
 };

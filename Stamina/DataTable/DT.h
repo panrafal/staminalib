@@ -17,6 +17,7 @@
 */
 
 #include <Stamina\Exception.h>
+#include <Stamina\Helpers.h>
 
 namespace Stamina { namespace DT {
 
@@ -168,7 +169,33 @@ namespace Stamina { namespace DT {
 		enError errorCode;
 
 		virtual String getReason() const {
-			return "DTException";
+			String code;
+			switch (errorCode) {
+				case errSuccess: code = "success"; break;
+				case errNoColumn: code = "noColumn"; break;
+				case errNoRow: code = "noRow"; break;
+				case errBadType: code = "badType"; break;
+
+				case errFileNotFound: code = "fileNotFound"; break;
+				case errNotInitialized: code = "notInitialized"; break;
+				case errNotAuthenticated: code = "authenticated"; break;
+				case errNotOpened: code = "notOpened"; break;
+				case errBadFormat: code = "badFormat"; break;
+				case errBadVersion: code = "badVersion"; break;
+				case errRowNotFound: code = "rowNotFound"; break;
+				case errBadParameter: code = "badParameter"; break;
+				case errWriteError: code = "writeError"; break;
+				case errAlreadyLoaded: code = "alreadyLoaded"; break;
+				case errNotLoaded: code = "notLoaded"; break;
+				case errNotChanged: code = "notChanged"; break;
+				case errFileError: code = "fileError"; break;
+
+				case resSkipped: code = "skipped"; break;
+				case resNothingToRead: code = "nothingToRead"; break;
+				default:
+					code = inttostr(errorCode);
+			};
+			return "DTException::" + code;
 		}
 	};
 

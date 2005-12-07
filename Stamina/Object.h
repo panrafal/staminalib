@@ -37,6 +37,7 @@ namespace Stamina {
 	extern tDebugObjects* debugObjects;
 	//extern CriticalSection* debugObjectsCS;
 	extern Lock* debugObjectsCS;
+	extern volatile long debugObjectsCount;
 #endif
 
 
@@ -141,6 +142,7 @@ namespace Stamina {
 #ifdef STAMINA_DEBUG
 
 		iObject() {
+			InterlockedIncrement(&debugObjectsCount);
 /*			if (debugObjectsCS) {
 				Locker locker(*debugObjectsCS);
 				if (debugObjects) {
@@ -150,6 +152,7 @@ namespace Stamina {
 			*/
 		}
 		virtual ~iObject() {
+			InterlockedDecrement(&debugObjectsCount);
 			/*
 			if (debugObjectsCS) {
 				Locker locker (*debugObjectsCS);

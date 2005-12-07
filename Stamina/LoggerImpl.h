@@ -39,4 +39,17 @@ namespace Stamina {
 
 	};
 
+
+	class LoggerFile: public LoggerImpl {
+	public:
+		LoggerFile(FILE* file, LogLevel level): LoggerImpl(level) {
+			_file = file;
+		}
+
+		void logMsg(LogLevel level, const char* module, const char* where, const char* msg);
+
+	private:
+		FILE* _file;
+	};
+
 };

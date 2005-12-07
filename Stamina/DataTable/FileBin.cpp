@@ -149,6 +149,9 @@ namespace Stamina { namespace DT {
 		} else {
 			openmode = "rb";
 			_recreating = false;
+			if (!fileExists) {
+				throw DTException( errFileNotFound );
+			}
 		}
 
 		if (_table->_timeCreated.empty()) 
@@ -1226,7 +1229,7 @@ namespace Stamina { namespace DT {
 		// szukamy backupów
 		FindFile::Found found = DT::findLastBackup(filename.empty() ? this->_fileName : filename);
 		if (found.empty()) return false;
-		restoreBackup(found.getFileName());
+		restoreBackup(found.getFilePath());
 		return true;
 	}
 
@@ -1236,7 +1239,7 @@ namespace Stamina { namespace DT {
 		return date;
 	}
 	String FileBin::findLastBackupFile(const StringRef& filename, Date64* date) {
-		return DT::findLastBackup(filename.empty() ? this->_fileName : filename, date).getFileName();
+		return DT::findLastBackup(filename.empty() ? this->_fileName : filename, date).getFilePath();
 	}
 
 

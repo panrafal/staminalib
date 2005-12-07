@@ -37,8 +37,9 @@ namespace Stamina {
 
 		class Found {
 		public:
-			Found() {
+			Found(const std::string& dir = "") {
 				_data.cFileName[0] = 0;
+				setDirectory(dir);
 			}
 			inline Found(const Found& b) {
 				*this = b;
@@ -46,6 +47,7 @@ namespace Stamina {
 
 			inline Found& operator = (const Found& b) {
 				memcpy(&_data, &b._data, sizeof(_data));
+				this->_dir = b._dir;
 				return *this;
 			}
 
@@ -89,8 +91,20 @@ namespace Stamina {
 				return size;
 			}
 
+			inline std::string getDirectory() const {
+				return _dir;
+			}
+
+			inline void setDirectory(const std::string& dir)  {
+				_dir = Stamina::unifyPath(dir, true);
+			}
+
 			inline std::string getFileName() const {
 				return _data.cFileName;
+			}
+
+			inline std::string getFilePath() const {
+				return _dir + this->getFileName();
 			}
 
 			inline std::string getAlternateFileName() const {
@@ -105,6 +119,7 @@ namespace Stamina {
 				return this->hasAttribute(attDirectory);
 			}
 
+/*
 			inline operator std::string() const {
 				return this->getFileName();
 			}
@@ -112,9 +127,11 @@ namespace Stamina {
 			inline const TCHAR* c_str() const {
 				return _data.cFileName;
 			}
+*/
 
 		private:
 			WIN32_FIND_DATA _data;
+			std::string _dir;
 		};
 
 #ifdef _LIST_
@@ -140,6 +157,7 @@ namespace Stamina {
 				_file = 0;
 			}
 			_mask = mask;
+			_found.setDirectory( Stamina::getFileDirectory(mask) );
 		}
 
 		void requireAttribute(enAttribute attr) {
