@@ -13,6 +13,28 @@
 
 namespace Stamina { namespace DT {
 
+	class Interface_silent: public SharedObject<iInterface> {
+
+	public:
+
+		virtual Result handleFailedLoad(FileBase* file, DTException& exception, int retry) {
+			return iInterface::fail;
+		}
+		virtual Result handleFailedSave(FileBase* file, DTException& exception, int retry) {
+			return iInterface::fail;
+		}
+		virtual Result handleFailedAppend(FileBase* file, DTException& exception, int retry) {
+			return iInterface::fail;
+		}
+
+		virtual void showFileMessage(FileBase* file, const StringRef& message, const StringRef& title, bool error) {
+		}
+		virtual Result confirmFileError(FileBase* file, const StringRef& message, const StringRef& title, DTException& e) {
+			return iInterface::fail;
+		}
+
+	};
+
 	class Interface_basic: public SharedObject<iInterface> {
 
 	public:
