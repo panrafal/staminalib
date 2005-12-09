@@ -261,9 +261,9 @@ namespace Stamina {
 	class iLockableObject: public iObject {
 	public:
 	    /** Blokuje dostêp do obiektu */
-		virtual void __stdcall lock() const {}
+		virtual void lock() const {}
 		/** Odblokowuje dostêp do obiektu */
-		virtual void __stdcall unlock() const {}
+		virtual void unlock() const {}
 
 		virtual ~iLockableObject() {};
 
@@ -281,12 +281,12 @@ namespace Stamina {
 
 	class iSharedObject: public iLockableObject {
 	public:
-		virtual bool __stdcall hold() =0;
-		virtual void __stdcall release() =0;
+		virtual bool hold() =0;
+		virtual void release() =0;
 		/** Returns true when it's safe to use the object */
-		virtual bool __stdcall isValid() =0;
-		virtual bool __stdcall isDestroyed() =0;
-		virtual unsigned int __stdcall getUseCount() =0;
+		virtual bool isValid() =0;
+		virtual bool isDestroyed() =0;
+		virtual unsigned int getUseCount() =0;
 
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSharedObject, iLockableObject, Version(0,1,0,0));
 

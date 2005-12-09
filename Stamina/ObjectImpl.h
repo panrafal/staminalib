@@ -36,11 +36,11 @@ namespace Stamina {
 	*/
 	template <class OI, class TCS = Stamina::CriticalSection, class OIMP = Object<OI> > class LockableObject: public OIMP {
 	public:
-		void __stdcall lock() const {
+		void lock() const {
 			const_cast<LockableObject*>(this)->_cs.lock();
 		}
 		/** Odblokowuje dostêp do obiektu */
-		void __stdcall unlock() const {
+		void unlock() const {
 			const_cast<LockableObject*>(this)->_cs.unlock();
 		}
 		TCS & CS() {return _cs;}
@@ -65,14 +65,14 @@ namespace Stamina {
 			// je¿eli ani razu nie wywo³amy hold/release znaczy ¿e obiekt by³ utworzony i usuniêty bez u¿ycia SharedPtr i ma _useCount == 1
 			S_ASSERT(this->_useCount == 0 || this->_useCount == 1);
 		}
-		bool __stdcall hold() {
+		bool hold() {
 			LockerTmpl<LO>(this);
 			if (this->_useCount == 0)
 				return false;
 			this->_useCount++;
 			return true;
 		}
-		void __stdcall release() {
+		void release() {
 			{
 				LockerTmpl<LO>(this);
 				if (this->_useCount < 1) {
@@ -91,20 +91,20 @@ namespace Stamina {
 		}
 		/** Zwraca true je¿eli z obiektu mo¿na korzystaæ
 		*/
-		bool __stdcall isValid() {
+		bool isValid() {
 			LockerTmpl<LO>(this);
 			return this->_useCount != 0;
 		}
-		bool __stdcall isDestroyed() {
+		bool isDestroyed() {
 			LockerTmpl<LO>(this);
 			return this->_useCount == 0;
 		}
-		virtual void __stdcall destroy() {
+		virtual void destroy() {
 			LockerTmpl<LO>(this);
 			S_ASSERT(this->_useCount == 0);
 			delete this;
 		}
-		unsigned int __stdcall getUseCount() {
+		unsigned int getUseCount() {
 			LockerTmpl<LO>(this);
 			return this->_useCount;
 		}
