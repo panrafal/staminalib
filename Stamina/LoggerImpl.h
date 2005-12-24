@@ -35,7 +35,7 @@ namespace Stamina {
 		LoggerDebugOutput(LogLevel level): LoggerImpl(level) {
 		}
 
-		void logMsg(LogLevel level, const char* module, const char* where, const char* msg);
+		void logMsg(LogLevel level, const char* module, const char* where, const StringRef& msg);
 
 	};
 
@@ -46,7 +46,7 @@ namespace Stamina {
 			_file = file;
 		}
 
-		void logMsg(LogLevel level, const char* module, const char* where, const char* msg);
+		void logMsg(LogLevel level, const char* module, const char* where, const StringRef& msg);
 
 	private:
 		FILE* _file;

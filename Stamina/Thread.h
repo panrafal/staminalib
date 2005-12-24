@@ -82,8 +82,16 @@ namespace Stamina {
 			ResumeThread(this->getHandle());
 		}
 
+		inline void suspend() const {
+			SuspendThread(this->getHandle());
+		}
+
 		inline void terminate(int exitCode = 0) {
 			TerminateThread(this->getHandle(), exitCode);
+		}
+
+		inline void setPriority(int priority) {
+			SetThreadPriority(this->getHandle(), priority);
 		}
 
 	private:

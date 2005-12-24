@@ -30,14 +30,14 @@ namespace Stamina {
 		delete [] buff;
 	}
 
-	void LoggerDebugOutput::logMsg(LogLevel level, const char* module, const char* where, const char* msg) {
+	void LoggerDebugOutput::logMsg(LogLevel level, const char* module, const char* where, const StringRef& msg) {
 		CStdString txt;
-		txt.Format("L> %s::%s - %s \n", module, where, msg);
+		txt.Format("L> %s::%s - %s \n", module, where, msg.a_str());
 		OutputDebugString(txt);
 	}
 
-	void LoggerFile::logMsg(LogLevel level, const char* module, const char* where, const char* msg) {
-		fprintf(_file, "%s::%s - %s\n", module, where, msg);
+	void LoggerFile::logMsg(LogLevel level, const char* module, const char* where, const StringRef& msg) {
+		fprintf(_file, "%s::%s - %s\n", module, where, msg.a_str());
 	}
 
 

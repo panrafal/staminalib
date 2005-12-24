@@ -404,7 +404,6 @@ namespace Stamina {
 		}
 		*/
 
-		template <typename CHAR>
 		inline StringRef getRef() const {
 			return StringRef(*this);
 		}

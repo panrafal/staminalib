@@ -43,13 +43,8 @@ namespace Stamina {
 			return _level;
 		}
 
-		inline void log(LogLevel level, const char* format, ...) {
-			if (!this->hasLevel(level)) 
-				return;
-			va_list ap;
-			va_start(ap, format);
-			this->logV(level , "", "", format , ap);
-			va_end(ap);
+		virtual void setLevel(LogLevel level, LogLevel levelMask = logAll) {
+			_level = (LogLevel)((this->_level & ~levelMask) | level);
 		}
 
 		inline void log(LogLevel level, const char* module, const char* where, const char* format, ...) {
@@ -63,7 +58,7 @@ namespace Stamina {
 
 		virtual void logV(LogLevel level, const char* module, const char* where, const char* format, va_list va) = 0;
 
-		virtual void logMsg(LogLevel level, const char* module, const char* where, const char* msg) = 0;
+		virtual void logMsg(LogLevel level, const char* module, const char* where, const StringRef& msg) = 0;
 
 
 	protected:

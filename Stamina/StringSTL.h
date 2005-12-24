@@ -96,10 +96,18 @@ namespace Stamina {
 			return *this;
 		}
 
-
+	public:
 
 		const CHAR* c_str() const {
 			return this->str<CHAR>();
+		}
+
+		const CHAR operator [] (int i) const {
+			return this->str<CHAR>()[i];
+		}
+
+		CHAR& operator [] (int i) {
+			return this->getDataBuffer<CHAR>().getBuffer()[i];
 		}
 
 	protected:
