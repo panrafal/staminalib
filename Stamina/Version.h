@@ -154,7 +154,7 @@ namespace Stamina {
 	private:
 		enVersionCategory _category;
 		const char* _name;
-		const Version& _version;
+		const Version _version;
 	};
 
 };

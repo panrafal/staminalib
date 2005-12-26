@@ -28,16 +28,17 @@ namespace Stamina {
 
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::VersionControl, iObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::VersionControl, iObject, Version(1,1,0,0));
 
 		virtual String toString(iStringFormatter* format=0) const {
 			return "";
 		}
 
-		__declspec(dllexport) static VersionControl* instance() {
-			static VersionControl vcInstance;
-			return &vcInstance;		
+		static __declspec(dllexport) __declspec(noinline) VersionControl* instance() {
+			static VersionControl vc;
+			return &vc;
 		}
+
 
 		bool registerModule(const ModuleVersion& module) {
 			//OutputDebugString("registerModule: ");
@@ -82,7 +83,7 @@ namespace Stamina {
 		}
 
 		tModuleList::const_iterator end() const {
-			return _list.begin();
+			return _list.end();
 		}
 
 		unsigned int size() const {
@@ -94,12 +95,12 @@ namespace Stamina {
 		}
 
 	private:
-		VersionControl() {
-		}
+		VersionControl() {}
 	private:
 		tModuleList _list;        
 
 	};
+
 
 	inline void registerVersion(const ModuleVersion& module) {
 		VersionControl::instance()->registerModule(module);
@@ -134,9 +135,11 @@ namespace Stamina {
 		ModuleVersion version;
 	};
 
+#undef STAMINA_REGISTER_VERSION
 #define STAMINA_REGISTER_VERSION(NAME, MODULE) \
 	extern __declspec(dllexport) __declspec(selectany) const ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
 
+#undef STAMINA_REGISTER_CLASS_VERSION
 #define STAMINA_REGISTER_CLASS_VERSION(CLASS) \
 	STAMINA_REGISTER_VERSION(CLASS, CLASS::staticClassInfo())
 
@@ -147,6 +150,7 @@ namespace Stamina {
 	STAMINA_REGISTER_CLASS_VERSION(VersionControl);
 	STAMINA_REGISTER_VERSION(StaminaLib, Lib::version);
 
+	STAMINA_REGISTER_CLASS_VERSION(iString);
 
 };
 

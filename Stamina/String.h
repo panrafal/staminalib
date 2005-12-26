@@ -23,7 +23,7 @@ namespace Stamina {
 
 	class iString: public iObject {
 	public:
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iString, iObject, Version(0,1,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::iString, iObject, Version(1,0,0,0));
 
 		virtual unsigned int getCodePage() const =0;
 

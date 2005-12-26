@@ -17,7 +17,7 @@ namespace Stamina {
 	class LibInstance {
 	public:
 
-		__declspec(dllexport) static LibInstance& get() {
+		__declspec(dllexport) __declspec(noinline) static LibInstance& get() {
 			static LibInstance _instance;
 			return _instance;
 		}
