@@ -43,6 +43,9 @@ namespace Stamina { namespace Memory {
 		S_MEMORY_DLL wchar_t* __stdcall sm_allocBuffer16(unsigned int& size);
 		S_MEMORY_DLL void __stdcall sm_freeBuffer16(wchar_t* buff, unsigned int size);
 
+		S_MEMORY_DLL void* __stdcall sm_allocBuffer(unsigned int& size, unsigned int itemSize);
+		S_MEMORY_DLL void __stdcall sm_freeBuffer(void* buff, unsigned int size, unsigned int itemSize);
+
 	};
 
 
@@ -53,18 +56,22 @@ namespace Stamina { namespace Memory {
 		sm_free(buff);
 	}
 
-	/** Allocates character buffer for storing strings.
-	For sizes below 129 buffers are taken from two memory pools (small - 32b, and medium - 128b). Everything above is being malloc'ed.
+	/** Allocates character buffer for storing strings and other continous data.
+	For sizes below 129 buffers are taken from two fast memory pools (small - 32 items, and medium - 128 items). Everything above is being malloc'ed.
 	@size - Size in CHAR of requested buffer. Value of size is likely to change, you'll have to provide this value in freeBuffer().
 	*/
-	template <typename CHAR>
-	inline CHAR* allocBuffer(unsigned int& size);
+	template <typename TYPE>
+	inline TYPE* allocBuffer(unsigned int& size) {
+		return (TYPE*)sm_allocBuffer(size, sizeof(TYPE));
+	}
 	/** Frees memory allocateted with allocBuffer.
 	@param buff - buffer to free
 	@param size - Size set in allocBuffer
 	*/
-	template <typename CHAR>
-	inline void freeBuffer(CHAR* buff, unsigned int size);
+	template <typename TYPE>
+	inline void freeBuffer(TYPE* buff, unsigned int size) {
+		sm_freeBuffer(buff, size, sizeof(TYPE));
+	}
 
 	template <>
 	inline char* allocBuffer<char>(unsigned int& size) {

@@ -1083,6 +1083,9 @@
 				RelativePath=".\Assert.h">
 			</File>
 			<File
+				RelativePath=".\Buffer.h">
+			</File>
+			<File
 				RelativePath=".\ButtonX.h">
 			</File>
 			<File
@@ -1213,9 +1216,6 @@
 			</File>
 			<File
 				RelativePath=".\String.h">
-			</File>
-			<File
-				RelativePath=".\StringBuffer.h">
 			</File>
 			<File
 				RelativePath=".\StringCharTraits.h">

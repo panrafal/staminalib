@@ -16,7 +16,7 @@
 #include <string>
 #include "Object.h"
 //#include "WideChar.h"
-#include "StringBuffer.h"
+#include "Buffer.h"
 #include "StringType.h"
 
 namespace Stamina {
@@ -382,18 +382,18 @@ namespace Stamina {
 		}
 
 		template <typename CHAR>
-		const StringBuffer<CHAR>& getDataBuffer() const;
+		const Buffer<CHAR>& getDataBuffer() const;
 
 		template <typename CHAR>
-		const StringBuffer<CHAR>& getCDataBuffer() const {
+		const Buffer<CHAR>& getCDataBuffer() const {
 			return getDataBuffer<CHAR>();
 		}
 
-		template <> inline const StringBuffer<char>& getDataBuffer<char>() const {
+		template <> inline const Buffer<char>& getDataBuffer<char>() const {
 			return _a;
 		}
 
-		template <> inline const StringBuffer<wchar_t>& getDataBuffer<wchar_t>() const {
+		template <> inline const Buffer<wchar_t>& getDataBuffer<wchar_t>() const {
 			return _w;
 		}
 
@@ -1146,21 +1146,21 @@ namespace Stamina {
 		// ------ buffer handling
 
 		template <typename CHAR>
-		StringBuffer<CHAR>& getDataBuffer();
+		Buffer<CHAR>& getDataBuffer();
 
-		template <>inline StringBuffer<char>& getDataBuffer<char>() {
+		template <>inline Buffer<char>& getDataBuffer<char>() {
 			return _a;
 		}
 
-		template <> inline StringBuffer<wchar_t>& getDataBuffer<wchar_t>() {
+		template <> inline Buffer<wchar_t>& getDataBuffer<wchar_t>() {
 			return _w;
 		}
 
 
 	protected:
 
-		StringBuffer<char> _a;
-		StringBuffer<wchar_t> _w;
+		Buffer<char> _a;
+		Buffer<wchar_t> _w;
 
 		unsigned int _length;
 		int _flags;

@@ -9,7 +9,7 @@
  */
 
 #include "stdafx.h"
-#include "StringBuffer.h"
+#include "Buffer.h"
 #include "String.h"
 #include "Memory.h"
 

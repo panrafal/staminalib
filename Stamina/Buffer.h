@@ -18,24 +18,25 @@
 
 namespace Stamina {
 
-	/** Character buffer template.
-	Implements basic character buffer operations without regard to type, size or codepage.
+	/** Buffer template.
+	Implements basic buffer operations.
 
 	Supports:
 	 - cheap referencing - operations on external buffer of unknown size
 	 - data discard - ability to discard buffer's data without freeing the memory
-	 - up to 0x0FFFFFFF (268.435.455) bytes of length
-	 - always makes room for \0 char at the string's end. All buffer and data sizes don't count the terminating null character and neither You should do that!
+	 - up to 0x0FFFFFFF (268.435.455) items of length
+	 - always makes room for one (nulled on most types) item at the end for convenience (using data buffer as char*, passing it to winapi functions etc.). All buffer and data sizes don't count the terminating item and neither You should do that!
+	 - all size parameters are about item count, not real memory occupation!
 
 	*/
-	template <typename CHAR>
-	class StringBuffer {
+	template <typename TYPE>
+	class Buffer {
 
 	protected: // na poczπtku, øeby by≥y dobrze widoczne w debuggerze
 
-		CHAR* _buffer;
-		unsigned int _size;
-		unsigned int _length;
+		TYPE* _buffer;
+		unsigned int _size; ///< Size of the buffer (how many items it can accomodate without reallocating memory)
+		unsigned int _length; ///< Number of allocated & valid items
 
 	public:
 
@@ -47,49 +48,49 @@ namespace Stamina {
 		const static unsigned int lengthDiscarded = 0xFFFFFFFE;
 		const static unsigned int wholeData = 0xFFFFFFFF;
 
-		class PassBuffer: public StringBuffer<CHAR> {
+		class PassBuffer: public Buffer<TYPE> {
 		public:
-			PassBuffer(const StringBuffer<CHAR>& b):StringBuffer<CHAR>() {
-				this->swap(const_cast<StringBuffer<CHAR>&>(b));
+			PassBuffer(const Buffer<TYPE>& b):Buffer<TYPE>() {
+				this->swap(const_cast<Buffer<TYPE>&>(b));
 			}
 		};
 
-		class BufferRef: public StringBuffer<CHAR> {
+		class BufferRef: public Buffer<TYPE> {
 		public:
-			BufferRef(const StringBuffer<CHAR>& b):StringBuffer<CHAR>() {
+			BufferRef(const Buffer<TYPE>& b):Buffer<TYPE>() {
 				this->assignCheapReference(b);
 			}
 		};
 
 
 	public:
-		inline StringBuffer(): _size(0), _buffer(0), _length(0) {
+		inline Buffer(): _size(0), _buffer(0), _length(0) {
 		}
 
-		inline StringBuffer(const StringBuffer& b): _size(0), _buffer(0), _length(0) {
+		inline Buffer(const Buffer& b): _size(0), _buffer(0), _length(0) {
 			this->assign(b);
 		}
 
-		inline StringBuffer(const PassBuffer& pass): _size(0), _buffer(0), _length(0) {
+		inline Buffer(const PassBuffer& pass): _size(0), _buffer(0), _length(0) {
 			this->swap(const_cast<PassBuffer&>(pass));
 		}
 
 
-		inline StringBuffer(unsigned int initialSize): _size(0), _buffer(0), _length(0) {
+		inline Buffer(unsigned int initialSize): _size(0), _buffer(0), _length(0) {
 			resize(initialSize, 0);
 		}
 
-		inline StringBuffer(const CHAR* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _length(0) {
+		inline Buffer(const TYPE* data, unsigned int dataSize = lengthUnknown): _size(0), _buffer(0), _length(0) {
 			assignCheapReference(data, dataSize);
 		}
 
 
-		inline ~StringBuffer() {
+		inline ~Buffer() {
 			freeBuffer();
 		}
 
-		inline void swap(StringBuffer<CHAR>& b) {
-			CHAR* buffer = this->_buffer;
+		inline void swap(Buffer<TYPE>& b) {
+			TYPE* buffer = this->_buffer;
 			int length = this->_length;
 			int size = this->_size;
 			this->_buffer = b._buffer;
@@ -104,19 +105,19 @@ namespace Stamina {
 
 		/** Creates "cheap reference" - provided buffer will replace the one currently in use, until modification occurs.
 		*/
-		inline void assignCheapReference(const CHAR* data, unsigned int length = lengthUnknown) {
+		inline void assignCheapReference(const TYPE* data, unsigned int length = lengthUnknown) {
 			//S_ASSERT(data);
 			this->reset();
-			this->_buffer = (CHAR*)data;
+			this->_buffer = (TYPE*)data;
 			this->_length = length;
 		}
 
-		inline void assignCheapReference(const StringBuffer<CHAR>& b) {
+		inline void assignCheapReference(const Buffer<TYPE>& b) {
 			this->assignCheapReference( b.getBuffer(), b.getLength() );
 		}
 
 		/** Makes a copy of data */
-		inline void assign(const CHAR* data, unsigned int size) {
+		inline void assign(const TYPE* data, unsigned int size) {
 //			S_ASSERT(data);
 			S_ASSERT(size <= maxBufferSize);
 			this->makeRoom(size, 0);
@@ -126,11 +127,11 @@ namespace Stamina {
 			markValid(size);
 		}
 
-		inline void assign(const StringBuffer<CHAR>& b) {
+		inline void assign(const Buffer<TYPE>& b) {
 			this->assign( b.getBuffer(), b.getLength() );
 		}
 
-		int compare(const StringBuffer<CHAR>& b) {
+		int compare(const Buffer<TYPE>& b) {
 			int r;
 			int l = min((this->getLength()), (b.getLength()));
 
@@ -144,11 +145,11 @@ namespace Stamina {
 			return r;
 		}
 
-		bool equalBuffers(const StringBuffer<CHAR>& b) {
+		bool equalBuffers(const Buffer<TYPE>& b) {
 			return  (_buffer != 0 && _buffer == b._buffer);
 		}
 
-		bool operator == (const StringBuffer<CHAR>& b) {
+		bool operator == (const Buffer<TYPE>& b) {
 			return compare(b) == 0;
 		}
 
@@ -198,12 +199,12 @@ namespace Stamina {
 				return 0;
 			}
 			if (_length == lengthUnknown) {
-				const_cast<StringBuffer<CHAR> * >(this)->_length = 0;
+				const_cast<Buffer<TYPE> * >(this)->_length = 0;
 				if (!isEmpty() && isValid()) {
-					const_cast<StringBuffer<CHAR>* >(this)->_length = len(_buffer);
-					//CHAR* ch = _buffer;
-					//CHAR* end = isReference() ? (CHAR*)-1 : _buffer + _size;
-					//while (ch < end && *(ch++)) const_cast<StringBuffer<CHAR>* >(this)->_length++;
+					const_cast<Buffer<TYPE>* >(this)->_length = len(_buffer);
+					//TYPE* ch = _buffer;
+					//TYPE* end = isReference() ? (TYPE*)-1 : _buffer + _size;
+					//while (ch < end && *(ch++)) const_cast<Buffer<TYPE>* >(this)->_length++;
 				}
 			}
 			return _length;
@@ -214,11 +215,11 @@ namespace Stamina {
 
 		/** Appends data to the end of the buffer
 		*/
-		inline void append(const CHAR* data, unsigned int dataSize) {
+		inline void append(const TYPE* data, unsigned int dataSize) {
 			if (dataSize == 0) return;
 			S_ASSERT(dataSize <= maxBufferSize);
 			S_ASSERT(dataSize + getLength() <= maxBufferSize);
-			const CHAR* oldBuffer = _buffer;
+			const TYPE* oldBuffer = _buffer;
 			makeRoom(getLength() + dataSize);
 			S_ASSERT(_buffer != 0);
 			S_ASSERT(data != 0);
@@ -232,12 +233,12 @@ namespace Stamina {
 
 		/** Prepends data to the buffer 
 		*/
-		inline void prepend(const CHAR* data, unsigned int dataSize) {
+		inline void prepend(const TYPE* data, unsigned int dataSize) {
 			if (dataSize == 0) return;
 			unsigned currentLength = getLength();
 			S_ASSERT(dataSize <= maxBufferSize);
 			S_ASSERT(dataSize + currentLength <= maxBufferSize);
-			const CHAR* oldBuffer = _buffer;
+			const TYPE* oldBuffer = _buffer;
 			if (isValid()) {
 				moveRight(0, dataSize); // wywoluje makeroom
 			} else {
@@ -249,6 +250,8 @@ namespace Stamina {
 			if (data == oldBuffer) {
 				data = _buffer + dataSize;
 			}
+			// bÍdziemy pisali po starych elementach, musimy je oczyúciÊ...
+			this->destruct(0, dataSize);
 			copy(_buffer, data, dataSize);
 			markValid(currentLength + dataSize);
 		}
@@ -256,10 +259,10 @@ namespace Stamina {
 		/** Inserts data into any position in the buffer.
 		@param pos The position where to insert the data. Can be beyond currently allocated data!
 
-		@warning This function allows to insert data at virtually any location. It automatically expands the buffer, leaving completely random data between insert position and the end of previous data. Use with caution!
+		@warning This function allows to insert data at virtually any location. It automatically expands the buffer, leaving completely random data between insert position and the end of previous data. Use with @b extreme @b caution!
 		@warning You CANNOT insert data that comes from the same buffer!
 		*/
-		inline void insert(unsigned int pos, const CHAR* data, unsigned int dataSize) {
+		inline void insert(unsigned int pos, const TYPE* data, unsigned int dataSize) {
 			if (dataSize == 0) return;
 			unsigned currentLength = getLength();
 			if (pos > maxBufferSize) pos = currentLength;
@@ -279,11 +282,15 @@ namespace Stamina {
 			S_ASSERT(_buffer != 0);
 			S_ASSERT(data != 0);
 			S_ASSERT(getBufferSize() >= pos + dataSize);
+
+			// bÍdziemy pisali po starych elementach, musimy je oczyúciÊ...
+			this->destruct(pos, dataSize);
+
 			copy(_buffer + pos, data, dataSize);
 			markValid(max(currentLength + dataSize, pos + dataSize));
 		}
 
-		inline void insertInRange(unsigned int pos, const CHAR* data, unsigned int dataSize) {
+		inline void insertInRange(unsigned int pos, const TYPE* data, unsigned int dataSize) {
 			if (pos > getLength()) pos = getLength();
 			insert(pos, data, dataSize);
 		}
@@ -291,7 +298,7 @@ namespace Stamina {
 		/**
 		@warning You CANNOT substitute with data that comes from the same buffer!
 		*/
-		inline void replace(unsigned int pos, unsigned int count, const CHAR* data, unsigned int dataSize) {
+		inline void replace(unsigned int pos, unsigned int count, const TYPE* data, unsigned int dataSize) {
 			if (dataSize == 0) {
 				this->erase(pos, count);
 				return;
@@ -308,7 +315,7 @@ namespace Stamina {
 			unsigned int currentLength = getLength();
 			unsigned int newLength = currentLength;
 			if (isReference()) {
-				CHAR* from = _buffer;
+				TYPE* from = _buffer;
 				if (count > currentLength || pos + count > currentLength) count = currentLength - pos;
 				makeRoom(currentLength - count + dataSize, pos);
 				S_ASSERT(_buffer);
@@ -330,6 +337,10 @@ namespace Stamina {
 				newLength = pos + dataSize;
 			}
 			S_ASSERT(getBufferSize() >= pos + dataSize);
+
+			// bÍdziemy pisali po starych elementach, musimy je oczyúciÊ...
+			this->destruct(pos, dataSize);
+
 			copy(_buffer + pos, data, dataSize);
 			if (newLength != lengthUnknown) {
 				markValid(newLength);
@@ -353,6 +364,9 @@ namespace Stamina {
 			if (isReference()) {
 				makeUnique(pos);
 			}
+			// usuwamy nadmiarowe elementy, musimy je oczyúciÊ...
+			this->destruct(pos);
+
 			this->markValid(pos);
 		}
 
@@ -365,7 +379,7 @@ namespace Stamina {
 		*/
 		void moveLeft(unsigned int start, unsigned int offset, unsigned int length = wholeData, bool truncate = true) {
 			if (!isValid() || offset == 0) return;
-			CHAR* from = _buffer;
+			TYPE* from = _buffer;
 			unsigned int dataLength = getLength();
 			unsigned int newLength = dataLength;
 			if (length > dataLength) length = dataLength;
@@ -394,7 +408,7 @@ namespace Stamina {
 				// makeUnique bylby z≥y bo nie rezerwowa≥by bufora na przenoszenie
 				resize(truncate ? start - offset + length : dataLength, start - offset); // kopiujemy tylko to co zostanie na poczπtku
 			}
-			CHAR* to = _buffer;
+			TYPE* to = _buffer;
 
 			if (truncate/* || (length + start >= this->_length)*/) {
 				newLength = start - offset + length;
@@ -403,6 +417,7 @@ namespace Stamina {
 				newLength = dataLength;
 				if (getBuffer() != from) { // kopiujemy pozosta≥oúci
 					S_ASSERT(_size >= (start - offset + length) + dataLength - (start + length - offset));
+
 					copy(to + start - offset + length, from + start - offset + length, dataLength - (start + length - offset));
 				}
 			}
@@ -411,6 +426,10 @@ namespace Stamina {
 			S_ASSERT(_size >= start + length);
 			from += start;
 			to += start - offset;
+
+			// bÍdziemy pisali po starych elementach, musimy je oczyúciÊ...
+			this->destruct(start - offset, offset);
+
 			move(to, from, length);
 			markValid(newLength);
 		}
@@ -430,14 +449,14 @@ namespace Stamina {
 			if (length > dataLength - start)
 				length = dataLength - start;
 
-			CHAR* from = _buffer;
+			TYPE* from = _buffer;
 			if (isReference() && truncate) {
 				makeRoom(start + offset + length, start + offset); // potrzebujmey tylko co ma byÊ na poczπtku...
 			} else {
 				makeRoom(max(truncate ? 0 : dataLength, start + offset + length)); // potrzebujemy wszystko
 				from = _buffer;
 			}
-			CHAR* to = _buffer;
+			TYPE* to = _buffer;
 
 			S_ASSERT(from != 0);
 			S_ASSERT(to != 0);
@@ -445,6 +464,9 @@ namespace Stamina {
 
             from += start;
 			to += start + offset;
+
+			// bÍdziemy pisali po starych elementach, musimy je oczyúciÊ...
+			this->destruct(start + length, offset);
 
 			move(to, from, length);
 
@@ -468,7 +490,7 @@ namespace Stamina {
 				if (keepData > getLength()) keepData = getLength();
 				if (keepData > newSize) keepData = newSize;
 				unsigned int size = newSize;
-				CHAR* buffer = _alloc(size);
+				TYPE* buffer = _alloc(size);
 				S_ASSERT(buffer != 0);
 				S_ASSERT(size >= keepData && size > 0);
 				copy(buffer, _buffer, keepData);
@@ -498,13 +520,16 @@ namespace Stamina {
 			}
 		}
 
+
 		// -- static helpers
 
-		static inline void copy(CHAR* to, const CHAR* from, unsigned int count);
+		static inline void copy(TYPE* to, const TYPE* from, unsigned int count);
 
-		static inline void move(CHAR* to, const CHAR* from, unsigned int count);
+		static inline void move(TYPE* to, const TYPE* from, unsigned int count);
 
-		static inline unsigned int len(const CHAR* str);
+		static inline unsigned int len(const TYPE* str);
+
+		static inline void nullify(TYPE* where);
 
 
 		// getters
@@ -517,18 +542,18 @@ namespace Stamina {
 			return _size;
 		}
 
-		inline CHAR* getBuffer() const {
+		inline TYPE* getBuffer() const {
 			return _buffer;
 		}
 
-		inline CHAR* getBufferEnd(unsigned size = lengthUnknown) const {
+		inline TYPE* getBufferEnd(unsigned size = lengthUnknown) const {
 			if (size > getLength()) size = getLength();
 			return _buffer + size;
 		}
 
 
-		inline const CHAR* getString() const {
-			return isValid() ? _buffer : (CHAR*)L"";
+		inline const TYPE* getString() const {
+			return isValid() ? _buffer : (TYPE*)L"";
 		}
 
 		//
@@ -557,7 +582,7 @@ namespace Stamina {
 				if (this->_length != lengthUnknown) {
 					S_ASSERT(_size >= _length && _size > 0);
 					S_ASSERT(_buffer != 0);
-					this->_buffer[this->_length] = 0;
+					nullify(this->_buffer + this->_length);
 				}
 			}
 		}
@@ -573,9 +598,12 @@ namespace Stamina {
 
 	private:
 
+		/** Calls desctructors for object within valid range. */
+		inline void destruct(unsigned int pos, unsigned int count = wholeData);
 
 		inline void freeBuffer() {
 			if (hasOwnBuffer()) {
+				destruct(0);
 				_free(_buffer, getBufferSize());
 			}
 			_buffer = 0;
@@ -583,59 +611,141 @@ namespace Stamina {
 		}
 
 		/** Returned memory block is always @a size + 1 of size */
-		static CHAR* _alloc(unsigned int &size) {
-			return Memory::allocBuffer<CHAR>(size);
+		static TYPE* _alloc(unsigned int &size) {
+			return Memory::allocBuffer<TYPE>(size);
 		}
-		static void _free(CHAR* buff, unsigned int size) {
-			Memory::freeBuffer<CHAR>(buff, size);
+		static void _free(TYPE* buff, unsigned int size) {
+			Memory::freeBuffer<TYPE>(buff, size);
 		}
 
 	};
 
-	inline void StringBuffer<char>::copy(char* to, const char* from, unsigned int count) {
+	inline void Buffer<char>::copy(char* to, const char* from, unsigned int count) {
 		::memcpy(to, from, count);
 	}
-
-	inline void StringBuffer<char>::move(char* to, const char* from, unsigned int count) {
-		::memmove(to, from, count);
-	}
-
-	inline unsigned int StringBuffer<char>::len(const char* str) {
-		return strlen(str);
-	}
-
-	inline void StringBuffer<wchar_t>::copy(wchar_t* to, const wchar_t* from, unsigned int count) {
+	inline void Buffer<wchar_t>::copy(wchar_t* to, const wchar_t* from, unsigned int count) {
 		::wmemcpy(to, from, count);
 	}
-
-	inline void StringBuffer<wchar_t>::move(wchar_t* to, const wchar_t* from, unsigned int count) {
-		::wmemmove(to, from, count);
-	}
-
-	inline unsigned int StringBuffer<wchar_t>::len(const wchar_t* str) {
-		return wcslen(str);
-	}
-
-
-
-	inline void StringBuffer<unsigned char>::copy(unsigned char* to, const unsigned char* from, unsigned int count) {
+	inline void Buffer<unsigned char>::copy(unsigned char* to, const unsigned char* from, unsigned int count) {
 		::memcpy(to, from, count);
 	}
-
-	inline void StringBuffer<unsigned char>::move(unsigned char* to, const unsigned char* from, unsigned int count) {
-		::memmove(to, from, count);
+	inline void Buffer<int>::copy(int* to, const int* from, unsigned int count) {
+		::memcpy(to, from, count * sizeof(int));
+	}
+	inline void Buffer<unsigned int>::copy(unsigned int* to, const unsigned int* from, unsigned int count) {
+		::memcpy(to, from, count * sizeof(unsigned int));
+	}
+	/*template <typename TYPE> // wskaüniki...
+	inline void Buffer<TYPE*>::copy(TYPE* to, const TYPE* from, unsigned int count) {
+		::memcpy(to, from, count * sizeof(void*));
+	}*/
+	template <typename TYPE> // pozosta≥e...
+	inline void Buffer<TYPE>::copy(TYPE* to, const TYPE* from, unsigned int count) {
+		while (count--) {
+			new (to++) TYPE(*(from++));  // inicjalizuje kolejne obiekty w pamiÍci w adresach to danymi z from
+		}
 	}
 
-	inline unsigned int StringBuffer<unsigned char>::len(const unsigned char* str) {
+
+
+	inline void Buffer<char>::move(char* to, const char* from, unsigned int count) {
+		::memmove(to, from, count);
+	}
+	inline void Buffer<wchar_t>::move(wchar_t* to, const wchar_t* from, unsigned int count) {
+		::wmemmove(to, from, count);
+	}
+	inline void Buffer<unsigned char>::move(unsigned char* to, const unsigned char* from, unsigned int count) {
+		::memmove(to, from, count);
+	}
+	inline void Buffer<int>::move(int* to, const int* from, unsigned int count) {
+		::memmove(to, from, count * sizeof(int));
+	}
+	inline void Buffer<unsigned int>::move(unsigned int* to, const unsigned int* from, unsigned int count) {
+		::memmove(to, from, count * sizeof(unsigned int));
+	}
+	/*template <typename TYPE> // wskaüniki...
+	inline void Buffer<TYPE*>::move(TYPE** to, const TYPE** from, unsigned int count) {
+		::memmove(to, from, count * sizeof(void*));
+	}*/
+	template <typename TYPE> // pozosta≥e...
+	inline void Buffer<TYPE>::move(TYPE* to, const TYPE* from, unsigned int count) {
+		if (to > from && to <= from + count) {
+			to += count;
+			from += count;
+			while (count--) {
+				new (to--) TYPE(*(from--));  // inicjalizuje kolejne obiekty w pamiÍci w adresach to danymi z from
+			}
+		} else {
+			copy(to, from, count);
+		}
+	}
+
+
+	inline unsigned int Buffer<char>::len(const char* str) {
+		return strlen(str);
+	}
+	inline unsigned int Buffer<wchar_t>::len(const wchar_t* str) {
+		return wcslen(str);
+	}
+	template <typename TYPE>
+	inline unsigned int Buffer<TYPE>::len(const TYPE* str) {
 		return 0;
 	}
 
 
+	inline void Buffer<char>::nullify(char* where) {
+		*where = 0;
+	}
+	inline void Buffer<wchar_t>::nullify(wchar_t* where) {
+		*where = 0;
+	}
+	inline void Buffer<unsigned char>::nullify(unsigned char* where) {
+		*where = 0;
+	}
+	/*template<typename TYPE>
+	inline void Buffer<TYPE*>::nullify(TYPE** where) {
+		*where = 0;
+	}*/
+	template<typename TYPE>
+	inline void Buffer<TYPE>::nullify(TYPE* where) {
+		if (sizeof(TYPE) == 4) {
+			*((int*)where) = 0;
+		}
+	}
 
-	template StringBuffer<char>;
-	template StringBuffer<wchar_t>;
 
-	typedef StringBuffer<unsigned char> ByteBuffer;
+	template <> 
+	inline void Buffer<char>::destruct(unsigned int pos, unsigned int count) {
+	}
+	template <> 
+	inline void Buffer<wchar_t>::destruct(unsigned int pos, unsigned int count) {
+	}
+	template <> 
+	inline void Buffer<unsigned char>::destruct(unsigned int pos, unsigned int count) {
+	}
+	template <> 
+	inline void Buffer<int>::destruct(unsigned int pos, unsigned int count) {
+	}
+	template <> 
+	inline void Buffer<unsigned int>::destruct(unsigned int pos, unsigned int count) {
+	}
+
+	template<typename TYPE>
+	inline void Buffer<TYPE>::destruct(unsigned int pos, unsigned int count) {
+		if (this->isReference() == true || this->isValid() == false) return;
+		while (count-- && pos < this->_length) {
+			delete (this->_buffer + pos) this->_buffer[pos];
+			pos++;
+		}
+	}
+
+
+
+
+	template Buffer<char>;
+	template Buffer<wchar_t>;
+
+	typedef Buffer<unsigned char> ByteBuffer;
 
 };
 

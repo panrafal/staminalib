@@ -61,5 +61,34 @@ void __stdcall sm_free(void* buff) {
 
 DECLARE_POOLED_BUFFER(char, 8, 32, 128);
 DECLARE_POOLED_BUFFER(wchar_t, 16, 32, 128);
+DECLARE_POOLED_BUFFER(int, 32, 16, 64);
+
+
+void* __stdcall sm_allocBuffer(unsigned int& size, unsigned int itemSize) {
+	switch (itemSize) {
+		case 1:
+			return sm_allocBuffer8(size);
+		case 2:
+			return sm_allocBuffer16(size);
+		case 4:
+			return sm_allocBuffer32(size);
+		default:
+			return sm_malloc(size * itemSize);
+	};
+}
+
+void __stdcall sm_freeBuffer(void* buff, unsigned int size, unsigned int itemSize) {
+	switch (itemSize) {
+		case 1:
+			return sm_freeBuffer8((char*)buff, size);
+		case 2:
+			return sm_freeBuffer16((wchar_t*)buff, size);
+		case 4:
+			return sm_freeBuffer32((int*)buff, size);
+		default:
+			return sm_free(buff);
+	};
+}
+
 
 } }
