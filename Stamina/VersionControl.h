@@ -149,6 +149,7 @@ namespace Stamina {
 	STAMINA_REGISTER_CLASS_VERSION(iSharedObject); // w object.h nie ma mo¿liwoœci rejestracji...
 	STAMINA_REGISTER_CLASS_VERSION(VersionControl);
 	STAMINA_REGISTER_VERSION(StaminaLib, Lib::version);
+	STAMINA_REGISTER_VERSION(Buffer, Buffer<char>::version);
 
 	STAMINA_REGISTER_CLASS_VERSION(iString);
 

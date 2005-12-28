@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include "Version.h"
 #include "Assert.h"
 #include "Memory.h"
 
@@ -39,6 +40,9 @@ namespace Stamina {
 		unsigned int _length; ///< Number of allocated & valid items
 
 	public:
+
+		const static ModuleVersion version;
+
 
 //		friend class String;
 
@@ -734,12 +738,15 @@ namespace Stamina {
 	inline void Buffer<TYPE>::destruct(unsigned int pos, unsigned int count) {
 		if (this->isReference() == true || this->isValid() == false) return;
 		while (count-- && pos < this->_length) {
-			delete (this->_buffer + pos) this->_buffer[pos];
+			this->_buffer[pos].~TYPE();
+			//delete (this->_buffer + pos, this->_buffer + pos);
 			pos++;
 		}
 	}
 
 
+	template<typename TYPE>
+	const ModuleVersion Buffer<TYPE>::version = ModuleVersion(versionClass, "Stamina::Buffer", Version(1, 0, 0, 0));
 
 
 	template Buffer<char>;

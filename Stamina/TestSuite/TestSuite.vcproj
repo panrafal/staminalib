@@ -188,6 +188,9 @@
 			Name="Tests"
 			Filter="">
 			<File
+				RelativePath=".\TestBuffer.cpp">
+			</File>
+			<File
 				RelativePath="..\DataTable\Test\TestColumns.cpp">
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -280,7 +283,8 @@
 				<File
 					RelativePath="..\Test\TestString.cpp">
 					<FileConfiguration
-						Name="Debug|Win32">
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
@@ -289,7 +293,8 @@
 				<File
 					RelativePath="..\Test\TestStringBuffer.cpp">
 					<FileConfiguration
-						Name="Debug|Win32">
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
 						<Tool
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
