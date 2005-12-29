@@ -1080,6 +1080,9 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath=".\Array.h">
+			</File>
+			<File
 				RelativePath=".\Assert.h">
 			</File>
 			<File
@@ -1134,6 +1137,9 @@
 				RelativePath=".\Helpers.h">
 			</File>
 			<File
+				RelativePath=".\iArray.h">
+			</File>
+			<File
 				RelativePath=".\iImage.h">
 			</File>
 			<File
@@ -1183,6 +1189,9 @@
 			</File>
 			<File
 				RelativePath=".\Object.h">
+			</File>
+			<File
+				RelativePath=".\ObjectClassInfo.h">
 			</File>
 			<File
 				RelativePath=".\ObjectImpl.h">

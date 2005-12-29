@@ -12,11 +12,21 @@
 
 #include "Object.h"
 
+/** @file Automated iObject pointers
+
+These classes support staticClassInfo() function. To get static information about class inside the pointer - use ObjectClassInfo::getBaseInfo()
+
+*/
+
+
 namespace Stamina {
 
 	/** Class for handling static objects (no reference counting!, without iSharedObj implemented) */
 	template <class T> class StaticObj {
 	public:
+
+		STAMINA_OBJECT_CLASS_DEFINE(StaticObj, "StaticObj", T, Version(1,0,0,0));
+
 		StaticObj() {
 			_obj.disableRefCount();
 		}
@@ -70,6 +80,9 @@ namespace Stamina {
 	/** Class for handling static objects (no reference counting!, without iSharedObj implemented) */
 	template <class T> class StaticPtr {
 	public:
+
+		STAMINA_OBJECT_CLASS_DEFINE(StaticPtr, "StaticPtr", T, Version(1,0,0,0));
+
 		StaticPtr(T & obj) {
 			this->set(obj);
 		}
@@ -147,6 +160,9 @@ namespace Stamina {
 	/** Class for handling iSharedObject (uses reference counting) */
 	template <class T> class SharedPtr: public StaticPtr<T> {
 	public:
+
+		STAMINA_OBJECT_CLASS_DEFINE(SharedPtr, "SharedPtr", T, Version(1,0,0,0));
+
 		SharedPtr(T * obj = 0):StaticPtr<T>() {
 			this->set(obj);
 		}

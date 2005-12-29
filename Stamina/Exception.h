@@ -30,7 +30,9 @@ namespace Stamina {
 
 		STAMINA_OBJECT_CLASS(Stamina::Exception, iObject);
 
-		virtual String getReason() const = 0;
+		virtual String getReason() const {
+			return this->toString();
+		}
 		virtual String toString(iStringFormatter* f = 0) const {
 			return iObject::toString(f);
 		}
