@@ -50,7 +50,7 @@ namespace ListWnd
 
 
 	int ListView::onPaint() {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		PAINTSTRUCT ps;
 		GetUpdateRgn(this->_hwnd, this->_paintRgn, false);
 		this->_paintNeeded = false;

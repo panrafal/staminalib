@@ -66,7 +66,7 @@ namespace ListWnd {
 	void Item::setState(ItemState state)
 	{
 		if (this->_itemState == state) return;
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 /*		if (state == stateExcluded) {
 			this->_pos = Point();
 			this->_size = Size();
@@ -82,7 +82,7 @@ namespace ListWnd {
 	void Item::setFlag(ItemFlags flag, bool setting, ListView* lv)
 	{
 		if (this->getFlag(flag) == setting) return;	
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		bool repaint = false;
 		bool visible = this->isVisible();
 
@@ -150,11 +150,11 @@ namespace ListWnd {
 
 	Rect Item::getRect()
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		return Rect(this->getPos(), this->getSize());
 	}
 	Rect Item::getWholeRect(bool accurate) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		return Rect(this->getPos(), this->getWholeSize(accurate));	
 	}
 
@@ -191,7 +191,7 @@ namespace ListWnd {
 	bool Item::setSize(Size size)
 	{
 		if (size == this->_size) return false;
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		this->_size = size;
 		this->setRefreshFlag(refreshDimensionsChanged);
 		return true;
@@ -200,7 +200,7 @@ namespace ListWnd {
 	bool Item::setPos(Point pos)
 	{
 		if (pos == this->_pos) return false;
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		this->_pos = pos;
 		this->setRefreshFlag(refreshDimensionsChanged);
 		return true;

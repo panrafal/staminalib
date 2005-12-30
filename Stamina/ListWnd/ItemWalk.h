@@ -142,12 +142,11 @@ namespace ListWnd {
 				if (_recursive) {
 					ItemCollection* ic = (*it)->getItemCollection();
 					if (ic) {
-						ic->lock();
+						ObjLocker(ic, lockWrite);
 						_stack.push(ic);
 						if (!_walk(ic->getItemList(), func))
 							return false;
 						_stack.pop();
-						ic->unlock();
 					}
 				}
 				

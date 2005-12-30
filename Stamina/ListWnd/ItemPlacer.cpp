@@ -28,7 +28,7 @@ namespace ListWnd
 		czy aktualna pozycja odpowiada spodziewanej
 
 		*/
-		ObjLocker lock(coll.get());
+		ObjLocker lock(coll, lockWrite);
 		// pt - punkt w którym aktualnie siê znajdujemy...
 		Rect rect = coll->getEntry()->getICollection()->getItemsRect(lv, coll);
 		rect.left += marginLeft;

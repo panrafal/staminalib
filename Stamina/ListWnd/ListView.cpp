@@ -67,7 +67,7 @@ namespace ListWnd
 	void ListView::setActiveItem(const oItem& item)
 	{
 		{
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (this->_activeItem == item) return;
 			this->lockPaint();
 			this->lockRefresh();
@@ -106,7 +106,7 @@ namespace ListWnd
 	{
 		Point pos;
 		{
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (!this->_activeItem) return;
 			InView in = this->isInView(this->_activeItem);
 			pos = this->getScrollPos();
@@ -134,7 +134,7 @@ namespace ListWnd
 	}
 
 	InView ListView::isInView(oItem itemObj) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		S_ASSERT(itemObj.isValid());
 		/*Lepiej przewin¹æ siê nie da, wiêc musimy pozwalaæ na czêœciowe*/
 		/*if (this->getScrollPos() == item->getPos()) {
@@ -245,14 +245,14 @@ namespace ListWnd
 
 	HDC ListView::getDC()
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		this->_dcCount++;
 		return this->_paintdc ? this->_paintdc : this->_dc ? this->_dc : this->_dc = GetDC(this->_hwnd);	
 	}
 
 	void ListView::releaseDC(HDC dc)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		S_ASSERT(this->_dcCount > 0);
 		this->_dcCount--;
 		if (dc == this->_paintdc) return;
@@ -264,7 +264,7 @@ namespace ListWnd
 	}
 
 	void ListView::refreshItems(RefreshFlags refresh) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (!this->canRefresh()) {
 			this->_refreshNeeded = true;
 			return;
@@ -278,7 +278,7 @@ namespace ListWnd
 		}
 	}
 	void ListView::repaintView() {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (!this->canPaint()) {
 			this->_paintNeeded = true;
 			return;

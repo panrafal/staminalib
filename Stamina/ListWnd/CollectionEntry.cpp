@@ -44,7 +44,7 @@ namespace ListWnd
 		return fitIn;
 	}
 	void CollectionEntry::paintEntry(ListView* lv, const oItem& li,				const oItemCollection& parent) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		HDC dc = lv->getDC();
 		Rect rc = lv->itemToClient(li->getRect());
 		if (li->isActive()) {
@@ -72,7 +72,7 @@ namespace ListWnd
 	}
 
 	void CollectionEntry::setText(ListView* lv, const std::string& text, bool repaint) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		this->_text = text;
 		if (repaint)
 			this->refreshEntry(lv, refreshPaint);
