@@ -32,8 +32,8 @@ namespace Stamina {
 		logger->log(level, "Stamina", "debugDumpObjects", "Debug: Objects list");
 		for (std::list<iObject*>::iterator it = debugObjects->begin(); it != debugObjects->end(); it++) {
 			iObject* obj = *it;
-			ObjectClassInfo& info = obj->getClass();
-			ObjectClassInfo* base = info.getBaseInfo();
+			const ObjectClassInfo& info = obj->getClass();
+			const ObjectClassInfo& base = info.getBaseInfo();
 			if (counter.find(info.getName()) == counter.end()) {
 				counter[info.getName()] = 1;
 			} else {
@@ -44,13 +44,11 @@ namespace Stamina {
 				useCount = obj->castObject<iSharedObject>()->getUseCount();
 			}
 			logger->log(level, "Stamina", "debugDumpObjects"
-				, "%s[%d]::%s sz=%d uid=%x lib=%x"
+				, "%s[%d]::%s sz=%d"
 				, info.getName()
 				, useCount
-				, base ? base->getName() : ""
+				, base.getName()
 				, info.getSize()	
-				, info.getUID()
-				, info.getLibInstance()
 				);
 		}
 		logger->log(level, "Stamina", "debugDumpObjects", "--------------------");

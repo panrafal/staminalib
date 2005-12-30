@@ -58,9 +58,9 @@ namespace Stamina {
 			do {
 				if (registerModule(it->getModuleVersion()) == false)
 					break;
-				it = it->getBaseInfo();
+				it = &it->getBaseInfo();
 				//break;
-			} while (it);
+			} while (it->isValid());
 		}
 
 		template <class CLASS>

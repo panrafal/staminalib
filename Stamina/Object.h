@@ -91,7 +91,7 @@ namespace Stamina {
 
 
 		/** Returns object's class information */
-		virtual ObjectClassInfo& getClass() const {
+		virtual const ObjectClassInfo& getClass() const {
 			return staticClassInfo();
 		}
 
@@ -110,17 +110,17 @@ namespace Stamina {
 	public:
 
 		/** Static class information */
-		static ObjectClassInfo& staticClassInfo() {
-			static ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), 0, Version(0,1,0,0));
+		static const ObjectClassInfo& staticClassInfo() {
+			static const ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), ObjectClassInfo::none, Version(1,0,0,0));
 			return oci;
 		}
 
-		bool isFromCurrentLibInstance() {
+/*		bool isFromCurrentLibInstance() {
 			return this->getClass().getLibInstance() == LibInstance::get();
 		}
 		bool isSameLibInstance(const iObject& obj) {
 			return this->getClass().getLibInstance() == obj.getClass().getLibInstance();
-		}
+		}*/
 
 		template <class TO> TO* castStaticObject() {
 			return static_cast<TO*>(this);
@@ -173,6 +173,9 @@ namespace Stamina {
 
 		virtual void zzPlaceHolder_iObject1() {}
 		virtual void zzPlaceHolder_iObject2() {}
+		virtual void zzPlaceHolder_iObject3() {}
+		virtual void zzPlaceHolder_iObject4() {}
+		virtual void zzPlaceHolder_iObject5() {}
 
 	};
 
