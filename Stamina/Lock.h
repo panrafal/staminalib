@@ -32,10 +32,19 @@ namespace Stamina {
 		}
 		//virtual void access() {lock(); unlock();}
 		virtual int getLockCount() = 0;
+
+	private:
+		virtual void zzPlaceHolder_Lock1() {}
+		virtual void zzPlaceHolder_Lock2() {}
+		virtual void zzPlaceHolder_Lock3() {}
+		virtual void zzPlaceHolder_Lock4() {}
 	};
 
 	class Lock_blank:public Lock {
 	public:
+
+		STAMINA_OBJECT_CLASS(Lock_blank, Lock);
+
 		static Lock_blank instance;
 		__inline void lock() {} 
 		__inline void unlock() {} 

@@ -16,8 +16,11 @@
 
 namespace Stamina {
 
-	class Semaphore: public WaitableHandle, public Lock {
+	class Semaphore: public Lock, public WaitableHandle /*nie ma virtuali*/  {
 	public:
+
+		STAMINA_OBJECT_CLASS(Semaphore, Lock);
+
 		inline Semaphore(LPSECURITY_ATTRIBUTES attributes=0, int count=1, int maximum=0x7FFFFFFF, LPCTSTR name=0) {
 			_handle = CreateSemaphore(attributes, count, maximum, name);
 			S_ASSERT(_handle);

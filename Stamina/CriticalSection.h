@@ -33,13 +33,33 @@ timeout'owania oczekiwania sekcji wyjatkiem strukturalnym.
 namespace Stamina {
 
 
+	/** Empty Critical section class.
+	*/
+	class iCriticalSection:public Lock {
+	public:
+
+		STAMINA_OBJECT_CLASS(iCriticalSection, Lock);
+
+	private:
+
+		virtual void zzPlaceHolder_iCriticalSection1() {}
+		virtual void zzPlaceHolder_iCriticalSection2() {}
+		virtual void zzPlaceHolder_iCriticalSection3() {}
+		virtual void zzPlaceHolder_iCriticalSection4() {}
+
+	};
+
+
 	// =========================================================================
 
 	// struktura do bezposredniej obslugi blokowania dostepu
 	/** Simple class to direct use of blocking access.
 	*/
-	class CriticalSection_w32:public Lock {
+	class CriticalSection_w32:public iCriticalSection {
 	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_w32, iCriticalSection);
+
 		CRITICAL_SECTION cs;
 
 		CriticalSection_w32();
@@ -54,8 +74,11 @@ namespace Stamina {
 
 	};
 
-	class CriticalSection_simple: public Lock {
+	class CriticalSection_simple: public iCriticalSection {
 	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_simple, iCriticalSection);
+
 		__inline CriticalSection_simple() {
 			_occupied = 0;
 			_thread = 0;
@@ -88,8 +111,11 @@ namespace Stamina {
 
 	/** Empty Critical section class.
 	*/
-	class CriticalSection_blank:public Lock {
+	class CriticalSection_blank:public iCriticalSection {
 	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_blank, iCriticalSection);
+
 		__inline void lock() {} 
 		__inline void unlock() {} 
 		int getLockCount() {return 0;}
@@ -99,8 +125,11 @@ namespace Stamina {
 	// struktura do bezposredniej obslugi blokowania dostepu
 	/** Class to direct use of blocking access.
 	*/
-	class CriticalSection_:public Lock {
+	class CriticalSection_:public iCriticalSection {
 	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_, iCriticalSection);
+
 		CriticalSection_();
 		~CriticalSection_();
 		void lock(); // Zwraca liczbê wczeœniej za³o¿onych blokad

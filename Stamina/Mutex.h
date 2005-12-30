@@ -38,6 +38,9 @@ namespace Stamina {
 
 	class SimpleMutex: public Lock {
 	public:
+
+		STAMINA_OBJECT_CLASS(SimpleMutex, Lock);
+
 		__inline SimpleMutex() {
 			_occupied = 0;
 		}
