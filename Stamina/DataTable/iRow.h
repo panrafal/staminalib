@@ -106,6 +106,7 @@ namespace Stamina { namespace DT {
 
 	iRow* const rowDefault = (iRow*)-1;
 
+	STAMINA_REGISTER_CLASS_VERSION(iRow);
 
 } }
 

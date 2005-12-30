@@ -19,26 +19,14 @@
 
 
 #include "Assert.h"
-#include "LibInstance.h"
 #include "Version.h"
 #include "Memory.h"
 #include "ObjectClassInfo.h"
 #include "ObjectPtr.h"
-#include "LockSelector.h"
-
-#ifdef STAMINA_DEBUG
-	#include <list>
-	#include <vector>
-	#include "CriticalSection.h"
-#endif
 
 namespace Stamina {
 
 #ifdef STAMINA_DEBUG
-	typedef std::list<class iObject*> tDebugObjects;
-	extern tDebugObjects* debugObjects;
-	//extern CriticalSection* debugObjectsCS;
-	extern Lock* debugObjectsCS;
 	extern volatile long debugObjectsCount;
 #endif
 
@@ -64,24 +52,9 @@ namespace Stamina {
 
 		iObject() {
 			InterlockedIncrement(&debugObjectsCount);
-/*			if (debugObjectsCS) {
-				Locker locker(*debugObjectsCS);
-				if (debugObjects) {
-					debugObjects->push_back(this);
-				}
-			}
-			*/
 		}
 		virtual ~iObject() {
 			InterlockedDecrement(&debugObjectsCount);
-			/*
-			if (debugObjectsCS) {
-				Locker locker (*debugObjectsCS);
-				if (debugObjects) {
-					debugObjects->remove(this);
-				}
-			}
-			*/
 		}
 #else 
 		iObject() {
@@ -181,6 +154,33 @@ namespace Stamina {
 	};
 
 
+}; // kompletne podstawy....
+
+
+#include "String.h"
+#include "Lock.h"
+#include "LockSelector.h"
+
+#ifdef STAMINA_DEBUG
+	#include <list>
+	#include <vector>
+	#include "CriticalSection.h"
+#endif
+
+
+
+
+// dokañczamy....
+namespace Stamina {
+
+#ifdef STAMINA_DEBUG
+	typedef std::list<class iObject*> tDebugObjects;
+	extern tDebugObjects* debugObjects;
+	//extern CriticalSection* debugObjectsCS;
+	extern Lock* debugObjectsCS;
+	extern volatile long debugObjectsCount;
+#endif
+
 	/** Interface of lockable objects */
 	class iLockableObject: public iObject {
 	public:
@@ -199,7 +199,7 @@ namespace Stamina {
 
 		virtual ~iLockableObject() {};
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iLockableObject, iObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iLockableObject, iObject, Version(1,0,0,0));
 
 	private:
 
@@ -240,7 +240,7 @@ namespace Stamina {
 		virtual bool isDestroyed() =0;
 		virtual unsigned int getUseCount() =0;
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSharedObject, iLockableObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iSharedObject, iLockableObject, Version(1,0,0,0));
 
 
 #ifdef STAMINA_DEBUG
@@ -292,7 +292,6 @@ namespace boost {
 	}
 };
 
-#include "String.h"
 
 
 

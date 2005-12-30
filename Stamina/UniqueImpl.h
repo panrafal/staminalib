@@ -24,7 +24,7 @@ namespace Stamina { namespace Unique {
 	class Range:public SharedObject<iRange> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::Unique::Range, iRange);
+		STAMINA_OBJECT_CLASS(Unique::Range, iRange);
 
 
 		Range(tRangeId rangeId, enType type, unsigned int priority,  unsigned int minimum = 1, unsigned int maximum = 0x7FFFFFFF, unsigned int uniqueStart=-1)
@@ -89,7 +89,7 @@ namespace Stamina { namespace Unique {
 		typedef std::map<tRangeId, oRange> tRanges;
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::Unique::Domain, iDomain);
+		STAMINA_OBJECT_CLASS(Unique::Domain, iDomain);
 
 		Domain(tDomainId domainId, const StringRef& domainName):_domainId(domainId),_domainName(domainName) {}
 
@@ -135,7 +135,7 @@ namespace Stamina { namespace Unique {
 		typedef std::map<tDomainId, oDomain> tMap;
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::Unique::DomainList, iDomainList);
+		STAMINA_OBJECT_CLASS(Unique::DomainList, iDomainList);
 
 		virtual oDomain getDomain(tDomainId id) const {
 			ObjLocker lock(this, lockRead);

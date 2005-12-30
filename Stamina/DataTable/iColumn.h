@@ -116,6 +116,8 @@ namespace Stamina { namespace DT {
 
 	typedef SharedPtr<iColumn> oColumn;
 
+	STAMINA_REGISTER_CLASS_VERSION(iColumn);
+
 } }
 
 #endif

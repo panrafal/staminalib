@@ -20,7 +20,7 @@ namespace Stamina {
 
 	class iArrayBase: public iSharedObject {
 	public:
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iArrayBase, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iArrayBase, iSharedObject, Version(1,0,0,0));
 
 		class ExceptionOutOfRange: public Exception {
 		public:
@@ -126,6 +126,8 @@ namespace Stamina {
 
 	};
 
+
+	STAMINA_REGISTER_CLASS_VERSION(iArrayBase);
 
 };
 

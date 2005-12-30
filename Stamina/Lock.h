@@ -8,15 +8,18 @@
  *  $Id$
  */
 
-#pragma once
+#include "Object.h"
 
+#ifndef __STAMINA_LOCK__
+#define __STAMINA_LOCK__
 
 namespace Stamina {
 
-
-
-	class Lock {
+	class Lock: public iObject {
 	public:
+
+		STAMINA_OBJECT_CLASS_VERSION(Lock, iObject, Version(1,0,0,0));
+
 		virtual void lock() = 0;
 		virtual void unlock() = 0;
 		virtual bool canAccess() = 0;
@@ -82,3 +85,5 @@ namespace Stamina {
 
 
 };
+
+#endif

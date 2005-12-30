@@ -28,7 +28,7 @@ namespace Stamina {
 
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::VersionControl, iObject, Version(1,1,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(VersionControl, iObject, Version(1,1,0,0));
 
 		VersionControl() {}
 
@@ -153,6 +153,7 @@ namespace Stamina {
 	STAMINA_REGISTER_VERSION(Buffer, Buffer<char>::version);
 
 	STAMINA_REGISTER_CLASS_VERSION(iString);
+	STAMINA_REGISTER_CLASS_VERSION(Lock);
 
 };
 

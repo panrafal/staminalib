@@ -42,7 +42,7 @@ namespace Stamina {
 	class Internet: public Stamina::SharedObject<Stamina::iSharedObject> {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Internet, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Internet, iSharedObject, Version(1,0,0,0));
 
 		/** Constructor
 		@param session Handle to a valid session.
@@ -132,7 +132,7 @@ namespace Stamina {
 	*/
 	class Connection: public SharedObject<iSharedObject> {
 	public:
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Connection, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Connection, iSharedObject, Version(1,0,0,0));
 
 
 		/** @brief Enumeration of connection types.
@@ -251,7 +251,7 @@ namespace Stamina {
 	*/
 	class Request: public SharedObject<iSharedObject> {
 	public:
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Request, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Request, iSharedObject, Version(1,0,0,0));
 
 		/** @exception Bad request.
 		*/

@@ -26,7 +26,7 @@ namespace Stamina {
 		virtual void logV(LogLevel level, const char* module, const char* where, const char* format, va_list va);
 
 
-		STAMINA_OBJECT_CLASS(Stamina::LoggerImpl, Logger);
+		STAMINA_OBJECT_CLASS(LoggerImpl, Logger);
 	};
 
 

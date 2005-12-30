@@ -28,7 +28,7 @@ namespace Stamina {
 	class Exception: public iObject {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::Exception, iObject);
+		STAMINA_OBJECT_CLASS_VERSION(Exception, iObject, Version(1,0,0,0));
 
 		virtual String getReason() const {
 			return this->toString();
@@ -43,7 +43,7 @@ namespace Stamina {
 	class ExceptionString: public Exception {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::ExceptionString, Exception);
+		STAMINA_OBJECT_CLASS(ExceptionString, Exception);
 
 		ExceptionString(const StringRef& reason):_reason(reason) {
 		}
@@ -65,12 +65,14 @@ namespace Stamina {
 
 	class ExceptionDeprecated: public ExceptionString {
 	public:
-		STAMINA_OBJECT_CLASS(Stamina::ExceptionDeprecated, ExceptionString);
+		STAMINA_OBJECT_CLASS(ExceptionDeprecated, ExceptionString);
 
 		ExceptionDeprecated(const StringRef& reason):ExceptionString(reason) {
 		}
 
 	};
 
+
+	STAMINA_REGISTER_CLASS_VERSION(Exception);
 
 };

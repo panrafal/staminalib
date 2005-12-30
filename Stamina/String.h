@@ -8,13 +8,12 @@
  *  $Id$
  */
 
+#include "Object.h"
+
 #ifndef __STAMINA_STRING__
 #define __STAMINA_STRING__
 
-#pragma once
-
 #include <string>
-#include "Object.h"
 //#include "WideChar.h"
 #include "Buffer.h"
 #include "StringType.h"
@@ -23,7 +22,7 @@ namespace Stamina {
 
 	class iString: public iObject {
 	public:
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iString, iObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iString, iObject, Version(1,0,0,0));
 
 		virtual unsigned int getCodePage() const =0;
 
@@ -76,7 +75,7 @@ namespace Stamina {
 
 		typedef StringRefT<TYPE> StringRef;
 
-		STAMINA_OBJECT_CLASS(Stamina::StringRefT<TYPE>, iString);
+		STAMINA_OBJECT_CLASS(StringRefT<TYPE>, iString);
 
 	protected:
 
@@ -1172,7 +1171,7 @@ namespace Stamina {
 	class StringT: public StringRefT<TYPE> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::StringT<TYPE>, StringRefT<TYPE>);
+		STAMINA_OBJECT_CLASS(StringT<TYPE>, StringRefT<TYPE>);
 
 		StringT() {}
 
@@ -1207,7 +1206,7 @@ namespace Stamina {
 	class String: public StringRefT<stACP> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::String, StringRef);
+		STAMINA_OBJECT_CLASS(String, StringRef);
 
 		String() {}
 

@@ -33,7 +33,7 @@ namespace Stamina {
 	template <typename CHAR>
 	class StringRefSTL: public StringRefT<stACP> {
 	public:
-		STAMINA_OBJECT_CLASS(Stamina::StringRefSTL<CHAR>, StringRefT<stACP>);
+		STAMINA_OBJECT_CLASS(StringRefSTL<CHAR>, StringRefT<stACP>);
 
 
 	public:
@@ -128,7 +128,7 @@ namespace Stamina {
 	class StringSTL: public StringRefSTL<CHAR> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::StringSTL<CHAR>, StringRefSTL<CHAR>);
+		STAMINA_OBJECT_CLASS(StringSTL<CHAR>, StringRefSTL<CHAR>);
 
 	public:
 

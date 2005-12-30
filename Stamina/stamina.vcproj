@@ -1161,9 +1161,6 @@
 				RelativePath=".\Lib.h">
 			</File>
 			<File
-				RelativePath=".\LibInstance.h">
-			</File>
-			<File
 				RelativePath=".\ListWndImpl.h">
 			</File>
 			<File

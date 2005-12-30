@@ -30,7 +30,7 @@ namespace Stamina {
 	class ButtonX: public LockableObject<iLockableObject> {
 		public:
 
-			STAMINA_OBJECT_CLASS(Stamina::ButtonX, iLockableObject);
+			STAMINA_OBJECT_CLASS(ButtonX, iLockableObject);
 
 			/** Constructor
 			@param title String that contains text to display on the button.

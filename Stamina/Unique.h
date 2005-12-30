@@ -49,7 +49,7 @@ namespace Stamina { namespace Unique {
 	class iRange: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Unique::iRange, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Unique::iRange, iSharedObject, Version(1,0,0,0));
 
 		/** Rodzaj zakresu		
 		*/
@@ -94,7 +94,7 @@ namespace Stamina { namespace Unique {
 	class iDomain: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Unique::iDomain, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Unique::iDomain, iSharedObject, Version(1,0,0,0));
 
 
 		virtual tDomainId getDomainId() const =0;
@@ -145,7 +145,7 @@ namespace Stamina { namespace Unique {
 	class iDomainList: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Unique::iDomainList, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Unique::iDomainList, iSharedObject, Version(1,0,0,0));
 
 
 		virtual oDomain getDomain(tDomainId id) const =0;

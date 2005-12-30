@@ -23,7 +23,7 @@ namespace Stamina {
 	class iMenu: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iMenu, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iMenu, iSharedObject, Version(1,0,0,0));
 
 
 		virtual oMenuItem popupMenu(Point pt, HWND hwnd)=0;
@@ -37,7 +37,7 @@ namespace Stamina {
 	class iMenuItem: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iMenuItem, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iMenuItem, iSharedObject, Version(1,0,0,0));
 
 		virtual void onClick(iMenu* menu)=0;
 

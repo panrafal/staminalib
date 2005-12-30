@@ -37,7 +37,7 @@ namespace Stamina {
 			mouseCaptured = 0x100,
 		};
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Control, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Control, iSharedObject, Version(1,0,0,0));
 
 	public:
 
