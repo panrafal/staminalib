@@ -120,8 +120,8 @@ protected:
 		dt.addRow();
 		dt.addRow();
 		dt.addRow();
-		dt.lock(allRows);
-		dt.unlock(allRows);
+		dt.lockRow(allRows);
+		dt.unlockRow(allRows);
 	}
 
 	void testSetPassword() {

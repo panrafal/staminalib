@@ -23,14 +23,7 @@ namespace Stamina { namespace DT {
 	public:
 
 		STAMINA_OBJECT_CLASS_VERSION(DT::iRow, iSharedObject, Version(1, 0, 0, 0));
-/*
-		virtual void lockRow() = 0;
-		virtual void unlockRow() = 0;
 
-		virtual bool canAccessRow() = 0;
-*/
-		virtual Lock& getCS() = 0;
-	
 		enRowFlag getFlags() const {
 			return _flag;
 		}

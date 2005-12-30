@@ -36,21 +36,7 @@ namespace Stamina { namespace DT {
 		~DataRow() {
 			freeData();
 		}
-/*
-		inline void lockRow() {
-			_cs.lock();
-		}
-		inline void unlockRow() {
-			_cs.unlock();
-		}
-		inline bool canAccessRow()  {
-			return _cs.canAccess();
-		}
-*/
-		inline Lock& getCS() {
-			return CS();
-		}
-	
+
 
 		inline void setId(tRowId id) {
 			_id = flagId(id);

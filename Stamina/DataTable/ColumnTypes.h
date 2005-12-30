@@ -157,7 +157,7 @@ namespace Stamina { namespace DT {
 		}
 		virtual String getString(const iRow* row, GetSet flags) const {
 			if (flags & getCopy) {
-				ObjLocker l (getRowLocker(row));
+				ObjLocker l (getRowLocker(row), lockRead);
 				String s = get<ColumnType_string>(row, flags);
 				s.makeUnique();
 				return PassStringRef(s);
@@ -167,7 +167,7 @@ namespace Stamina { namespace DT {
 		}
 		virtual ByteBuffer getBin(const iRow* row, GetSet flags) const { 
 			if (flags & getCopy) {
-				ObjLocker l (getRowLocker(row));
+				ObjLocker l (getRowLocker(row), lockRead);
 				ByteBuffer b = get<ColumnType_bin>(row, flags);
 				b.makeUnique();
 				return b;
@@ -246,7 +246,7 @@ namespace Stamina { namespace DT {
 
 		template <class TO>
 		typename TO::tConvert get(const iRow* row, GetFlags flags) const {
-			ObjLocker l (getRowLocker(row));
+			ObjLocker l (getRowLocker(row), lockRead);
 			tGetTypeData val = this->getTypeData(row, true);
 			if (this->getHandler.empty() == false) {
 				tValue current (val);
@@ -260,7 +260,7 @@ namespace Stamina { namespace DT {
 
 		template <typename FROM>
 		bool set(iRow* row, typename FROM::tCRef val, SetFlags flags) const {
-			ObjLocker l (getRowLocker(row));
+			ObjLocker l (getRowLocker(row), lockWrite);
 			if (setHandler.empty() == false) {
 				FROM::tValue current (val);
 				current.disableRefCount();

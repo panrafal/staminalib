@@ -37,7 +37,7 @@ namespace Stamina { namespace DT {
 	}
 
     bool DataRow::freeData() {
-		LockerCS lock (this->CS());
+		ObjLocker lock (this, lockDefault);
 		ColumnsDesc::tColumns::const_iterator colIt = _table->getColumns().begin();
 		for (tData::iterator i = _data.begin() ; i != _data.end() ; ++i, ++colIt) {
 			S_ASSERT( colIt != _table->getColumns().end() );

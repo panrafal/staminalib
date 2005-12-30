@@ -804,7 +804,7 @@ namespace Stamina { namespace DT {
 				throw DTFileException();
 
 			oDataRow rowObj = _table->getRow(row);
-			ObjLocker l(rowObj);
+			ObjLocker l(rowObj, lockWrite);
 			
 
 			unsigned int rowSize = 0;

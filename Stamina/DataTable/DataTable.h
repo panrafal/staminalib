@@ -265,9 +265,8 @@ namespace Stamina { namespace DT {
 			return _changed;
 		}
 
-		void lock(tRowId row) throw(...);
-		void unlock(tRowId row) throw(...);
-		bool canAccess(tRowId row) throw(...);
+		void lockRow(tRowId row) throw(...);
+		void unlockRow(tRowId row) throw(...);
 
 		/* Gets the value of a field using type conversion.
 		- When retrieving ctypeString/ctypeWideString there are several possible ways of setting input buffer in Value:
@@ -402,13 +401,13 @@ namespace Stamina { namespace DT {
 	class LockerDT { 
 	public:
 		inline LockerDT(DataTable* dt, tRowId row):_dt(dt), _row(row) {
-			_dt->lock(_row);
+			_dt->lockRow(_row);
 		}
 		inline LockerDT(DataTable& dt, tRowId row):_dt(&dt), _row(row) {
-			_dt->lock(_row);
+			_dt->lockRow(_row);
 		}
 		inline ~LockerDT() {
-			_dt->unlock(_row);
+			_dt->unlockRow(_row);
 		}
 	private:
 		DataTable* _dt;

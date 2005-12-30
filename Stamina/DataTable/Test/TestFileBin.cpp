@@ -3,6 +3,7 @@
 #include <ostream>
 #include <cppunit/extensions/HelperMacros.h>
 #include <Stamina/VersionControl.h>
+#include <Stamina\FindFile.h>
 #include "..\DataTable.h"
 #include "..\FileBin.h"
 #include "..\InterfaceBasic.h"
@@ -794,7 +795,8 @@ protected:
 		result = fb.loadAll(filename);
 		CPPUNIT_ASSERT(result == DT::success);
 
-		CPPUNIT_ASSERT_EQUAL((int)1, iface->passAsked);
+		// iface domyœlnie sprawdza puste has³o i o nie nie pyta!
+		CPPUNIT_ASSERT_EQUAL((int)(password == "" ? 0 : 1), iface->passAsked);
 
 		dt.setPassword("z³e has³o");
 		dt.setInterface(0);
@@ -803,7 +805,7 @@ protected:
 		CPPUNIT_ASSERT(result == DT::errNotAuthenticated);
 
 		dt.setInterface(iface);
-		result = fb.append(filename);
+		result = fb.append(filename); // powinien odnaleŸæ odpowiednie has³o...
 		CPPUNIT_ASSERT(result == DT::success);
 		
 	}

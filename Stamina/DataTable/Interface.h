@@ -20,8 +20,8 @@ namespace Stamina { namespace DT {
 		STAMINA_OBJECT_CLASS(DT::iInterface, iSharedObject);
 
 		enum Result {
-			retry,
-			fail,
+			retry = 1,
+			fail = 2,
 			quiet = 0x100,
 			failQuiet = fail | quiet,
 		};
