@@ -29,10 +29,10 @@ namespace Stamina {
 		};
 
 
-		const static unsigned int wholeData = 0xFFFFFFFF;
+		const static unsigned int wholeData = 0x7FFFFFFF;
 
 		/** Returns ObjectClassInfo structure for elements stored in this array, but only if the type supports staticClassInfo(); */
-		virtual ObjectClassInfo* getTypeClass() const =0;
+		virtual const ObjectClassInfo& getTypeClass() const =0;
 
 		/** Returns item count */
 		virtual unsigned int size() const =0;
@@ -45,7 +45,12 @@ namespace Stamina {
 		/** How many elements can fit in the array without resizing */
 		virtual unsigned int capacity() const =0;
 
-		virtual void erase(unsigned int pos, unsigned int count = wholeData)=0;
+		/** Erases count items from the array
+		@param pos Position. Use negative values to erase values from the end...
+		@param count Number od elements to erase. It's trimmed to available count of elements...
+		Throws iArrayBase::ExceptionOutOfRange
+		*/
+		virtual void erase(int pos, unsigned int count = wholeData)=0;
 
 		void clear() {
 			this->erase(0);
@@ -67,19 +72,35 @@ namespace Stamina {
 			}
 		}
 
-		virtual TYPE& insert(const TYPE&, unsigned int pos = wholeData) = 0;
+		/** Inserts an item into the array.
+		@param pos You can provide negative position, which starts from the end of the array. Position is always trimmed to the array's size.
+		*/
+		virtual TYPE& insert(const TYPE& v, int pos = wholeData) = 0;
 
-		virtual TYPE& at(unsigned int pos) = 0;
+		TYPE& append(const TYPE& v) {
+			return this->insert(v, wholeData);
+		}
 
-		const TYPE& at(unsigned int pos) const {
+		TYPE& prepend(const TYPE& v) {
+			return this->insert(v, 0);
+		}
+
+		/** Returns the element on desired position.
+		@param pos Position. Use negative values to query values from the end...
+		Throws iArrayBase::ExceptionOutOfRange
+		*/
+		virtual TYPE& at(int pos) = 0;
+
+
+		const TYPE& at(int pos) const {
 			return (const_cast< iArray<TYPE>* >(this))->at(pos);
 		}
 
-		TYPE& operator[] (unsigned int pos) {
+		TYPE& operator[] (int pos) {
 			return at(pos);
 		}
 
-		const TYPE& operator[] (unsigned int pos) const {
+		const TYPE& operator[] (int pos) const {
 			return at(pos);
 		}
 

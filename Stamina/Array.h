@@ -30,7 +30,7 @@ namespace Stamina {
 		}
 
 		/** Returns ObjectClassInfo structure for elements stored in this array, but only if the type supports staticClassInfo(); */
-		virtual ObjectClassInfo* getTypeClass() const {
+		virtual const ObjectClassInfo& getTypeClass() const {
 			return getTypeClassInfo<TYPE>();
 		}
 
@@ -51,20 +51,39 @@ namespace Stamina {
 			return _buffer.getBufferSize();
 		}
 
-		virtual void erase(unsigned int pos, unsigned int count = wholeData) {
-			_buffer.erase(pos, count);
+		virtual void erase(int pos, unsigned int count = wholeData) {
+			if (pos == 0 && count >= _buffer.getLength()) {
+				_buffer.reset();
+			} else {
+				_buffer.erase(this->getPos(pos), count);
+			}
 		}
 
-		virtual TYPE& insert(const TYPE& v, unsigned int pos = wholeData) {
-			return this->at(_buffer.insertInRange(pos, &v, 1));
+		virtual TYPE& insert(const TYPE& v, int pos = wholeData) {
+			return this->at(_buffer.insertInRange(this->getPosRange(pos), &v, 1));
 		}
 
-		virtual TYPE& at(unsigned int pos) {
-			if (pos >= _buffer.getLength()) {
+		virtual TYPE& at(int pos) {
+			return _buffer.getBuffer()[ this->getPos(pos) ];
+		}
+
+		unsigned int getPosRange(int pos) {
+			if (pos < 0) {
+				return max(0, _buffer.getLength() + pos);
+			}
+			return min((unsigned)pos, _buffer.getLength());
+		}
+
+		unsigned int getPos(int pos) {
+			if (pos < 0) {
+				pos = _buffer.getLength() + pos;
+			}
+			if (pos < 0 || (unsigned)pos >= _buffer.getLength()) {
 				throw ExceptionOutOfRange();
 			}
-			return _buffer.getBuffer()[pos];
+			return pos;
 		}
+
 
 	protected:
 
