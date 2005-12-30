@@ -31,19 +31,19 @@ namespace Stamina {
 		ButtonXTipTarget():_needsRefresh(false), _button(0) {
 		}
 		void detachButton(ButtonX* button) {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (_button == button) {
 				_button = 0;
 			}
 		}
 		void attachButton(ButtonX* button) {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (button != _button)
 				_needsRefresh = true;
 			_button = button;
 		}
 		ToolTipX::oTip getTip(ToolTipX::ToolTip * ttx) {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockRead);
 			if (!_button)
 				return ToolTipX::oTip();
 			return _button->getTipObject(ttx);
@@ -51,7 +51,7 @@ namespace Stamina {
 		// zawsze w obrêbie, ¿eby automat nam go nie wywali³
 		bool mouseAtTarget(ToolTipX::ToolTip * ttx,HWND window, const Point& screen,
  const Point& local) {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			ButtonX* button = ButtonX::fromHWND(WindowFromPoint(screen));
 			if (!button || !_button || !button->isEnabled())
 				return false;

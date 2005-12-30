@@ -138,14 +138,14 @@ namespace Stamina { namespace Unique {
 		STAMINA_OBJECT_CLASS(Stamina::Unique::DomainList, iDomainList);
 
 		virtual oDomain getDomain(tDomainId id) const {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockRead);
 			tMap::const_iterator found = _map.find(id);
 			if (found == _map.end()) return oDomain();
 			return found->second;
 		}
 
 		virtual oDomain getDomain(const StringRef& name) const {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockRead);
 			for (tMap::const_iterator it = _map.begin(); it != _map.end(); ++it) {
 				if (it->second->getDomainName() == name) return it->second;
 			}
@@ -153,13 +153,13 @@ namespace Stamina { namespace Unique {
 		}
 
 		virtual void registerDomain(const oDomain& domain) {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (domain->getDomainId() == domainNotFound) return;
 			if (domainExists(domain->getDomainId())) return;
 			_map[domain->getDomainId()] = domain;
 		}
 		virtual void unregisterDomain(const oDomain& domain) {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			_map.erase(domain->getDomainId());
 		}
 

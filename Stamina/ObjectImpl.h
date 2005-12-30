@@ -32,24 +32,25 @@ namespace Stamina {
 	/** iLockableObj implementation template
 	@param OI - object's interface
 	@param OIMP - Object implementation (iObject)
-	@param TCS - locker class to use (needs functions lock() and unlock())
+	@param LS - lock selector class to use (needs function selectLock()), or Lock object descendant (will be used for all types of locks...)
 	*/
-	template <class OI, class TCS = Stamina::CriticalSection, class OIMP = Object<OI> > class LockableObject: public OIMP {
+	template <class OI, class LS = Stamina::CriticalSection, class OIMP = Object<OI> > class LockableObject: public OIMP {
 	public:
-		void lock() const {
-			const_cast<LockableObject*>(this)->_cs.lock();
+
+		virtual Lock& selectLock(enLockType type) const {
+			__if_exists(LS::selectLock) {
+				return const_cast<LockableObject*>(this)->_lock.selectLock(type);
+			}
+			__if_not_exists(LS::selectLock) {
+				return const_cast<LockableObject*>(this)->_lock;
+			}
 		}
-		/** Odblokowuje dostêp do obiektu */
-		void unlock() const {
-			const_cast<LockableObject*>(this)->_cs.unlock();
-		}
-		TCS & CS() {return _cs;}
+
+		LS & lockSelector() {return _lock;}
 	private:
-		TCS _cs;
+		LS _lock;
 	};
 
-
-	typedef LockerTmpl<const iLockableObject> ObjLocker;
 
 	/** iSharedObj implementation
 	@param IO - object's interface
@@ -66,7 +67,7 @@ namespace Stamina {
 			S_ASSERT(this->_useCount == 0 || this->_useCount == 1);
 		}
 		bool hold() {
-			LockerTmpl<LO>(this);
+			ObjLocker(this, lockSharedMutex);
 			if (this->_useCount == 0)
 				return false;
 			this->_useCount++;
@@ -74,7 +75,7 @@ namespace Stamina {
 		}
 		void release() {
 			{
-				LockerTmpl<LO>(this);
+				ObjLocker(this, lockSharedMutex);
 				if (this->_useCount < 1) {
 					//IMDEBUG(DBG_ASSERT, "SharedObj released during destroy");
 					return;
@@ -92,20 +93,20 @@ namespace Stamina {
 		/** Zwraca true je¿eli z obiektu mo¿na korzystaæ
 		*/
 		bool isValid() {
-			LockerTmpl<LO>(this);
+			ObjLocker(this, lockSharedMutex);
 			return this->_useCount != 0;
 		}
 		bool isDestroyed() {
-			LockerTmpl<LO>(this);
+			ObjLocker(this, lockSharedMutex);
 			return this->_useCount == 0;
 		}
 		virtual void destroy() {
-			LockerTmpl<LO>(this);
+			ObjLocker(this, lockSharedMutex);
 			S_ASSERT(this->_useCount == 0);
 			delete this;
 		}
 		unsigned int getUseCount() {
-			LockerTmpl<LO>(this);
+			ObjLocker(this, lockSharedMutex);
 			return this->_useCount;
 		}
 		/** The object won't be ever deleted automatically. Use ONLY for heap allocated objects! */

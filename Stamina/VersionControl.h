@@ -30,6 +30,8 @@ namespace Stamina {
 
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::VersionControl, iObject, Version(1,1,0,0));
 
+		VersionControl() {}
+
 		virtual String toString(iStringFormatter* format=0) const {
 			return "";
 		}
@@ -95,7 +97,6 @@ namespace Stamina {
 		}
 
 	private:
-		VersionControl() {}
 	private:
 		tModuleList _list;        
 

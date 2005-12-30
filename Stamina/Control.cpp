@@ -15,14 +15,14 @@
 namespace Stamina {
 
 	void DrawableTipTarget::detachControl(const oDrawableControl& ctrl) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (_local == ctrl->getRect()) {
 			_local = Rect();
 			_tip = ToolTipX::oTip();
 		}
 	}
 	void DrawableTipTarget::attachControl(const oDrawableControl& ctrl) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (ctrl->getRect() != _local)
 			_needsRefresh = true;
 		else
@@ -31,12 +31,12 @@ namespace Stamina {
 		_tip = ctrl->getTipObject();
 	}
 	ToolTipX::oTip DrawableTipTarget::getTip(ToolTipX::ToolTip * ttx) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		return _tip;
 	}
 	// zawsze w obrêbie, ¿eby automat nam go nie wywali³
 	bool DrawableTipTarget::mouseAtTarget(ToolTipX::ToolTip * ttx,HWND window, const Point& screen, const Point& local) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (_local && _tip && _local.contains(local)) {
 			if (_needsRefresh) {
 				_needsRefresh = false;

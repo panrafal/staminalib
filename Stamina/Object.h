@@ -24,6 +24,7 @@
 #include "Memory.h"
 #include "ObjectClassInfo.h"
 #include "ObjectPtr.h"
+#include "LockSelector.h"
 
 #ifdef STAMINA_DEBUG
 	#include <list>
@@ -184,13 +185,21 @@ namespace Stamina {
 	class iLockableObject: public iObject {
 	public:
 	    /** Blokuje dostêp do obiektu */
-		virtual void lock() const {}
+		void lock(enLockType type) const {
+			selectLock(type).lock();
+		}
 		/** Odblokowuje dostêp do obiektu */
-		virtual void unlock() const {}
+		void unlock(enLockType type) const {
+			selectLock(type).unlock();
+		}
+		/** Zwraca obiekt blokuj¹cy o podanym typie */
+		virtual Lock& selectLock(enLockType type) const {
+			return Lock_blank::instance;
+		}
 
 		virtual ~iLockableObject() {};
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iLockableObject, iObject, Version(0,1,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::iLockableObject, iObject, Version(1,0,0,0));
 
 	private:
 
@@ -202,6 +211,26 @@ namespace Stamina {
 
 	};
 
+
+	/* Scoped locking of iLockable */
+	class ObjLocker {
+	public:
+		__inline ObjLocker(const iLockableObject* lo, enLockType type) {
+			_lock = &lo->selectLock(type);
+			_lock->lock();
+		}
+		__inline ObjLocker(const iLockableObject& lo, enLockType type) {
+			_lock = &lo.selectLock(type);
+			_lock->lock();
+		}
+		__inline ~ObjLocker(){
+			_lock->unlock();
+		}
+	protected:
+		Lock* _lock;
+	};
+
+
 	class iSharedObject: public iLockableObject {
 	public:
 		virtual bool hold() =0;
@@ -211,7 +240,7 @@ namespace Stamina {
 		virtual bool isDestroyed() =0;
 		virtual unsigned int getUseCount() =0;
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSharedObject, iLockableObject, Version(0,1,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSharedObject, iLockableObject, Version(1,0,0,0));
 
 
 #ifdef STAMINA_DEBUG

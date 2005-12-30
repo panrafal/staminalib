@@ -222,10 +222,18 @@ namespace Stamina {
 	std::string getCurrentDirectory();
 
 #ifdef _WINDOWS_
-	template<class LIST> int deleteFiles(const LIST& files) {
+	template<class FILE> bool deleteFile(const FILE& file);
+
+	__if_exists(StringRef) {
+		template<> inline int deleteFile<StringRef>(const StringRef& file) {
+			return ::DeleteFile(file.a_str());
+		}
+	}
+
+	template<class LIST> inline int deleteFiles(const LIST& files) {
 		int c = 0;
 		for (LIST::const_iterator it = files.begin(); it != files.end(); ++it) {
-			if (DeleteFile(it->c_str())) {
+			if (deleteFile(*it)) {
 				c++;
 			}
 		}

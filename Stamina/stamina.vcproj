@@ -1170,6 +1170,9 @@
 				RelativePath=".\Lock.h">
 			</File>
 			<File
+				RelativePath=".\LockSelector.h">
+			</File>
+			<File
 				RelativePath=".\Logger.h">
 			</File>
 			<File

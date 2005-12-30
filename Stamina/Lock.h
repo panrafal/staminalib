@@ -14,6 +14,7 @@
 namespace Stamina {
 
 
+
 	class Lock {
 	public:
 		virtual void lock() = 0;
@@ -32,14 +33,16 @@ namespace Stamina {
 
 	class Lock_blank:public Lock {
 	public:
+		static Lock_blank instance;
 		__inline void lock() {} 
 		__inline void unlock() {} 
 		int getLockCount() {return 0;}
 		__inline bool canAccess() {return true;}
 	};
 
+	__declspec(selectany) Lock_blank Lock_blank::instance;
 
-	/* Scoped locking of iLockable */
+	/* Scoped locking */
 	template <class TLO> class LockerTmpl {
 	public:
 		__inline LockerTmpl(const TLO* lo):_lo(const_cast<TLO*>(lo)) {
@@ -56,6 +59,9 @@ namespace Stamina {
 	};
 	typedef LockerTmpl<Lock> Locker;
 	typedef Locker LockerCS;
+
+
+
 
 	/** FastLocker works the same as LockerTmpl. However it doesn't use virtual functions, but call them directly on specified class (which could enable some compiler optimizations).
 	*/

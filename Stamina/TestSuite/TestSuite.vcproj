@@ -258,8 +258,7 @@
 				<File
 					RelativePath="..\DataTable\Test\TestColumns.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
@@ -274,8 +273,7 @@
 				<File
 					RelativePath="..\DataTable\Test\TestCrypt.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
@@ -290,8 +288,7 @@
 				<File
 					RelativePath="..\DataTable\Test\TestFileBin.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
@@ -305,8 +302,7 @@
 				<File
 					RelativePath="..\Test\TestFindFile.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
@@ -321,8 +317,7 @@
 				<File
 					RelativePath="..\Test\TestHelpers.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
@@ -337,8 +332,7 @@
 				<File
 					RelativePath="..\Test\TestStringType.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"/>
 					</FileConfiguration>
@@ -352,8 +346,7 @@
 				<File
 					RelativePath="..\DataTable\Test\TestTable.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
@@ -368,8 +361,7 @@
 				<File
 					RelativePath="..\Test\TestUnique.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>
@@ -384,8 +376,7 @@
 				<File
 					RelativePath="..\Test\TestVersionControl.cpp">
 					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Debug|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""/>

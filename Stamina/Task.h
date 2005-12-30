@@ -48,7 +48,7 @@ namespace Stamina {
 
 
 		void run() {
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (_state != stateCreated) return;
 			_thread.resume();
 			_state = stateRunning;
@@ -58,7 +58,7 @@ namespace Stamina {
 			if (_state > stateRunning) return;
 
 			Stamina::log(logFunc, "Stamina", "Task::shutdown", "name=%s", _name.c_str());
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			_state = stateShuttingDown;
 			_shutdownEvent.set();
 		}
