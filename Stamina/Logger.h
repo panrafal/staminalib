@@ -30,6 +30,10 @@ namespace Stamina {
 		logAll = 0xFFFFFF
 	};
 
+	inline LogLevel operator | (const LogLevel& a, const LogLevel& b) {
+		return (LogLevel)((int)a | (int)b);
+	}
+
 
 	class Logger: public iSharedObject {
 	public:

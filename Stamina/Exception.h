@@ -72,6 +72,25 @@ namespace Stamina {
 
 	};
 
+	class ExceptionBadCast: public Exception {
+	public:
+		STAMINA_OBJECT_CLASS(ExceptionBadCast, Exception);
+
+		ExceptionBadCast(const ObjectClassInfo& from, const ObjectClassInfo& to):from(from), to(to) {
+		}
+
+		const ObjectClassInfo& from;
+		const ObjectClassInfo& to;
+
+	};
+
+	template <class TO> inline TO* iObject::tryCastObject() throw (...) {
+		TO* obj = this->castObject<TO>();
+		if (obj == 0) {
+			throw ExceptionBadCast(this->getClass(), TO::staticClassInfo());
+		}
+		return obj;
+	}
 
 	STAMINA_REGISTER_CLASS_VERSION(Exception);
 

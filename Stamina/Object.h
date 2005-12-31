@@ -17,6 +17,11 @@
 #define STAMINA_DEBUG
 #endif
 
+#define WIN32_LEAN_AND_MEAN
+#define _WIN32_WINNT 0x0500
+
+#include <windows.h>
+
 
 #include "Assert.h"
 #include "Version.h"
@@ -111,6 +116,9 @@ namespace Stamina {
 				return 0;
 			}
 		}
+
+		template <class TO> TO* tryCastObject() throw (...);
+
 		template <class TO> TO castObject(TO toClass) {
 			if (this->getClass() >= toClass->getClass()) {
 				return reinterpret_cast<TO>(this);
