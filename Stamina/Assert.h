@@ -15,7 +15,7 @@
 
 #define S_ASSERT(a) _ASSERTE(a)
 #ifdef _DEBUG
-#define S_ASSERT_MSG(a, msg) _ASSERT_BASE(a, msg)
+#define S_ASSERT_MSG(a, msg) ((void)0)
 #else
 #define S_ASSERT_MSG(a, msg) ((void)0)
 #endif

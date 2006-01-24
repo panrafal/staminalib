@@ -593,7 +593,7 @@ namespace Stamina {
 			const UTF8* buff8 = (UTF8*)start;
 			UTF16* buff16 = (UTF16*)buffer;
 			ConvertUTF8toUTF16(&buff8, buff8 + length, &buff16, buff16 + buffSize, lenientConversion);
-			return buff16 - buffer;
+			return buff16 - (UTF16*)buffer;
 		}
 
 		static inline unsigned int convertToCharLength(const wchar_t* start, unsigned int length) {

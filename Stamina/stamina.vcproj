@@ -1065,7 +1065,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\..\__source\md5c\md5c.c">
+					RelativePath="..\depends\md5c\md5c.c">
 					<FileConfiguration
 						Name="Debug|Win32">
 						<Tool
