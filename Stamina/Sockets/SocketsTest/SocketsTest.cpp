@@ -27,9 +27,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	TCPClient sock;
 	sock.evtOnConnected.connect(boost::bind(onConnected));
 	sock.evtOnError.connect(boost::bind(onError, _1));
-	sock.evtOnReceived.connect(boost::bind(onReceived, (char*)0, 0));
-	sock.connectSync("localhost", 80);
-	char b[] = "GET /index.html HTTP/1.1\r\nHost: www.onet.pl\r\n";
+	sock.evtOnReceived.connect(boost::bind(onReceived, _1, _2));
+	sock.connectSync("www.kplugins.net", 80);
+	char b[] = "GET /index.xml HTTP/1.1\r\nHost: www.kplugins.net\r\n\r\n";
 	sock.send(b, strlen(b)+1);
 	while(1)
 		Sleep(1);

@@ -89,18 +89,12 @@ namespace Stamina {
 
 	void TCPSocket::onReceived() {
 		vector<char> theVector;
-		char buffer;
-		DWORD bytes = 0;
-		WSABUF buff;
-		int err;
-		char *data = 0;
-
-		buff.buf = &buffer;
-		buff.len = 1;
+		char buff;
+		char* data = 0;
 
 		// pobieramy kolejne bajty i wrzucamy do tablicy
-		while (!(err = WSARecv(_socket, &buff, 1, &bytes, NULL, NULL, NULL)) && bytes)
-			theVector.push_back(buffer);
+		while (recv(_socket, &buff, 1, 0) != SOCKET_ERROR)
+			theVector.push_back(buff);
 
 		data = new char[theVector.size()];
 		/// kopiujemy dane
