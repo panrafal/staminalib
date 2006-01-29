@@ -191,9 +191,16 @@ namespace Stamina {
 		inline Point getLT() const {
 			return getPos();
 		}
+		inline Point getLB() const {
+			return Point(left, bottom);
+		}
+		inline Point getRT() const {
+			return Point(right, top);
+		}
 		inline Point getRB() const {
 			return Point(right, bottom);
 		}
+
 		inline int getWidth() const {
 			return abs(right - left);
 		}
