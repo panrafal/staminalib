@@ -114,12 +114,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\TCPClient.cpp">
-			</File>
-			<File
-				RelativePath=".\TCPServer.cpp">
-			</File>
-			<File
 				RelativePath=".\TCPSocket.cpp">
 			</File>
 		</Filter>
@@ -134,16 +128,7 @@
 				RelativePath=".\iSocket.h">
 			</File>
 			<File
-				RelativePath=".\Socket.h">
-			</File>
-			<File
 				RelativePath=".\stdafx.h">
-			</File>
-			<File
-				RelativePath=".\TCPClient.h">
-			</File>
-			<File
-				RelativePath=".\TCPServer.h">
 			</File>
 			<File
 				RelativePath=".\TCPSocket.h">

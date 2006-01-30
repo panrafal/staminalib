@@ -37,44 +37,44 @@ namespace Stamina {
 		* @param major - winsock's major ver
 		* @param minor - winsock's minor ver
 		*/
-		TCPSocket(int major = 2, int minor = 2) throw(ExceptionSocket);
+		TCPSocket(int major = 2, int minor = 2);
 		~TCPSocket();
 
 		/** Establishes asynchronously connection to another socket application.
 		* @param host Hostname.
 		* @param port Port number.
 		*/
-		bool connect(const StringRef& host, unsigned port) throw(ExceptionSocket);
-
-		/** Places a socket in a state in which it is listening for an incoming connection.
-		*/
-		virtual bool listen(unsigned int port);
-
-		/** Sends data through socket.
-		*/
-		virtual void send(char* data, unsigned size);
+		bool connect(const StringRef& host, unsigned port);
 
 		/** Closes a connection.
 		*/
 		bool close();
 
+		/** Sends data through socket.
+		*/
+		virtual void send(const ByteBuffer& data);
+
+		/** Starts listening for an incoming connection.
+		*/
+		virtual void listen(unsigned int port);
+
 		/** Gets hostname where connection is established to.
 		*/
 		inline String getHost() const {
-			LockerCS(_critical);
+			LockerCS locker(_critical);
 			return _host;
 		}
 		/** Gets port number which connection is established on.
 		*/
 		inline int getPort() const {
-			LockerCS(_critical);
+			LockerCS locker(_critical);
 			return _port;
 		}
 
 		/** Gets connection state.
 		*/
 		inline State getState() const {
-			LockerCS lock(_critical);
+			LockerCS locker(_critical);
 			return _state;
 		}
 	public:
@@ -82,11 +82,14 @@ namespace Stamina {
 		*/
 		boost::signal<void (unsigned)> evtOnError;
 		/** Signal fires when connection is incoming.
+		* @param SOCKET Socket of incoming connection.
+		* @param sockaddr_in Filled sockaddr_in with infos about incoming connection.
+		* @param int Size of sockaddr_in struct.
 		*/
-		boost::signal<void ()> evtOnAccept;
+		boost::signal<void (SOCKET, const sockaddr_in&, int)> evtOnAccept;
 		/** Signal fires when data has been received.
 		*/
-		boost::signal<void (char*, unsigned)> evtOnReceived;
+		boost::signal<void (const ByteBuffer&)> evtOnReceived;
 		/** Signal fires when connection has been established.
 		*/
 		boost::signal<void ()> evtOnConnected;
@@ -100,11 +103,15 @@ namespace Stamina {
 		SOCKET _socket;
 		HANDLE _event;	/// WSAEvent
 		ThreadRunnerStore* _threads;
+		String _host;
+		unsigned int _port;
 	private:
 		/** Main loop for sockets.
 		*/
 		unsigned int loop();
 		unsigned int connecting();
+		void onReceived();
+		void onAccept();
 	};
 };
 
