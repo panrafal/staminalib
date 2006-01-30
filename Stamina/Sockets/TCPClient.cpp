@@ -6,20 +6,7 @@ namespace Stamina {
 		if (_connEvent)
 			CloseHandle(_connEvent);
 	}
-	bool TCPClient::connectAsync(const StringRef& host, unsigned port) {
-		if (_state != this->stOffline)
-			return false;
 	
-		_host = host;
-		_port = port;
-		_state = this->stConnecting;
-
-		if (!_threads->runEx(boost::bind(&TCPClient::connecting, this), "TCPClient::connecting")) {
-			this->evtOnError(erInvalidThread);
-			return false;
-		}
-		return true;
-	}
 
 	bool TCPClient::connectSync(const StringRef& host, unsigned int port) {
 		if (_state != this->stOffline)

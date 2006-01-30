@@ -14,13 +14,7 @@ namespace Stamina {
 		/** Permits an incoming connection attempt on a socket.
 		*/
 		virtual void accept();
-		/** Places a socket in a state in which it is listening for an incoming connection.
-		*/
-		virtual bool listen(unsigned int port);
-	public:
-		/** Signal fires when connection is incoming.
-		*/
-		boost::signal<void ()> evtOnAccept;
+		
 	protected:
 		/** Socket invokes function when has got something on input.
 		*/

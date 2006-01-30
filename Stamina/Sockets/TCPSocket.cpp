@@ -10,7 +10,8 @@ namespace Stamina {
 		WORD wVersionRequested;
 
 		wVersionRequested = MAKEWORD(major, minor);
-		WSAStartup(wVersionRequested, &wsaData);
+		if (WSAStartup(wVersionRequested, &wsaData))
+			throw ExceptionSocket(WSAGetLastError());
 
 		_state = stOffline;
 	}
@@ -21,6 +22,72 @@ namespace Stamina {
 		if (_event)
 			WSACloseEvent(_event);
 		WSACleanup();
+	}
+
+	bool TCPSocket::connect(const StringRef& host, unsigned port) {
+		if (_state != stOffline)
+			return false;
+	
+		_host = host;
+		_port = port;
+		_state = stConnecting;
+
+		if (!_threads->runEx(boost::bind(&TCPClient::connecting, this), "TCPSocket::connecting")) {
+			throw ExceptionSocket("Cannot create connecting thread");
+		}
+		return true;
+	}
+
+	unsigned int TCPClient::connecting() {
+		hostent *hp;
+		unsigned long addr;
+		struct sockaddr_in server;
+		unsigned long ul = 1;
+
+		_state = stConnecting;
+
+		_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, NULL);
+
+		if (_socket == INVALID_SOCKET)
+			throw ExceptionSocket(WSAGetLastError());
+
+			if (inet_addr(_host.c_str()) == INADDR_NONE)
+				hp = gethostbyname(_host.c_str());
+			else {
+				addr = inet_addr(_host.c_str());
+				hp = gethostbyaddr((char*)&addr, sizeof(addr), AF_INET);
+			}
+
+			if (hp == NULL) {
+				closesocket(_socket);
+				this->evtOnError(WSAGetLastError());
+				return (-1);
+			}
+			else {
+				server.sin_addr.s_addr =*((unsigned long*)hp->h_addr);
+				server.sin_family = AF_INET;
+				server.sin_port = htons( _port );
+
+				long option = 60*1000;
+				// set to send keep-alives.
+				setsockopt(_socket, SOL_SOCKET, SO_KEEPALIVE,(char*)&option, sizeof(option));
+				// set receives time-out in milliseconds
+				setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&option, sizeof(option));
+				// set send time-out in milliseconds
+				setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO,(char*)&option, sizeof(option));
+
+				//
+				if ((_event = WSACreateEvent()) == (HANDLE)-1 || 
+					WSAEventSelect(_socket, _event, FD_ACCEPT|FD_CONNECT|FD_WRITE|FD_READ|FD_CLOSE) == SOCKET_ERROR ||
+					!_threads->runEx(boost::bind(&TCPClient::loop, this), "TCPClient::loop") ||
+					::connect(_socket, (const sockaddr*)&server, sizeof(sockaddr_in)) != SOCKET_ERROR ||
+					WSAGetLastError() != WSAEWOULDBLOCK) {
+						closesocket(_socket);
+						this->evtOnError(WSAGetLastError());
+						return (-1);
+					}
+			}
+		return 0;
 	}
 
 	bool TCPSocket::close()
