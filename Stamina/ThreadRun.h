@@ -23,6 +23,7 @@
 namespace Stamina {
 
 	template <class F> unsigned int __stdcall  __threadRunProc(void* func) {
+		S_ASSERT(func != 0);
 		F* f = (F*)func;
 		(*f)();
 		delete f;
@@ -34,6 +35,7 @@ namespace Stamina {
 		F* f = new F(func);
 		unsigned int id;
 		HANDLE handle = (HANDLE) _beginthreadex(attr, 0, (fThreadProc)(__threadRunProc<F>), (void*)f, suspended ? CREATE_SUSPENDED : 0 , &id);
+		S_ASSERT(handle != 0 && handle != -1);
 		if (threadId)
 			*threadId = id;
 		if (name && *name) {
@@ -53,12 +55,13 @@ namespace Stamina {
 	/**
 	
 	*/
-	class ThreadRunner: public SharedObject<iSharedObject> {
+	class ThreadRunner: public SharedObject<iSharedObject, LockableObject<iSharedObject, Stamina::FastMutex> > {
 	public:
 
 		static uintptr_t defaultRunner (const char* name, void * sec, unsigned stack,	fThreadProc cb, void * args, unsigned flag, unsigned * addr) {
 			unsigned int id;
 			uintptr_t handle = (uintptr_t) _beginthreadex(sec, stack, cb, args, flag, &id);
+			S_ASSERT(handle != 0 && handle != -1);
 			if (addr) {
 				*addr = id;
 			}
@@ -77,9 +80,16 @@ namespace Stamina {
 		typedef unsigned int ( __stdcall * fThreadProc)( void * );
 
 		ThreadRunner(fBeginThread func = defaultRunner) {
+			S_ASSERT(func != 0);
 			this->_beginThread = func;
 		}
 		
+		void setRunner(fBeginThread func) {
+			ObjLocker l (this);
+			S_ASSERT(func != 0);
+			this->_beginThread = func;
+		}
+
 		template <class F> inline HANDLE runEx(F& func, const char* name = 0, SECURITY_ATTRIBUTES* attr = 0, bool suspended=false, unsigned int* threadId = 0) {
 			typedef unsigned int ( __stdcall * fThreadProc)( void * );
 			F* f = new F(func);
@@ -100,6 +110,7 @@ namespace Stamina {
 
 		virtual HANDLE beginThread(const char* name, void * sec, unsigned stack,	fThreadProc cb, void * args, unsigned flag, unsigned * addr) {
 			HANDLE handle = (HANDLE) _beginThread(name, sec, stack, cb, args, flag, addr);
+			S_ASSERT(handle != 0 && handle != (HANDLE)-1);
 			return handle;
 		}
 
@@ -119,7 +130,23 @@ namespace Stamina {
 			_list.clear();
 		}
 
+		/** Waits until all threads are terminated.
+		@param timeout - Timeout value for one thread
+		@param globalTimeout - Timeout value for whole operation
+		@param terminateOnTimeout - true if thread should be terminated on timeout.
+
+		Threads are being checked/terminated in FIFO direction.
+		*/
 		int waitForThreads(int timeout, int globalTimeout, bool terminateOnTimeout);
+
+		struct ThreadItem {
+			bool operator == (const ThreadItem& b) const {
+				return thread == b.thread;
+			}
+
+			Thread* thread;
+			std::string startName;
+        };
 
 	protected:
 
@@ -129,14 +156,6 @@ namespace Stamina {
 			ThreadRunnerStore* store;
 			std::string name;
 		};
-		struct ThreadItem {
-			bool operator == (const ThreadItem& b) const {
-				return thread == b.thread;
-			}
-
-			Thread* thread;
-			std::string startName;
-        };
 
 		typedef std::list<ThreadItem> ThreadList;
 

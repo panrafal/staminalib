@@ -56,6 +56,7 @@ namespace Stamina {
 
 
 	uintptr_t __stdcall ThreadRunnerStore::threadStore(RunParams* rp) {
+		S_ASSERT(rp);
 		Thread* thread = new Thread();
 		ThreadItem ti;
 		ti.thread = thread;
@@ -64,7 +65,7 @@ namespace Stamina {
 			ti.startName = Stamina::inttostr(thread->getId());
 		}
 		{
-			ObjLocker(rp->store);
+			ObjLocker lock(rp->store);
 			rp->store->_list.push_front( ti );
 		}
 		uintptr_t ret = rp->func(rp->args);
@@ -89,7 +90,7 @@ namespace Stamina {
 		rp->func = cb;
 		rp->args = args;
 		rp->store = this;
-		if (name) rp->name = name;
+		if (name) {rp->name = name;}
 		this->unlock();
 		HANDLE handle = (HANDLE) this->_beginThread(name, sec, stack, (fThreadProc)threadStore, rp, flag, addr);
 		return handle;
@@ -99,7 +100,10 @@ namespace Stamina {
 		int timeouts = 0;
 		while (1) {
 			this->lock();
-				if (this->_list.empty()) break;
+				if (this->_list.empty()) {
+					this->unlock();
+					break;
+				}
 				ThreadItem ti = this->_list.front();
 				Thread thread = *ti.thread;
 				this->_list.erase(this->_list.begin());

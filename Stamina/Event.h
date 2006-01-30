@@ -140,13 +140,13 @@ namespace Stamina {
 		}
 
 		inline void pulse() {
-			PulseEvent(_handle);
+			S_ASSERT_RUN( PulseEvent(_handle) );
 		}
 		inline void set() {
-			SetEvent(_handle);
+			S_ASSERT_RUN( SetEvent(_handle) );
 		}
 		inline void reset() {
-			ResetEvent(_handle);
+			S_ASSERT_RUN( ResetEvent(_handle) );
 		}
 
 
