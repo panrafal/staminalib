@@ -99,6 +99,9 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath=".\Socket.cpp">
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -126,6 +129,9 @@
 			</File>
 			<File
 				RelativePath=".\iSocket.h">
+			</File>
+			<File
+				RelativePath=".\Socket.h">
 			</File>
 			<File
 				RelativePath=".\stdafx.h">
