@@ -6,7 +6,8 @@ using namespace std;
 namespace Stamina {
 	bool TCPSocket::_wsa = false;
 
-	TCPSocket::TCPSocket(int major, int minor) {
+	TCPSocket::TCPSocket(int major, int minor)
+		: _endEvent(NULL) {
 		if (!_wsa) {
 			WSAData wsaData;
 			WORD wVersionRequested;
@@ -39,6 +40,8 @@ namespace Stamina {
 		_host = host;
 		_port = port;
 		_state = stConnected;
+
+		_threads->run(boost::bind(&TCPSocket::loop, this), "TCPSocket::loop");
 	}
 
 	TCPSocket::TCPSocket(const TCPSocket& socket) {
@@ -46,6 +49,9 @@ namespace Stamina {
 	}
 
 	TCPSocket::~TCPSocket() {
+		_state = stOffline;
+		SetEvent(_endEvent);
+		_threads->waitForThreads(1000, 5000, true);
 		WSACloseEvent(_event);
 		if (_wsa && this->getUseCount() <= 1) {
 			_wsa = false;
@@ -109,8 +115,10 @@ namespace Stamina {
 			// set send time-out in milliseconds
 			setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO,(char*)&option, sizeof(option));
 
+			_endEvent = CreateEvent(NULL, FALSE, FALSE, "TCPSocket::EndLoop");
+			_threads->run(boost::bind(&TCPSocket::loop, this), "TCPSocket::loop");
+
 			if (WSAEventSelect(_socket, _event, FD_CONNECT|FD_WRITE|FD_READ|FD_CLOSE) == SOCKET_ERROR ||
-				!_threads.runEx(boost::bind(&TCPSocket::loop, this), "TCPSocket::loop") ||
 				::connect(_socket, (const sockaddr*)&server, sizeof(sockaddr_in)) != SOCKET_ERROR ||
 				WSAGetLastError() != WSAEWOULDBLOCK) {
 					closesocket(_socket);
@@ -143,13 +151,14 @@ namespace Stamina {
 	unsigned TCPSocket::loop() {
 		DWORD wr;
 		WSANETWORKEVENTS nev = {0};
+		HANDLE events[] = {_endEvent, _event};
 
 		while (_state != stOffline && _state != stDisconnecting) {
 
 			// czekamy na sygnal od systemu...
-			wr = WaitForSingleObject(_event, -1);
-			if(wr != WAIT_OBJECT_0)
-				return 0;
+			wr = WaitForMultipleObjects(2, events, FALSE, INFINITE);
+			if ((wr - WAIT_OBJECT_0) == 0)	// endEvent
+				break;
 
 			// pobieramy rodzaj zdarzenia
 			if (WSAEnumNetworkEvents(_socket, _event, &nev))
@@ -171,7 +180,7 @@ namespace Stamina {
 				onClose();
 
 		}
-		return 0;
+		ExitThread(NO_ERROR);
 	}
 
 	void TCPSocket::send(const ByteBuffer& data) {
@@ -204,13 +213,14 @@ namespace Stamina {
 			throw ExceptionSocket(WSAGetLastError());
 		}
 
-		// if wsa event has been created and
-		// thread has started 
-		if (WSAEventSelect(_socket, _event, FD_ACCEPT|FD_CLOSE) == SOCKET_ERROR ||
-			!_threads.runEx(boost::bind(&TCPSocket::loop, this), "TCPSocket::loop")) {
-				closesocket(_socket);
-				throw ExceptionSocket(WSAGetLastError());
-			}
+		if (WSAEventSelect(_socket, _event, FD_ACCEPT|FD_CLOSE) == SOCKET_ERROR) {
+			closesocket(_socket);
+			throw ExceptionSocket(WSAGetLastError());
+		}
+
+		_state = stListen;
+		_endEvent = CreateEvent(NULL, FALSE, FALSE, "TCPSocket::EndLoop");
+		_thread = _threads->runEx(boost::bind(&TCPSocket::loop, this));
 
 		//----------------------
 		// Listen for incoming connection requests 
@@ -220,7 +230,6 @@ namespace Stamina {
 			closesocket(_socket);
 			throw ExceptionSocket(WSAGetLastError());
 		}
-		_state = stListen;
 	}
 
 	void TCPSocket::onConnected() {
@@ -252,15 +261,12 @@ namespace Stamina {
 		sock = accept(_socket, (sockaddr*)&addr, &size);
 		if (sock == INVALID_SOCKET)
 			evtOnError(WSAGetLastError());
-		//else
-			//evtOnAccept(TCPSocket(sock, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port)));
+		else
+			evtOnAccept(new TCPSocket(sock, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port)));
 	}
 
 	void TCPSocket::onClose()
 	{
-		if (_event)
-			WSACloseEvent(_event);
-		
 		_state = stOffline;
 		evtOnClose();
 	}

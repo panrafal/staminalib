@@ -7,7 +7,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SocketsTest", "SocketsTest\
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerTest", "ServerTest\ServerTest.vcproj", "{B25BC81E-B1AE-4809-859E-2DCB952DB05F}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release
@@ -21,6 +28,10 @@ Global
 		{F0A4089C-8643-43F5-B726-565042A635AF}.Debug.Build.0 = Debug|Win32
 		{F0A4089C-8643-43F5-B726-565042A635AF}.Release.ActiveCfg = Release|Win32
 		{F0A4089C-8643-43F5-B726-565042A635AF}.Release.Build.0 = Release|Win32
+		{B25BC81E-B1AE-4809-859E-2DCB952DB05F}.Debug.ActiveCfg = Debug|Win32
+		{B25BC81E-B1AE-4809-859E-2DCB952DB05F}.Debug.Build.0 = Debug|Win32
+		{B25BC81E-B1AE-4809-859E-2DCB952DB05F}.Release.ActiveCfg = Release|Win32
+		{B25BC81E-B1AE-4809-859E-2DCB952DB05F}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

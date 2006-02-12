@@ -11,9 +11,7 @@ namespace Stamina {
 		_port = port;
 		_state = stConnecting;
 
-		if (!_threads.runEx(boost::bind(&Socket::connecting, this), "Socket::connecting")) {
-			throw ExceptionSocket("Cannot create connecting thread.");
-		}
+		_threads->run(boost::bind(&Socket::connecting, this), "Socket::connecting");
 		return true;
 	}
 

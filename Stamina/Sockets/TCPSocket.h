@@ -10,7 +10,7 @@
 namespace Stamina {
 	class TCPSocket:
 		public Socket {
-		friend class Socket;
+		friend class TCPSocket;
 	public:
 		STAMINA_OBJECT_CLASS_VERSION(Stamina::TCPSocket, Socket, Version(0,1,0,0));
 	public:
@@ -47,11 +47,15 @@ namespace Stamina {
 	private:
 		SOCKET _socket;
 		HANDLE _event;	/// WSAEvent
+		HANDLE _thread;
+		HANDLE _endEvent;
 		static bool _wsa;	/// wsa was initialized
 	private:
 		virtual unsigned int loop();
 		virtual unsigned int connecting();
 	};
+
+	typedef SharedPtr<TCPSocket> oTCPSocket;
 };
 
 #endif	// __STAMINA_TCPSOCKET_H_

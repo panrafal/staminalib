@@ -12,6 +12,8 @@
 #include <boost/bind.hpp>
 
 namespace Stamina {
+	typedef SharedPtr<class Socket> oSocket;
+
 	class Socket:
 		public SharedObject<iSocket> {
 	public:
@@ -25,6 +27,7 @@ namespace Stamina {
 			stDisconnecting
 		};
 	public:
+		Socket() : _threads(new ThreadRunnerStore) {}
 		/** Establishes asynchronously connection to another socket application.
 		* @param host Hostname.
 		* @param port Port number.
@@ -70,7 +73,7 @@ namespace Stamina {
 		* @param sockaddr_in Filled sockaddr_in with infos about incoming connection.
 		* @param int Size of sockaddr_in struct.
 		*/
-		boost::signal<void (const Socket&)> evtOnAccept;
+		boost::signal<void (const oSocket&)> evtOnAccept;
 		/** Signal fires when data has been received.
 		*/
 		boost::signal<void (const ByteBuffer&)> evtOnReceived;
@@ -91,7 +94,7 @@ namespace Stamina {
 		virtual unsigned int loop() = 0;
 
 	protected:
-		ThreadRunnerStore _threads;
+		oThreadRunnerStore _threads;
 		State _state;
 		CriticalSection_w32 _critical;
 		String _host;
