@@ -52,7 +52,7 @@ namespace Stamina {
 		}
 		/** Gets port number which connection is established on.
 		*/
-		inline int getPort() const {
+		inline unsigned int getPort() const {
 			LockerCS locker(_critical);
 			return _port;
 		}
@@ -69,9 +69,7 @@ namespace Stamina {
 		*/
 		boost::signal<void (unsigned)> evtOnError;
 		/** Signal fires when connection is incoming.
-		* @param Socket Socket of incoming connection.
-		* @param sockaddr_in Filled sockaddr_in with infos about incoming connection.
-		* @param int Size of sockaddr_in struct.
+		* @param oSocket Socket of incoming connection.
 		*/
 		boost::signal<void (const oSocket&)> evtOnAccept;
 		/** Signal fires when data has been received.

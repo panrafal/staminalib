@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "..\TCPSocket.h"
+#include "..\SocketClient.h"
 using namespace Stamina;
 
 #pragma comment(lib, "../debug/sockets.lib")
@@ -28,26 +28,22 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	try
 	{
-		oTCPSocket sock = new TCPSocket;
+		oSocketClient client = new SocketClient(new TCPSocket);
 
-		sock->evtOnConnected.connect(boost::bind(onConnected));
-		sock->evtOnError.connect(boost::bind(onError, _1));
-		sock->evtOnReceived.connect(boost::bind(onReceived, _1));
-		sock->connect("localhost", 6588);
+		client->evtOnConnected.connect(boost::bind(onConnected));
+		client->evtOnError.connect(boost::bind(onError, _1));
+		client->evtOnReceived.connect(boost::bind(onReceived, _1));
+		client->connect("www.kplugins.net", 80, INFINITE);
 
-		char b[] = "GET /index.xml HTTP/1.1\r\nHost: www.kplugins.net\r\n\r\n";
+		char b[] = "GET / HTTP/1.1\r\nHost: www.kplugins.net\r\n\r\n";
 		ByteBuffer data;
 		data.assign((const unsigned char*)b, strlen(b));
-		while(1)
-		{
-			if (sock->getState() == TCPSocket::stConnected && connected)
-			{
-				Sleep(1000);
-				sock->send(data);
-				connected = false;
-			}
-			Sleep(1);
-		}
+		
+		client << data;
+		//client >> data;
+		//std::cout << data.getString();
+		char c;
+		std::cin >> c;
 	}
 	catch (const ExceptionSocket& e)
 	{

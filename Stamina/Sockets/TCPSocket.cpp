@@ -44,10 +44,6 @@ namespace Stamina {
 		_threads->run(boost::bind(&TCPSocket::loop, this), "TCPSocket::loop");
 	}
 
-	TCPSocket::TCPSocket(const TCPSocket& socket) {
-		(*this) = socket;
-	}
-
 	TCPSocket::~TCPSocket() {
 		_state = stOffline;
 		SetEvent(_endEvent);
@@ -57,21 +53,6 @@ namespace Stamina {
 			_wsa = false;
             WSACleanup();
 		}
-	}
-
-	TCPSocket& TCPSocket::operator=(const TCPSocket& right) {
-		_socket = right._socket;
-		_host = right.getHost();
-		_port = right.getPort();
-
-		if ((_event = WSACreateEvent()) == WSA_INVALID_EVENT ||
-			WSAEventSelect(_socket, _event, FD_WRITE|FD_READ|FD_CLOSE) == SOCKET_ERROR)
-		{
-			closesocket(_socket);
-			throw ExceptionSocket(WSAGetLastError());
-		}
-
-		return (*this);
 	}
 
 	unsigned int TCPSocket::connecting() {
@@ -86,7 +67,7 @@ namespace Stamina {
 
 		if (_socket == INVALID_SOCKET) {
 			evtOnError(WSAGetLastError());
-			return (-1);
+			ExitThread(-1);
 		}
 
 		// resolve host
@@ -100,20 +81,20 @@ namespace Stamina {
 		if (hp == NULL) {
 			closesocket(_socket);
 			evtOnError(WSAGetLastError());
-			return (-1);
+			ExitThread(-1);
 		}
 		else {
 			server.sin_addr.s_addr =*((unsigned long*)hp->h_addr);
 			server.sin_family = AF_INET;
 			server.sin_port = htons( _port );
 
-			long option = 60*1000;
-			// set to send keep-alives.
-			setsockopt(_socket, SOL_SOCKET, SO_KEEPALIVE,(char*)&option, sizeof(option));
-			// set receives time-out in milliseconds
-			setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&option, sizeof(option));
-			// set send time-out in milliseconds
-			setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO,(char*)&option, sizeof(option));
+			//long option = 60*1000;
+			//// set to send keep-alives.
+			//setsockopt(_socket, SOL_SOCKET, SO_KEEPALIVE,(char*)&option, sizeof(option));
+			//// set receives time-out in milliseconds
+			//setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO,(char*)&option, sizeof(option));
+			//// set send time-out in milliseconds
+			//setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO,(char*)&option, sizeof(option));
 
 			_endEvent = CreateEvent(NULL, FALSE, FALSE, "TCPSocket::EndLoop");
 			_threads->run(boost::bind(&TCPSocket::loop, this), "TCPSocket::loop");
@@ -123,14 +104,17 @@ namespace Stamina {
 				WSAGetLastError() != WSAEWOULDBLOCK) {
 					closesocket(_socket);
 					this->evtOnError(WSAGetLastError());
-					return (-1);
+					ExitThread(-1);
 				}
+			//SleepEx(1, FALSE);
 		}
-		return 0;
+		ExitThread(NO_ERROR);
 	}
 
 	bool TCPSocket::close()
 	{
+		LockerCS locker(_critical);
+
 		if (_state == stOffline)
 			return false;
 
@@ -161,32 +145,52 @@ namespace Stamina {
 				break;
 
 			// pobieramy rodzaj zdarzenia
-			if (WSAEnumNetworkEvents(_socket, _event, &nev))
+			if (WSAEnumNetworkEvents(_socket, _event, &nev) == SOCKET_ERROR)
 			{
 				evtOnError(WSAGetLastError());
-				return (-1);
+				ExitThread(-1);
 			}
 
 			// wykonujemy zaleznie od tego jakie zdarzenie bylo
 			if (nev.lNetworkEvents & FD_READ)
-				onReceived();
+				if (!nev.iErrorCode[FD_READ_BIT])
+                    onReceived();
+				else
+					evtOnError(nev.iErrorCode[FD_READ_BIT]);
 			else if (nev.lNetworkEvents & FD_ACCEPT)
-				onAccept();
+				if (!nev.iErrorCode[FD_ACCEPT_BIT])
+                    onAccept();
+				else
+					evtOnError(nev.iErrorCode[FD_ACCEPT_BIT]);
 			else if (nev.lNetworkEvents & FD_CONNECT)
-				onConnected();
+				if (!nev.iErrorCode[FD_CONNECT_BIT])
+                    onConnected();
+				else
+					evtOnError(nev.iErrorCode[FD_CONNECT_BIT]);
 			else if (nev.lNetworkEvents & FD_WRITE)
-				onWrite();
-			else if (nev.lNetworkEvents & FD_CLOSE) 
-				onClose();
+				if (!nev.iErrorCode[FD_WRITE_BIT])
+                    onWrite();
+				else
+					evtOnError(nev.iErrorCode[FD_WRITE_BIT]);
+			else if (nev.lNetworkEvents & FD_CLOSE)
+				if (!nev.iErrorCode[FD_CLOSE_BIT]) 
+                    onClose();
+				else
+					evtOnError(nev.iErrorCode[FD_CLOSE_BIT]);
 
 		}
 		ExitThread(NO_ERROR);
 	}
 
 	void TCPSocket::send(const ByteBuffer& data) {
+		LockerCS locker(_critical);
 		if (data.getLength()) {
 			int sent = 0;
-			while ((sent = ::send(_socket, (const char*)data.getBuffer() + sent, data.getBufferSize(), 0)) < data.getBufferSize())
+			/** @todo B³ad przy wysylaniu, send zwraca SOCKET_ERROR
+			* pozatym przy socket_error tracimy dane o wyslanych bajtach.
+			* Moze warto przejsc na WSASend?...
+			*/
+			while ((sent = ::send(_socket, (const char*)data.getBuffer() + sent, data.getLength(), 0)) < data.getBufferSize())
 				if (sent == WSAEWOULDBLOCK)
 					Sleep(100);
 				else if (sent < 0)
@@ -220,7 +224,7 @@ namespace Stamina {
 
 		_state = stListen;
 		_endEvent = CreateEvent(NULL, FALSE, FALSE, "TCPSocket::EndLoop");
-		_thread = _threads->runEx(boost::bind(&TCPSocket::loop, this));
+		_threads->run(boost::bind(&TCPSocket::loop, this), "TCPSocket::loop");
 
 		//----------------------
 		// Listen for incoming connection requests 
@@ -242,11 +246,17 @@ namespace Stamina {
 
 	void TCPSocket::onReceived() {
 		ByteBuffer buffer;
-		char buff;
+		char buff[1024];
+		WSABUF wsaBuff;
+		DWORD recvd, flags = 0;
 
-		// pobieramy kolejne bajty
-		while (recv(_socket, &buff, 1, 0) != SOCKET_ERROR)
-			buffer.append((const unsigned char*)&buff, 1);
+		wsaBuff.buf = buff;
+		wsaBuff.len = 1024;
+
+		while (WSARecv(_socket, &wsaBuff, 1, &recvd, &flags, NULL, NULL) != SOCKET_ERROR &&
+			recvd != 0) {
+			buffer.append((const unsigned char*)&buff, recvd);
+		}
 
 		// wysylamy sygnal
 		this->evtOnReceived(buffer);

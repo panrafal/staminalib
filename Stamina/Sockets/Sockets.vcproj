@@ -102,6 +102,9 @@
 				RelativePath=".\Socket.cpp">
 			</File>
 			<File
+				RelativePath=".\SocketClient.cpp">
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -132,6 +135,9 @@
 			</File>
 			<File
 				RelativePath=".\Socket.h">
+			</File>
+			<File
+				RelativePath=".\SocketClient.h">
 			</File>
 			<File
 				RelativePath=".\stdafx.h">

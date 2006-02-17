@@ -20,7 +20,6 @@ namespace Stamina {
 		*/
 		TCPSocket(int major = 2, int minor = 2);
 		TCPSocket(SOCKET socket, const StringRef& host, unsigned int port);
-		TCPSocket(const TCPSocket& socket);
 
 		~TCPSocket();
 
@@ -36,18 +35,15 @@ namespace Stamina {
 		*/
 		virtual void listen(unsigned int port);
 
-		TCPSocket& operator=(const TCPSocket& right);
-
 	protected:
-		void onConnected();
-		void onWrite();
-		void onReceived();
-		void onClose();
-		void onAccept();
+		virtual void onConnected();
+		virtual void onWrite();
+		virtual void onReceived();
+		virtual void onClose();
+		virtual void onAccept();
 	private:
 		SOCKET _socket;
 		HANDLE _event;	/// WSAEvent
-		HANDLE _thread;
 		HANDLE _endEvent;
 		static bool _wsa;	/// wsa was initialized
 	private:
