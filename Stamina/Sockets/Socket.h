@@ -63,6 +63,13 @@ namespace Stamina {
 			LockerCS locker(_critical);
 			return _state;
 		}
+
+		/** Gets data which has been sent immediately after connection was established.
+		*/
+		inline const ByteBuffer& getData() const {
+			ObjLocker locker(this);
+			return _buffer;
+		}
 	
 	public:
 		/** Signal fires when error occures.
@@ -97,6 +104,7 @@ namespace Stamina {
 		CriticalSection_w32 _critical;
 		String _host;
 		unsigned int _port;
+		ByteBuffer _buffer;
 	};
 }
 

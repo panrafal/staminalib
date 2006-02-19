@@ -33,7 +33,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		client->evtOnConnected.connect(boost::bind(onConnected));
 		client->evtOnError.connect(boost::bind(onError, _1));
 		client->evtOnReceived.connect(boost::bind(onReceived, _1));
-		client->connect("www.kplugins.net", 80, INFINITE);
+		client->connect("localhost", 6588, INFINITE);
 
 		char b[] = "GET / HTTP/1.1\r\nHost: www.kplugins.net\r\n\r\n";
 		ByteBuffer data;

@@ -258,8 +258,12 @@ namespace Stamina {
 			buffer.append((const unsigned char*)&buff, recvd);
 		}
 
-		// wysylamy sygnal
-		this->evtOnReceived(buffer);
+		// jeœli jeszcze nie ma ¿adnego podlaczonego slota
+		// to lepiej nie marnowac danych ;)
+		if (this->evtOnReceived.num_slots())
+            this->evtOnReceived(buffer);
+		else
+			_buffer.append(buffer.getBuffer(), buffer.getLength());
 	}
 
 	void TCPSocket::onAccept()
