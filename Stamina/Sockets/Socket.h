@@ -10,9 +10,23 @@
 
 #include <boost/signal.hpp>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 
 namespace Stamina {
 	typedef SharedPtr<class Socket> oSocket;
+
+	/** 
+	*/
+	typedef boost::function<void (unsigned)> fUnsigned;
+	typedef boost::function<void (const oSocket&)> fSocket;
+	typedef boost::function<void (const ByteBuffer&)> fBuffer;
+	typedef boost::function<void ()> fVoid;
+
+	typedef boost::signal<void (unsigned)> sOnError;
+	typedef boost::signal<void (const oSocket&)> sOnAccept;
+	typedef boost::signal<void (const ByteBuffer&)> sOnReceived;
+	typedef boost::signal<void ()> sOnConnected;
+	typedef boost::signal<void ()> sOnClose;
 
 	class Socket:
 		public SharedObject<iSocket> {
@@ -70,24 +84,51 @@ namespace Stamina {
 			ObjLocker locker(this);
 			return _buffer;
 		}
-	
 	public:
+
+		bool setEvtOnError(fUnsigned f);
+		const sOnError& getEvtOnError() const {
+			return _evtOnError;
+		}
+
+		bool setEvtOnAccept(fSocket f);
+		const sOnAccept& getEvtOnAccpet() const {
+			return _evtOnAccept;
+		}
+
+		bool setEvtOnReceived(fBuffer f);
+		const sOnReceived& getEvtOnReceived() const {
+			return _evtOnReceived;
+		}
+
+		bool setEvtOnConnected(fVoid f);
+		const sOnConnected& getEvtOnConnected() const {
+			return _evtOnConnected;
+		}
+
+		bool setEvtOnClose(fVoid f);
+		const sOnClose& getEvtOnClose() const {
+			return _evtOnClose;
+		}
+
+	
+	protected:
 		/** Signal fires when error occures.
 		*/
-		boost::signal<void (unsigned)> evtOnError;
+		sOnError _evtOnError;
 		/** Signal fires when connection is incoming.
 		* @param oSocket Socket of incoming connection.
 		*/
-		boost::signal<void (const oSocket&)> evtOnAccept;
+		sOnAccept _evtOnAccept;
 		/** Signal fires when data has been received.
 		*/
-		boost::signal<void (const ByteBuffer&)> evtOnReceived;
+		sOnReceived _evtOnReceived;
 		/** Signal fires when connection has been established.
 		*/
-		boost::signal<void ()> evtOnConnected;
+		sOnConnected _evtOnConnected;
 		/** Signal fires when connection has been closed.
 		*/
-		boost::signal<void ()> evtOnClose;
+		sOnClose _evtOnClose;
 
 	protected:
 		/** Connecting thread.

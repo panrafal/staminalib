@@ -30,12 +30,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		oSocketClient client = new SocketClient(new TCPSocket);
 
-		client->evtOnConnected.connect(boost::bind(onConnected));
-		client->evtOnError.connect(boost::bind(onError, _1));
-		client->evtOnReceived.connect(boost::bind(onReceived, _1));
-		client->connect("localhost", 6588, INFINITE);
+		client->setEvtOnConnected(boost::bind(onConnected));
+		client->setEvtOnError(boost::bind(onError, _1));
+		client->setEvtOnReceived(boost::bind(onReceived, _1));
+		client->connect("konnekt.info", 80, INFINITE);
 
-		char b[] = "GET / HTTP/1.1\r\nHost: www.kplugins.net\r\n\r\n";
+		char b[] = "GET / HTTP/1.1\r\nHost: www.konnekt.info\r\n\r\n";
 		ByteBuffer data;
 		data.assign((const unsigned char*)b, strlen(b));
 		

@@ -1,12 +1,12 @@
 #ifndef __STAMINA_SOCKETCLIENT_H__
 #define __STAMINA_SOCKETCLIENT_H__
 
-#include "TCPSocket.h"
+#include "SocketController.h"
 #include <Stamina/Event.h>
 
 namespace Stamina {
 	class SocketClient 
-		: public SharedObject<iSharedObject> {
+		: public SocketController {
 	public:
 		SocketClient(const oSocket& socket);
 
@@ -33,12 +33,7 @@ namespace Stamina {
 		/** Receives string synchronously.
 		*/
 		SocketClient& operator>>(String& right);
-		/** @return Client state.
-		*/
-		inline Socket::State getState() const {
-			ObjLocker locker(_socket);
-			return _socket->getState();
-		}
+		
 		/** @return Host.
 		*/
 		inline String getHost() const {
@@ -52,26 +47,25 @@ namespace Stamina {
 			ObjLocker locker(_socket);
 			return _socket->getPort();
 		}
-	public:
-		/** Signal fires when data has been received.
-		*/
-		boost::signal<void (const ByteBuffer&)> evtOnReceived;
-		/** Signal fires when connection has been established.
-		*/
-		boost::signal<void ()> evtOnConnected;
-		/** Signal fires when error occures.
-		*/
-		boost::signal<void (unsigned)> evtOnError;
-		/** Signal fires when connection has been closed.
-		*/
-		boost::signal<void ()> evtOnClose;
-	protected:
-		oSocket _socket;
+
+		/** onReceived **/
+		inline bool setEvtOnReceived(fBuffer f) {
+			return this->_socket->setEvtOnReceived(f);
+		}
+		inline const sOnReceived& getEvtOnReceived() const {
+			return this->_socket->getEvtOnReceived();
+		}
+
+		/** onConnected **/
+		inline bool setEvtOnConnected(fVoid f) {
+			return this->_socket->setEvtOnConnected(f);
+		}
+		inline const sOnConnected& getEvtOnConnected() const {
+			return this->_socket->getEvtOnConnected();
+		}
 	protected:
 		virtual void onConnected();
 		virtual void onReceived(const ByteBuffer& buff);
-		virtual void onError(unsigned int err);
-		virtual void onClose();
 	private:
 		Event _connected;
 		Event _received;
@@ -83,7 +77,9 @@ namespace Stamina {
 	typedef SharedPtr<SocketClient> oSocketClient;
 
 	oSocketClient& operator<<(oSocketClient& client, const ByteBuffer& buff);
+	oSocketClient& operator<<(oSocketClient& client, const String& txt);
 	oSocketClient& operator>>(oSocketClient& client, ByteBuffer& buff);
+	oSocketClient& operator>>(oSocketClient& client, String& txt);
 }
 
 #endif	// __STAMINA_SOCKETCLIENT_H__

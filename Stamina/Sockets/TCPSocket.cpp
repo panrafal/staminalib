@@ -66,7 +66,7 @@ namespace Stamina {
 		_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, NULL);
 
 		if (_socket == INVALID_SOCKET) {
-			evtOnError(WSAGetLastError());
+			_evtOnError(WSAGetLastError());
 			ExitThread(-1);
 		}
 
@@ -80,7 +80,7 @@ namespace Stamina {
 
 		if (hp == NULL) {
 			closesocket(_socket);
-			evtOnError(WSAGetLastError());
+			_evtOnError(WSAGetLastError());
 			ExitThread(-1);
 		}
 		else {
@@ -103,7 +103,7 @@ namespace Stamina {
 				::connect(_socket, (const sockaddr*)&server, sizeof(sockaddr_in)) != SOCKET_ERROR ||
 				WSAGetLastError() != WSAEWOULDBLOCK) {
 					closesocket(_socket);
-					this->evtOnError(WSAGetLastError());
+					_evtOnError(WSAGetLastError());
 					ExitThread(-1);
 				}
 			//SleepEx(1, FALSE);
@@ -147,7 +147,7 @@ namespace Stamina {
 			// pobieramy rodzaj zdarzenia
 			if (WSAEnumNetworkEvents(_socket, _event, &nev) == SOCKET_ERROR)
 			{
-				evtOnError(WSAGetLastError());
+				_evtOnError(WSAGetLastError());
 				ExitThread(-1);
 			}
 
@@ -156,27 +156,27 @@ namespace Stamina {
 				if (!nev.iErrorCode[FD_READ_BIT])
                     onReceived();
 				else
-					evtOnError(nev.iErrorCode[FD_READ_BIT]);
+					_evtOnError(nev.iErrorCode[FD_READ_BIT]);
 			else if (nev.lNetworkEvents & FD_ACCEPT)
 				if (!nev.iErrorCode[FD_ACCEPT_BIT])
                     onAccept();
 				else
-					evtOnError(nev.iErrorCode[FD_ACCEPT_BIT]);
+					_evtOnError(nev.iErrorCode[FD_ACCEPT_BIT]);
 			else if (nev.lNetworkEvents & FD_CONNECT)
 				if (!nev.iErrorCode[FD_CONNECT_BIT])
                     onConnected();
 				else
-					evtOnError(nev.iErrorCode[FD_CONNECT_BIT]);
+					_evtOnError(nev.iErrorCode[FD_CONNECT_BIT]);
 			else if (nev.lNetworkEvents & FD_WRITE)
 				if (!nev.iErrorCode[FD_WRITE_BIT])
                     onWrite();
 				else
-					evtOnError(nev.iErrorCode[FD_WRITE_BIT]);
+					_evtOnError(nev.iErrorCode[FD_WRITE_BIT]);
 			else if (nev.lNetworkEvents & FD_CLOSE)
 				if (!nev.iErrorCode[FD_CLOSE_BIT]) 
                     onClose();
 				else
-					evtOnError(nev.iErrorCode[FD_CLOSE_BIT]);
+					_evtOnError(nev.iErrorCode[FD_CLOSE_BIT]);
 
 		}
 		ExitThread(NO_ERROR);
@@ -238,7 +238,7 @@ namespace Stamina {
 
 	void TCPSocket::onConnected() {
 		_state = stConnected;
-		evtOnConnected();
+		_evtOnConnected();
 	}
 
 	void TCPSocket::onWrite() {
@@ -260,8 +260,8 @@ namespace Stamina {
 
 		// jeœli jeszcze nie ma ¿adnego podlaczonego slota
 		// to lepiej nie marnowac danych ;)
-		if (this->evtOnReceived.num_slots())
-            this->evtOnReceived(buffer);
+		if (this->_evtOnReceived.num_slots())
+            this->_evtOnReceived(buffer);
 		else
 			_buffer.append(buffer.getBuffer(), buffer.getLength());
 	}
@@ -274,15 +274,15 @@ namespace Stamina {
 
 		sock = accept(_socket, (sockaddr*)&addr, &size);
 		if (sock == INVALID_SOCKET)
-			evtOnError(WSAGetLastError());
+			_evtOnError(WSAGetLastError());
 		else
-			evtOnAccept(new TCPSocket(sock, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port)));
+			_evtOnAccept(new TCPSocket(sock, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port)));
 	}
 
 	void TCPSocket::onClose()
 	{
 		_state = stOffline;
-		evtOnClose();
+		_evtOnClose();
 	}
 
 };

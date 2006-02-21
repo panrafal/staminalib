@@ -4,30 +4,18 @@
 namespace Stamina {
 	
     SocketClient::SocketClient(const oSocket& socket)
-		: _socket(socket) {
-		_socket->evtOnError.connect(boost::bind(&SocketClient::onError, this, _1));
-		_socket->evtOnClose.connect(boost::bind(&SocketClient::onClose, this));
-		_socket->evtOnConnected.connect(boost::bind(&SocketClient::onConnected, this));
-		_socket->evtOnReceived.connect(boost::bind(&SocketClient::onReceived, this, _1));
-	}
-
-	void SocketClient::onClose() {
-		evtOnClose();
+		: SocketController(socket) {
+		_socket->setEvtOnConnected(boost::bind(&SocketClient::onConnected, this));
+		_socket->setEvtOnReceived(boost::bind(&SocketClient::onReceived, this, _1));
 	}
 
 	void SocketClient::onConnected() {
 		_connected.set();
-		evtOnConnected();
-	}
-
-	void SocketClient::onError(unsigned int err) {
-		evtOnError(err);
 	}
 
 	void SocketClient::onReceived(const ByteBuffer& buff) {
         _received.set();
 		_buff.assign(buff);
-		evtOnReceived(buff);
 	}
 
 	bool SocketClient::connect(const StringRef& host, unsigned int port, unsigned int timeout) {
@@ -75,8 +63,18 @@ namespace Stamina {
 		return client;
 	}
 
+	oSocketClient& operator<<(oSocketClient& client, const String& txt) {
+		(*client.get()) << txt;
+		return client;
+	}
+
 	oSocketClient& operator>>(oSocketClient& client, ByteBuffer& buff) {
 		(*client.get()) >> buff;
+		return client;
+	}
+
+	oSocketClient& operator>>(oSocketClient& client, String& txt) {
+		(*client.get()) >> txt;
 		return client;
 	}
 }

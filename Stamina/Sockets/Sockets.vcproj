@@ -143,6 +143,9 @@
 				RelativePath=".\SocketClient.h">
 			</File>
 			<File
+				RelativePath=".\SocketController.h">
+			</File>
+			<File
 				RelativePath=".\SocketServer.h">
 			</File>
 			<File
