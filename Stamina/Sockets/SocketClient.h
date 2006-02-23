@@ -66,7 +66,7 @@ namespace Stamina {
 	protected:
 		virtual void onConnected();
 		virtual void onReceived(const ByteBuffer& buff);
-	private:
+	protected:
 		Event _connected;
 		Event _received;
 

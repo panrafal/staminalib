@@ -40,6 +40,12 @@ namespace Stamina {
 			stListen,
 			stDisconnecting
 		};
+
+		/** Proxy type*/
+		enum Proxy {
+			proxyNone,
+			proxySOCKS5
+		};
 	public:
 		Socket() : _threads(new ThreadRunnerStore) {}
 		/** Establishes asynchronously connection to another socket application.
@@ -139,6 +145,12 @@ namespace Stamina {
 		*/
 		virtual unsigned int loop() = 0;
 
+		/** Sends proxy handshake. */
+		bool sendProxyHandshake();
+
+		/** Handles proxy handshake reply. */
+		bool handleProxyHandshakeReply(const ByteBuffer& reply);
+
 	protected:
 		oThreadRunnerStore _threads;
 		State _state;
@@ -146,6 +158,7 @@ namespace Stamina {
 		String _host;
 		unsigned int _port;
 		ByteBuffer _buffer;
+		Proxy _proxy;
 	};
 }
 
