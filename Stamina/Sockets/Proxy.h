@@ -1,3 +1,14 @@
+/*
+ *  Stamina.LIB
+ *  
+ *  Please READ /License.txt FIRST! 
+ * 
+ *  Copyright (C)2005-2006 Krzysztof G³ogocki
+ *
+ *  $Id:  $
+ */
+
+
 #ifndef __STAMINA_PROXY_H__
 #define __STAMINA_PROXY_H__
 
@@ -37,11 +48,7 @@ namespace Stamina {
 		Proxy(ProxyType type, const StringRef& host, unsigned int port);
 		/// Constructs proxy in client mode with username/password authorization
 		Proxy(ProxyType type, const StringRef& host, unsigned int port, const StringRef& username, const StringRef& password);
-		/** In client mode checks if authorization was successfull.
-		*/
-		bool operator!() {
-			return _authorized;
-		}
+
 		/** Incoming data */
 		Proxy& operator>>(const ByteBuffer& in);
 
@@ -76,7 +83,6 @@ namespace Stamina {
 			stSocks5AuthSent
 		};
 		ProxyType _type;
-		bool _authorized;
 		authType _auth;
 		String _username;
 		String _password;

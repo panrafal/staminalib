@@ -1,3 +1,14 @@
+/*
+ *  Stamina.LIB
+ *  
+ *  Please READ /License.txt FIRST! 
+ * 
+ *  Copyright (C)2005-2006 Krzysztof G³ogocki
+ *
+ *  $Id:  $
+ */
+
+
 #ifndef __STAMINA_ISOCKET_H__
 #define __STAMINA_ISOCKET_H__
 

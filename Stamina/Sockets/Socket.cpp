@@ -1,3 +1,14 @@
+/*
+ *  Stamina.LIB
+ *  
+ *  Please READ /License.txt FIRST! 
+ * 
+ *  Copyright (C)2005-2006 Krzysztof G³ogocki
+ *
+ *  $Id:  $
+ */
+
+
 #include "stdafx.h"
 #include "Socket.h"
 
@@ -52,40 +63,5 @@ namespace Stamina {
 			return false;
 		_evtOnClose.connect(f);
 		return true;
-	}
-
-	bool Socket::sendProxyHandshake() {
-		ByteBuffer head;
-		switch (_proxy) {
-			case proxySOCKS5:
-				head.append((unsigned char*)5, 1);	// SOCKS ver
-				head.append((unsigned char*)2, 1);	// number of authentication methods
-				head.append((unsigned char*)0, 1);	// no authentication
-				head.append((unsigned char*)2, 1);	// plain text username/password
-				break;
-			default:
-				return false;
-		}
-		send(head);
-		return true;
-	}
-
-	bool Socket::handleProxyHandshakeReply(const ByteBuffer& reply) {
-		unsigned char* t = reply.getBuffer();
-		switch (_proxy) {
-			case proxySOCKS5: {
-					if (t[0] != 5)	// wrong SOCKS version
-						return false;
-					switch (t[1]) {
-						case 0:	// no authorization
-							break;
-						default:	// not supported method
-							return false;
-					}
-				}
-				break;
-			default:
-				return false;
-		}
 	}
 }
