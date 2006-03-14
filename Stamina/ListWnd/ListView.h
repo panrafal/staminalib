@@ -18,10 +18,10 @@
 /* Include files */
 #include "Item.h"
 #include "Entry.h"
-#include "..\Region.h"
+#include "..\UI\Region.h"
 #include "..\Thread.h"
-#include "..\Image.h"
-#include "..\Menu.h"
+#include "..\UI\Image.h"
+#include "..\UI\Menu.h"
 #include <boost\signals.hpp>
 namespace Stamina {
 namespace ListWnd {

@@ -69,7 +69,7 @@ namespace Stamina {
 			} else {
 				int queueRet = ::QueueUserAPC(func, this->getHandle(), (ULONG_PTR)param) != 0;
 				S_ASSERT(queueRet);
-				return queueRet;
+				return queueRet != 0;
 			}
 		}
 #endif

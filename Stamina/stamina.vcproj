@@ -187,60 +187,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\ButtonX.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\Control.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\CriticalSection.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -269,60 +215,6 @@
 			</File>
 			<File
 				RelativePath=".\Debug.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\DrawableButton.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\DrawableGauge.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
@@ -406,60 +298,6 @@
 			</File>
 			<File
 				RelativePath=".\Helpers.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\Image.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\ImageIL.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
@@ -594,33 +432,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Menu.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\Object.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -649,60 +460,6 @@
 			</File>
 			<File
 				RelativePath=".\RegEx.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\Region.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\RichHTML.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
@@ -918,88 +675,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\ToolTipX.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\ToolTipXitems.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\Unique.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_scrt|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="3"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\Window.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
@@ -1083,13 +759,7 @@
 				RelativePath=".\Assert.h">
 			</File>
 			<File
-				RelativePath=".\ButtonX.h">
-			</File>
-			<File
 				RelativePath=".\Console.h">
-			</File>
-			<File
-				RelativePath=".\Control.h">
 			</File>
 			<File
 				RelativePath=".\CRC32.h">
@@ -1105,12 +775,6 @@
 			</File>
 			<File
 				RelativePath=".\Debug.h">
-			</File>
-			<File
-				RelativePath=".\DrawableButton.h">
-			</File>
-			<File
-				RelativePath=".\DrawableGauge.h">
 			</File>
 			<File
 				RelativePath=".\Event.h">
@@ -1131,22 +795,10 @@
 				RelativePath=".\Helpers.h">
 			</File>
 			<File
-				RelativePath=".\iImage.h">
-			</File>
-			<File
-				RelativePath=".\Image.h">
-			</File>
-			<File
-				RelativePath=".\ImageIL.h">
-			</File>
-			<File
 				RelativePath=".\Internet.h">
 			</File>
 			<File
 				RelativePath=".\InvokeQueue.h">
-			</File>
-			<File
-				RelativePath=".\iToolTipX.h">
 			</File>
 			<File
 				RelativePath=".\Lib.h">
@@ -1173,9 +825,6 @@
 				RelativePath=".\Memory.h">
 			</File>
 			<File
-				RelativePath=".\Menu.h">
-			</File>
-			<File
 				RelativePath=".\Mutex.h">
 			</File>
 			<File
@@ -1188,19 +837,10 @@
 				RelativePath=".\ObjectPtr.h">
 			</File>
 			<File
-				RelativePath=".\PhonoLogicImpl.h">
-			</File>
-			<File
 				RelativePath=".\Rect.h">
 			</File>
 			<File
 				RelativePath=".\RegEx.h">
-			</File>
-			<File
-				RelativePath=".\Region.h">
-			</File>
-			<File
-				RelativePath=".\RichHTML.h">
 			</File>
 			<File
 				RelativePath=".\Semaphore.h">
@@ -1248,9 +888,6 @@
 				RelativePath=".\TLS.h">
 			</File>
 			<File
-				RelativePath=".\ToolTipX.h">
-			</File>
-			<File
 				RelativePath=".\Unique.h">
 			</File>
 			<File
@@ -1264,9 +901,6 @@
 			</File>
 			<File
 				RelativePath=".\WideChar.h">
-			</File>
-			<File
-				RelativePath=".\Window.h">
 			</File>
 			<File
 				RelativePath=".\WinHelper.h">
