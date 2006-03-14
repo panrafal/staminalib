@@ -20,7 +20,7 @@ Contributor(s):
 
 --
 
-$Id: CriticalSection.cpp 160 2006-01-29 13:54:08Z hao $
+$Id$
 
 */
 

@@ -7,7 +7,7 @@
  * 
  *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id: Window.h 8 2005-06-15 14:24:57Z hao $
+ *  $Id$
  */
 
 
