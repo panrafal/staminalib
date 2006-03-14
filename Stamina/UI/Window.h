@@ -14,19 +14,22 @@
 
 #include "Control.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
+
+	typedef SharedPtr<class Window> oWindow;
 
 	class Window: public Control {
+	protected:
+
+		Window(HWND hwnd = 0);
+
 	public:
 
-		Window(const char* text, int style, int styleEx, const Rect& rect , HWND parent , int id);
-		void create(const char* text, int style, int styleEx, const Rect& rect , HWND parent , int id);
-		Window(HWND hwnd = 0);
-		void init();
-
-		static void registerWindowClass();
-
-		static Window* fromHWND(HWND wnd);
+		static oWindow fromHWND(HWND hwnd) {
+			return new Window(hwnd);
+		}
+		
+		virtual void destroyWindow();
 
 		virtual bool isVirtualWindow() {
 			return false;
@@ -69,6 +72,46 @@ namespace Stamina {
 
 		}
 
+		virtual HWND getChild(int id) {
+			return GetDlgItem(_hwnd, id);
+		}
+
+		virtual oWindow getChildWindow(int id) {
+			return fromHWND(GetDlgItem(_hwnd, id));
+		}
+        
+		virtual void setText(const StringRef& text) {
+			SetWindowTextW(_hwnd, text.w_str());
+		}
+
+		virtual String getText() {
+		 	String txt;
+			int size = GetWindowTextLength(_hwnd);
+            GetWindowTextW(_hwnd, txt.useBuffer<wchar_t>(size), size);
+			txt.releaseBuffer<wchar_t>(size);
+			return PassStringRef(txt);
+		}
+
+		virtual void enableWindow(bool state) {
+			EnableWindow(_hwnd, state);
+		}
+
+		virtual bool isEnabled() {
+			return IsWindowEnabled(_hwnd) != 0;
+		}
+
+		virtual void showWindow(int show) {
+			ShowWindow(_hwnd, show);
+		}
+
+		virtual bool isVisible() {
+			return IsWindowVisible(_hwnd) != 0;
+		}
+
+
+		virtual int sendMessage(int message, WPARAM wParam, LPARAM lParam) {
+			return SendMessage(_hwnd, message, wParam, lParam);
+		}
 
 		virtual void onCreateWindow();
 		virtual void onDestroyWindow();
@@ -99,9 +142,13 @@ namespace Stamina {
 			return 0;
 		}
 
-		virtual int windowProc(HWND hwnd , int message , WPARAM wParam, LPARAM lParam);
+		virtual void onCommand(int code, int id, HWND sender) {}
 
-		static int CALLBACK staticWindowProc(HWND hwnd , int message , WPARAM wParam, LPARAM lParam);
+		virtual void onClose() {
+			this->destroyWindow();
+		}
+
+		virtual int windowProc(HWND hwnd , int message , WPARAM wParam, LPARAM lParam, bool& handled);
 
 		inline HWND getHwnd() {
 			return _hwnd;
@@ -115,51 +162,8 @@ namespace Stamina {
 
 	};
 
-	/** Groups several controls */
-	class WindowDrawableControl: public Window {
-	public:
 
-		WindowDrawableControl(const oDrawableControl& ctrl) : _ctrl(ctrl) {
-			bufferedPaint = true;
-			eraseBrush = GetSysColorBrush(COLOR_BTNFACE);
-		}
 
-		void createAuto(const Point& pos, HWND parent, int id = 0, int style = WS_CHILD | WS_VISIBLE , int styleEx = 0) {
-			S_ASSERT(_ctrl);
-			Window::create("", style, styleEx, Rect(pos, pos + _ctrl->getRect().getRB()), parent, id);
-		}
 
-		void setControl(const oDrawableControl& ctrl) {
-			_ctrl = ctrl;
-		}
-		oDrawableControl getControl() {
-			return _ctrl;
-		}
 
-		virtual void repaint(bool whole) {
-			if (whole) {
-				Window::repaint(whole);
-			} else {
-				Region rgn;
-				_ctrl->getRepaintRegion(rgn, whole);
-				RedrawWindow(_hwnd, NULL, rgn, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
-			}
-
-		}
-
-	public:
-		bool bufferedPaint;
-		HBRUSH eraseBrush;
-
-	protected:
-
-		virtual int onPaint();
-		virtual int onEraseBackground();
-		virtual void onMouseDown(int vkey, const Point& pos);
-		virtual void onMouseMove(int vkey, const Point& pos);
-		virtual void onMouseUp(int vkey, const Point& pos);
-
-		oDrawableControl _ctrl;
-	};
-
-};
+} };
