@@ -19,10 +19,10 @@
 #endif
 
 #include "iToolTipX.h"
-#include "Object.h"
+#include "../Object.h"
 #include "Image.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 	/** ButtonX implements easy to use button class.
 
 	Each one button can be drawn with icon, image or text only.
@@ -30,7 +30,7 @@ namespace Stamina {
 	class ButtonX: public LockableObject<iLockableObject> {
 		public:
 
-			STAMINA_OBJECT_CLASS(Stamina::ButtonX, iLockableObject);
+			STAMINA_OBJECT_CLASS(Stamina::UI::ButtonX, iLockableObject);
 
 			/** Constructor
 			@param title String that contains text to display on the button.
@@ -160,7 +160,7 @@ namespace Stamina {
 	};
 
 
-};
+} };
 
 #endif
  

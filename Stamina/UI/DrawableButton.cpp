@@ -12,7 +12,7 @@
 #include "ToolTipX.h"
 #include "DrawableButton.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 
 
@@ -58,4 +58,4 @@ namespace Stamina {
 
 
 
-};
+} };

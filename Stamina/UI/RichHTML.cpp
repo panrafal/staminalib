@@ -23,12 +23,12 @@ piiiipii<span class="mark">MARKO-<span class="mark">WAN</span>IE</span><br/>
 #include <stack>
 #include <shellapi.h>
 #include "RichHTML.h"
-#include "SimXML.h"
-#include "WinHelper.h"
-#include "Helpers.h"
+#include "../SimXML.h"
+#include "../WinHelper.h"
+#include "../Helpers.h"
 using namespace std;
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	HWND RichEditHtml::create(int style , int x , int y , int w , int h , HWND parent , HMENU id) {
 		HWND hwnd = CreateWindowEx(0 , RICHEDIT_CLASS  , "" , style | WS_CHILD|WS_VISIBLE|ES_MULTILINE | ES_AUTOVSCROLL | 
@@ -383,4 +383,4 @@ namespace Stamina {
 	}
 
 
-};
+} };

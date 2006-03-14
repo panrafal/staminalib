@@ -14,12 +14,12 @@
 #include <boost/intrusive_ptr.hpp>
 #include <deque>
 #include "RichHtml.h"
-#include "Rect.h"
+#include "../Rect.h"
 #include "Region.h"
 #include "Image.h"
-#include "Object.h"
+#include "../Object.h"
 
-namespace Stamina { namespace ToolTipX {
+namespace Stamina {  namespace UI { namespace ToolTipX {
 
 	class ToolTip;
 
@@ -111,5 +111,5 @@ namespace Stamina { namespace ToolTipX {
 	typedef boost::intrusive_ptr<iTarget> oTarget;
 
 
-} };
+} } };
 #endif

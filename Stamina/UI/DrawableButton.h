@@ -18,7 +18,7 @@
 
 
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	typedef SharedPtr <class DrawableButtonBasic> oDrawableButton;
 
@@ -82,4 +82,4 @@ namespace Stamina {
 	};
 
 
-};
+} };

@@ -17,15 +17,15 @@
 #include <stdstring.h>
 #include <math.h>
 #include <map>
-#include "Helpers.h"
-#include "WinHelper.h"
+#include "../Helpers.h"
+#include "../WinHelper.h"
 
 using namespace std;
 #include "ToolTipX.h"
 
 
 
-namespace Stamina {	namespace ToolTipX {
+namespace Stamina {	 namespace UI { namespace ToolTipX {
 	//    ------------------------------------------------------------
 	ToolTip::ToolTip(HWND parent, HINSTANCE hInst) {
 		this->create(parent, hInst);
@@ -576,4 +576,4 @@ namespace Stamina {	namespace ToolTipX {
 	}
 
 
-} } // namespace
+} } } // namespace

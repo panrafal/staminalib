@@ -10,12 +10,12 @@
 
 #pragma once
 
-#include "ObjectImpl.h"
-#include "Rect.h"
+#include "../ObjectImpl.h"
+#include "../Rect.h"
 #include <list>
 #include <boost\function.hpp>
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	typedef SharedPtr<class iMenu> oMenu;
 	typedef SharedPtr<class iMenuItem> oMenuItem;
@@ -23,7 +23,7 @@ namespace Stamina {
 	class iMenu: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iMenu, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::UI::iMenu, iSharedObject, Version(1,0,0,0));
 
 
 		virtual oMenuItem popupMenu(Point pt, HWND hwnd)=0;
@@ -37,7 +37,7 @@ namespace Stamina {
 	class iMenuItem: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iMenuItem, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::UI::iMenuItem, iSharedObject, Version(1,0,0,0));
 
 		virtual void onClick(iMenu* menu)=0;
 
@@ -143,4 +143,4 @@ namespace Stamina {
 	STAMINA_REGISTER_CLASS_VERSION(iMenuItem);
 
 
-};
+} };

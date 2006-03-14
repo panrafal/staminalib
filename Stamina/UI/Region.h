@@ -15,10 +15,10 @@ Obs³uga typów prostok¹ta, punktu i rozmiaru...
 #pragma once
 
 #include <windows.h>
-#include "Rect.h"
+#include "../Rect.h"
 
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	class Region {
 	public:
@@ -132,4 +132,4 @@ namespace Stamina {
 		HRGN _rgn;
 	};
 
-};
+} };

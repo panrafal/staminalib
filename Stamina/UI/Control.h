@@ -12,12 +12,12 @@
 #include <boost\intrusive_ptr.hpp>
 #include <list>
 
-#include "Rect.h"
+#include "../Rect.h"
 #include "Region.h"
 #include "ToolTipX.h"
 
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	class Control: public SharedObject<iSharedObject> {
 	public:
@@ -37,7 +37,7 @@ namespace Stamina {
 			mouseCaptured = 0x100,
 		};
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Control, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::UI::Control, iSharedObject, Version(1,0,0,0));
 
 	public:
 
@@ -196,4 +196,4 @@ namespace Stamina {
 
 	STAMINA_REGISTER_CLASS_VERSION(Control);
 
-};
+} };
