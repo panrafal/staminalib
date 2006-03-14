@@ -13,10 +13,12 @@
 #include "FileResource.h"
 #include "Helpers.h"
 
+#pragma comment(lib, "Version.lib")
+
 namespace Stamina {
 
 
-	FileVersion::FileVersion(const std::string& fileName) {
+	void FileVersion::init(const std::string& fileName) {
 		int size = GetFileVersionInfoSize(fileName.c_str(),0);
 		if (size > 0) {
 			_buffer = new char [size];
