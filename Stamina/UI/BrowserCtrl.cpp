@@ -42,6 +42,8 @@ namespace UI {
 
 	BrowserCtrl::BrowserCtrl(const Rect& rc, HWND parent, BrowserCtrlSink* sink) {
 
+		Stamina::log(Stamina::logFunc, "Stamina::BrowserCtrl", "BrowserCtrl", "Creating control");
+
 		if (!sink) {
 			sink = new BrowserCtrlSink();
 		}
@@ -54,7 +56,7 @@ namespace UI {
 		_rect = rc;
 		_sink = sink;
 		_wndProcServer = 0;
-
+		
 		if (!SUCCEEDED(CoCreateInstance(CLSID_WebBrowser, NULL, CLSCTX_INPROC, IID_IWebBrowser2, (LPVOID*)&_browser))) {
 			throw Stamina::ExceptionString("CoCreateInstance failed!");
 		}
@@ -97,6 +99,8 @@ namespace UI {
 		
 		_browser->put_RegisterAsDropTarget(VARIANT_FALSE);
 
+		Stamina::log(Stamina::logLog, "Stamina::BrowserCtrl", "BrowserCtrl", "Control created");
+
 	}
 
 
@@ -117,8 +121,11 @@ namespace UI {
 			delete _sink;
 		}
 
-		_browser->Release();
+		//_browser->Release();
 		DestroyWindow(_hwndShell);
+
+		Stamina::log(Stamina::logFunc, "Stamina::BrowserCtrl", "~BrowserCtrl", "Creating destroyed");
+
 	}
 
 
@@ -156,6 +163,9 @@ namespace UI {
 		}
 		_bstr_t bHeaders = headers.w_str();
 		_variant_t vHeaders = bHeaders;
+
+		Stamina::log(Stamina::logFunc, "Stamina::BrowserCtrl", "navigate", "url='%s' pos=%d, headers=%s", url.c_str(), post.length(), headers.c_str());
+
 		_browser->Navigate(bUrl, 0, 0, post.empty() ? 0 : &vPost, headers.empty() ? 0 : &vHeaders);
 		if (!post.empty()) {
 			SafeArrayDestroy(arr);
@@ -163,25 +173,50 @@ namespace UI {
 	}
 
 
-	IHTMLDocument2 *BrowserCtrl::getDocument2() {
-		IHTMLDocument2 *document = NULL;
-		IDispatch *dispatch = NULL;
-		if (SUCCEEDED(_browser->get_Document(&dispatch)) && (dispatch != NULL)) {
+	IHTMLDocument2Ptr BrowserCtrl::getDocument2() {
+		IHTMLDocument2Ptr document;
+		IDispatchPtr dispatch;
+
+		if (SUCCEEDED(_browser->get_Document(&dispatch))) {
 			dispatch->QueryInterface(IID_IHTMLDocument2, (void **)&document);
-			dispatch->Release();
 		}
 		return document;
 	}
 
-	IHTMLDocument3 *BrowserCtrl::getDocument3() {
-		IHTMLDocument3 *document = NULL;
-		IDispatch *dispatch = NULL;
-		if (SUCCEEDED(_browser->get_Document(&dispatch)) && (dispatch != NULL)) {
+	IHTMLDocument3Ptr BrowserCtrl::getDocument3() {
+		IHTMLDocument3Ptr document;
+		IDispatchPtr dispatch;
+		
+		if (SUCCEEDED(_browser->get_Document(&dispatch))) {
 			dispatch->QueryInterface(IID_IHTMLDocument3, (void **)&document);
-			dispatch->Release();
 		}
 		return document;
 	}
+
+
+	// -------------------------------------
+
+
+
+	String BrowserCtrl::getInnerHTML() {
+				
+		Stamina::log(Stamina::logFunc, "Stamina::BrowserCtrl", "getInnerHTML", "");
+
+		IHTMLDocument3Ptr doc = this->getDocument3();
+		IHTMLElementPtr el;
+		doc->get_documentElement(&el);
+		_bstr_t str;
+		el->get_innerHTML(str.GetAddress());
+		
+		return (wchar_t*)str;
+	}
+
+	String BrowserCtrl::getLocationURL() {
+		_bstr_t str;
+		_browser->get_LocationURL(str.GetAddress());
+		return (wchar_t*)str;					
+	}
+
 
 
 	// -------------------------------------
@@ -341,6 +376,8 @@ namespace UI {
 				bool ctrl = (GetKeyState(VK_CONTROL)&0x80)!=0;
 				me->translateAccelerator(message, wParam, lParam);
 				return 0;}
+			case WM_GETDLGCODE: return DLGC_WANTALLKEYS | DLGC_WANTTAB;
+							 
 		}
 		return CallWindowProc(me->_wndProcServer, hwnd, message, wParam, lParam);
 	}
@@ -415,6 +452,13 @@ namespace UI {
 			case DISPID_DOCUMENTCOMPLETE:
 				DocumentComplete(0, 0);
 				return S_OK;
+			case DISPID_DOWNLOADBEGIN:
+				DownloadBegin();
+				return S_OK;
+			case DISPID_DOWNLOADCOMPLETE:
+				DownloadComplete();
+				return S_OK;
+
 				
 		}
 		return DISP_E_MEMBERNOTFOUND;

@@ -36,9 +36,18 @@ $Id$
 #include <oleauto.h>
 #include <mshtmhst.h>
 
+
 #include "Control.h"
 
 #include <Stamina/String.h>
+#include <Stamina/ComHelper.h>
+#include <Stamina/Logger.h>
+
+S_COM_SMARTPTR_TYPEDEF(IDispatch);
+S_COM_SMARTPTR_TYPEDEF(IWebBrowser2);
+S_COM_SMARTPTR_TYPEDEF(IHTMLDocument3);
+S_COM_SMARTPTR_TYPEDEF(IHTMLDocument2);
+S_COM_SMARTPTR_TYPEDEF(IHTMLElement);
 
 
 namespace Stamina {
@@ -63,14 +72,21 @@ namespace UI {
 		STDMETHODIMP_(void)StatusTextChange(BSTR) {}
 		virtual void __stdcall ProgressChange(long, long) {}
 		STDMETHODIMP_(void)CommandStateChange(long, VARIANT_BOOL) {}
-		STDMETHODIMP_(void)DownloadBegin() {}
-		STDMETHODIMP_(void)DownloadComplete() {}
+		virtual void __stdcall DownloadBegin() {
+			Stamina::log(Stamina::logEvent, "Stamina::BrowserCtrlSink", "DownloadBegin", "");
+		}
+		virtual void __stdcall DownloadComplete() {
+			Stamina::log(Stamina::logEvent, "Stamina::BrowserCtrlSink", "DownloadComplete", "");
+		}
 		STDMETHODIMP_(void)TitleChange(BSTR Text) {}
 		STDMETHODIMP_(void)PropertyChange(BSTR Text) {}
-		virtual void __stdcall BeforeNavigate2(IDispatch*,VARIANT*,VARIANT*,VARIANT*,VARIANT*,VARIANT*,VARIANT_BOOL*) {}
+		virtual void __stdcall BeforeNavigate2(IDispatch*,VARIANT*,VARIANT*,VARIANT*,VARIANT*,VARIANT*,VARIANT_BOOL*) {
+		}
 		STDMETHODIMP_(void)NewWindow2(IDispatch**, VARIANT_BOOL*) {}
 		STDMETHODIMP_(void)NavigateComplete(IDispatch*, VARIANT*) {}
-		virtual void __stdcall DocumentComplete(IDispatch*, VARIANT*) {}
+		virtual void __stdcall DocumentComplete(IDispatch*, VARIANT*) {
+			Stamina::log(Stamina::logEvent, "Stamina::BrowserCtrlSink", "DocumentComplete", "");
+		}
 		STDMETHODIMP_(void)OnQuit() {}
 		STDMETHODIMP_(void)OnVisible(VARIANT_BOOL) {}
 		STDMETHODIMP_(void)OnToolBar(VARIANT_BOOL) {}
@@ -107,8 +123,14 @@ namespace UI {
 		static BrowserCtrl* replaceWindow(HWND replace, BrowserCtrlSink* sink = 0);
 
 		void navigate(const StringRef& url, const StringRef& post = "", StringRef headers = "");
-		IHTMLDocument2 *getDocument2();
-		IHTMLDocument3 *getDocument3();
+		IHTMLDocument2Ptr getDocument2();
+		IHTMLDocument3Ptr getDocument3();
+		IWebBrowser2Ptr getBrowser() {
+			return _browser;
+		}
+
+		String getInnerHTML();
+		String getLocationURL();
 
 	protected:
 
@@ -172,7 +194,8 @@ namespace UI {
 
 		void translateAccelerator(int message, WPARAM wParam, LPARAM lParam);
 
-		IWebBrowser2* _browser;
+		
+		IWebBrowser2Ptr _browser;
 		BrowserCtrlSink* _sink;
 		HWND _parent;
 		HWND _hwndShell;

@@ -87,27 +87,21 @@ protected:
 		browser->navigate("http://test.konnekt.info/test.php", "test1=blah&test2=ciap");
 		//browser->navigate("https://81.15.209.200:8445/login.html", "user=48222132379&password=imlgn6&redirectOnLoginError=http://www.konnekt.info/test.php");
 
+		/*
 		while (1) {
 			SleepEx(1, 1);
 			Stamina::processMessages(0);
 		}
-
-		//MessageBox(0, "Czekam2", "", MB_OK);
+		*/
+		MessageBox(0, "Czekam2", "", MB_OK);
 	}
 
 	void testDocument() {
 
-		IHTMLDocument3* doc = browser->getDocument3();
-		IHTMLElement* el;
-		doc->get_documentElement(&el);
 
-		_bstr_t str;
-		el->get_innerHTML(str.GetAddress());
+		cout << endl << "LocationUrl:" << browser->getLocationURL() << endl;
+		cout << endl << "Content:" << browser->getInnerHTML() << endl;
 
-		cout << endl << "Content:" << str << endl;
-
-		el->Release();
-		doc->Release();
 
 	}
 
