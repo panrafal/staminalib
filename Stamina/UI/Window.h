@@ -113,6 +113,10 @@ namespace Stamina { namespace UI {
 			return SendMessage(_hwnd, message, wParam, lParam);
 		}
 
+		virtual bool postMessage(int message, WPARAM wParam, LPARAM lParam) {
+			return PostMessage(_hwnd, message, wParam, lParam) != 0;
+		}
+
 		virtual void onCreateWindow();
 		virtual void onDestroyWindow();
 

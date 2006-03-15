@@ -45,7 +45,7 @@ namespace Stamina { namespace UI {
 			    break;
 			case WM_DESTROY:
 				this->onDestroyWindow();
-				break;
+				return 0;
 			case WM_MOUSEWHEEL:
 				this->onMouseWheel(HIWORD(wParam), LOWORD(wParam), HIWORD(lParam), LOWORD(lParam));
 				return 0;

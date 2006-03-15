@@ -42,6 +42,8 @@ namespace Stamina { namespace UI {
 
 		virtual void onCreateWindow();
 
+		virtual void onDestroyWindow();
+
 		virtual int windowProc(HWND hwnd , int message , WPARAM wParam, LPARAM lParam, bool& handled);
 
 		static int CALLBACK staticDialogProc(HWND hwnd , int message , WPARAM wParam, LPARAM lParam);

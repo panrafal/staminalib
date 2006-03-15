@@ -39,6 +39,7 @@ namespace Stamina { namespace UI {
 	}
 	int WindowDialog::createModal(HINSTANCE instance, LPCTSTR id, HWND parent) {
 		_isModal = true;
+		SharedPtr<WindowDialog> thisPtr = this; // zabezpieczy przed przedwczesnym rozwaleniem...
 		_return = DialogBoxParam(instance, id, parent, (DLGPROC)WindowDialog::staticDialogProc, (LPARAM)this);
 		return _return;
 	}
@@ -48,8 +49,13 @@ namespace Stamina { namespace UI {
 	}
 
 	void WindowDialog::onCreateWindow() {
-		SetProp(_hwnd, "Stamina::WindowDialog*", this);
 		__super::onCreateWindow();
+		SetProp(_hwnd, "Stamina::WindowDialog*", this);
+	}
+
+	void WindowDialog::onDestroyWindow() {
+		SetProp(_hwnd, "Stamina::WindowDialog*", 0);
+		__super::onDestroyWindow();
 	}
 
 
