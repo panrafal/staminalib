@@ -759,6 +759,9 @@
 				RelativePath=".\Assert.h">
 			</File>
 			<File
+				RelativePath=".\ComHelper.h">
+			</File>
+			<File
 				RelativePath=".\Console.h">
 			</File>
 			<File
