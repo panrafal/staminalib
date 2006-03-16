@@ -168,6 +168,9 @@ namespace Stamina { namespace UI {
 
 // -----------------------------------------------------------------
 
+	SharedPtr<Icon> Icon::OEMIcon(LPTSTR id) {
+		return new Icon(LoadIcon(0, id), true);
+	}
 
 	Icon::Icon(const char* filename, int size, int bits) {
 		_icon = loadIconEx(0, filename, size, bits);

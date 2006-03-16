@@ -16,6 +16,7 @@
 #include "Region.h"
 #include "iImage.h"
 #include "../ObjectImpl.h"
+#include "../Mutex.h"
 
 namespace Stamina { namespace UI {
 
@@ -66,7 +67,7 @@ namespace Stamina { namespace UI {
 
 	/** Represents an Image.
 	*/
-	class Image: public SharedObject<iImage> {
+	class Image: public SharedObject<iImage, LockableObject<iImage, Stamina::FastMutex> > {
 	public:
 		enum DrawMask {
 			dmNone = 0,
@@ -200,6 +201,7 @@ namespace Stamina { namespace UI {
 
 	class Icon: public ImageSized {
 	public:
+		static SharedPtr<Icon> OEMIcon(LPTSTR id);
 		Icon(const char* filename, int size = 32, int bits = 32);
 		Icon(HINSTANCE hinst, const char* resId, int size = 32, int bits = 32);
 		Icon(HICON icon, bool shared);
