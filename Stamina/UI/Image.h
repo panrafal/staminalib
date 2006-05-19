@@ -69,6 +69,9 @@ namespace Stamina { namespace UI {
 	*/
 	class Image: public SharedObject<iImage, LockableObject<iImage, Stamina::FastMutex> > {
 	public:
+
+		STAMINA_OBJECT_CLASS(Image, iImage);
+
 		enum DrawMask {
 			dmNone = 0,
 			dmAlpha = 1,
@@ -201,6 +204,9 @@ namespace Stamina { namespace UI {
 
 	class Icon: public ImageSized {
 	public:
+
+		STAMINA_OBJECT_CLASS(Icon, ImageSized);
+
 		static SharedPtr<Icon> OEMIcon(LPTSTR id);
 		Icon(const char* filename, int size = 32, int bits = 32);
 		Icon(HINSTANCE hinst, const char* resId, int size = 32, int bits = 32);
@@ -224,6 +230,9 @@ namespace Stamina { namespace UI {
 
 	class Bitmap: public ImageSized {
 	public:
+
+		STAMINA_OBJECT_CLASS(Bitmap, ImageSized);
+
 		Bitmap(HBITMAP bmp, bool shared);
 		Bitmap(const char* filename, bool trans=false);
 		Bitmap(HINSTANCE hinst, const char* resId, bool trans=false);
@@ -246,6 +255,9 @@ namespace Stamina { namespace UI {
 
 	class Bitmap32: public Bitmap {
 	public:
+
+		STAMINA_OBJECT_CLASS(Bitmap32, Bitmap);
+
 		//Bitmap32(const char* iconfile, int size);
 		Bitmap32(HBITMAP bmp, bool transparent, bool shared);
 
@@ -261,6 +273,9 @@ namespace Stamina { namespace UI {
 
 	class Brush: public Image {
 	public:
+
+		STAMINA_OBJECT_CLASS(Brush, Image);
+
 		Brush(HBRUSH brush, bool shared = false) {
 			_brush = brush;
 			_shared = shared;
@@ -290,6 +305,9 @@ namespace Stamina { namespace UI {
 
 	class Pattern: public Image {
 	public:
+
+		STAMINA_OBJECT_CLASS(Pattern, Image);
+
 		Pattern(const oImage& pattern):_pattern(pattern) {
 		}
 

@@ -19,6 +19,8 @@ namespace Stamina { namespace UI {
 	class iImage: public iSharedObject {
 	public:
 
+		STAMINA_OBJECT_CLASS(iImage, iSharedObject);
+
 	};
 
 } };

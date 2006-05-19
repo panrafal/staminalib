@@ -28,6 +28,7 @@ namespace Stamina { namespace UI {
 
 	class ButtonXTipTarget: public ToolTipX::TargetImpl {
 	public:
+
 		ButtonXTipTarget():_needsRefresh(false), _button(0) {
 		}
 		void detachButton(ButtonX* button) {
