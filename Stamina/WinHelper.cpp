@@ -646,4 +646,17 @@ end:
 	}
 
 
+	Size toolBar_getSize(HWND hwnd) {
+		int c = SendMessage(hwnd , TB_BUTTONCOUNT , 0 , 0);
+		Rect rc;
+		Rect tbrc;
+		for (int i=0; i < c; i++) {
+			if (SendMessage(hwnd , TB_GETITEMRECT , i , (LPARAM)rc.ref())) {
+				tbrc.include(rc);
+			}
+		}
+		return tbrc.getSize();
+	}
+
+
 };

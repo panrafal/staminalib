@@ -206,6 +206,7 @@ namespace Stamina {
 	int ListView_AddColumn(HWND hwnd , const char * txt , int cx);
 	int ListView_MoveItem(HWND hwnd , int pos , int newPos);
 
+	Size toolBar_getSize(HWND hwnd);
 
 
 };
