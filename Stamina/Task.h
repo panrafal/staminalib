@@ -61,6 +61,7 @@ namespace Stamina {
 			_thread = Thread( thread, threadId );
 			CloseHandle(thread);
 			_state = stateCreated;
+			_shutdownEvent.reset();
 		}
 
 

@@ -22,7 +22,7 @@ Contributor(s):
 
 $Id$
 
-*/
+ */
 
 #include "stdafx.h"
 #define _WIN32_WINNT 0x501
@@ -72,6 +72,7 @@ namespace Stamina {
 
 
 	uintptr_t __stdcall ThreadRunnerStore::threadStore(RunParams* rp) {
+		S_ASSERT(rp);
 		Thread* thread = new Thread();
 		ThreadItem ti;
 		ti.thread = thread;
@@ -80,7 +81,7 @@ namespace Stamina {
 			ti.startName = Stamina::inttostr(thread->getId());
 		}
 		{
-			ObjLocker(rp->store, lockWrite);
+			ObjLocker lock(rp->store);
 			rp->store->_list.push_front( ti );
 		}
 		uintptr_t ret = rp->func(rp->args);
@@ -104,10 +105,10 @@ namespace Stamina {
 		{
 			ObjLocker(this, lockWrite);
 			rp = new RunParams;
-			rp->func = cb;
-			rp->args = args;
-			rp->store = this;
-			if (name) rp->name = name;
+		rp->func = cb;
+		rp->args = args;
+		rp->store = this;
+		if (name) {rp->name = name;}
 		}
 		HANDLE handle = (HANDLE) this->_beginThread(name, sec, stack, (fThreadProc)threadStore, rp, flag, addr);
 		return handle;
@@ -117,7 +118,10 @@ namespace Stamina {
 		int timeouts = 0;
 		while (1) {
 			this->lock(lockWrite);
-				if (this->_list.empty()) break;
+				if (this->_list.empty()) {
+					this->unlock();
+					break;
+				}
 				ThreadItem ti = this->_list.front();
 				Thread thread = *ti.thread;
 				this->_list.erase(this->_list.begin());

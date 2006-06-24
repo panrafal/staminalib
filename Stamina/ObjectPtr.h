@@ -138,9 +138,12 @@ namespace Stamina {
 		T & operator * () const {
 			return *this->get();
 		}
+		/* operator T * za³atwia poni¿sze... */
+		/*
 		operator bool () const {
 			return this->_obj != 0;
 		}
+		*/
 		bool operator ! () const {
 			return this->_obj == 0;
 		}
@@ -153,6 +156,9 @@ namespace Stamina {
 		bool operator == (const T * b) const {
 			return this->_obj == b;
 		}
+		bool operator == (T * const b) const {
+			return this->_obj == b;
+		}
 		bool operator == (const StaticPtr & b) const {
 			return this->_obj == b.get();
 		}
@@ -160,6 +166,9 @@ namespace Stamina {
 			return (this->_obj != 0) == b;
 		}
 		bool operator != (const T * b) const {
+			return this->_obj != b;
+		}
+		bool operator != (T * const b) const {
 			return this->_obj != b;
 		}
 		bool operator != (const StaticPtr & b) const {
@@ -213,10 +222,25 @@ namespace Stamina {
 		void reset() {
 			this->set(0);
 		}
+		T * resetGet() {
+			T* tmp = this->_obj;
+			S_ASSERT(tmp != 0);
+			S_ASSERT(tmp->getUseCount() > 2);
+			this->reset();
+			return tmp;
+		}
 	private:
 	};
 
 
 };
 
+namespace boost {
 
+	template<class T> T * get_pointer(const Stamina::StaticPtr<T> & p)
+	{
+		return p.get();
+	}
+
+
+};

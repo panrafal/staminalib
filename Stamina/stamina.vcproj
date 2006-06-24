@@ -1200,9 +1200,6 @@
 				RelativePath=".\ObjectPtr.h">
 			</File>
 			<File
-				RelativePath=".\PhonoLogicImpl.h">
-			</File>
-			<File
 				RelativePath=".\Rect.h">
 			</File>
 			<File

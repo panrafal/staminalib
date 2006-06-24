@@ -22,7 +22,7 @@ Contributor(s):
 
 $Id$
 
-*/
+ */
 
 
 #pragma once
@@ -77,10 +77,10 @@ namespace Stamina {
 
 		iObject() {
 			InterlockedIncrement(&debugObjectsCount);
-		}
+				}
 		virtual ~iObject() {
 			InterlockedDecrement(&debugObjectsCount);
-		}
+				}
 #else 
 		iObject() {
 		}
@@ -264,9 +264,26 @@ namespace Stamina {
 		virtual bool hold() =0;
 		virtual void release() =0;
 		/** Returns true when it's safe to use the object */
-		virtual bool isValid() =0;
-		virtual bool isDestroyed() =0;
+		virtual bool __stdcall isValid() =0;
+		virtual bool __stdcall isDestroyed() =0;
+
+		/** Returns number of object instances in use. There are some special meanings.
+		0 means that object is being destroyed
+		1 means that object was created, but never used (by calling hold())
+		1+ means that object is used (by calling hold()) number-1 times
+
+		If getUseCount() returns 2 (used one time), releasing will trigger the destroy proces...
+
+		To make an assertion if object will be destroyed after calling release() use:
+		@code
+		S_ASSERT(obj->isLastInstance() == 1);
+		@endcode
+		*/
 		virtual unsigned int getUseCount() =0;
+
+		bool isLastInstance() {
+			return this->getUseCount() == 2;
+		}
 
 		STAMINA_OBJECT_CLASS_VERSION(iSharedObject, iLockableObject, Version(1,0,0,0));
 
@@ -318,6 +335,7 @@ namespace boost {
 	inline void intrusive_ptr_release(Stamina::iSharedObject* p) {
 		p->release();
 	}
+
 };
 
 

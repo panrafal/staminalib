@@ -36,7 +36,7 @@ namespace Stamina {
 		}
 		__inline void lock() {
 			while (InterlockedCompareExchange(&_occupied, 1, 0) == 1) {
-				Sleep(0);
+				Sleep(1);
 			}
 		}
 		__inline void unlock() {
