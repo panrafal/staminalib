@@ -58,8 +58,13 @@ namespace Stamina {
 	class FileVersion {
 	public:
 
+		FileVersion(HMODULE module) {
+			init(getModuleFileName(module));
+		}
 
-		FileVersion(const std::string& fileName);
+		FileVersion(const std::string& fileName) {
+			init(fileName);
+		}
 
 		~FileVersion();
 
@@ -99,6 +104,9 @@ namespace Stamina {
 
 
 	private:
+
+		void init(const std::string& fileName);
+
 		char* _buffer;
 		std::string _stringBlock;
 	};
