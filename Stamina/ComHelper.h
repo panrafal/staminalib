@@ -12,31 +12,23 @@ under the License.
 
 The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
 
-The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+The Initial Developer of the Original Code is "STAMINA" - Rafa- Lindemann.
 Portions created by STAMINA are 
-Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+Copyright (C) 2003-2006 "STAMINA" - Rafa- Lindemann. All Rights Reserved.
 
 Contributor(s): 
 
 --
 
-$Id$
+$Id: BrowserCtrl.cpp 179 2006-03-14 22:56:40Z hao $
 
 */
 
 #pragma once
 
-#include "../Object.h"
+#include <comutil.h>
 
-namespace Stamina { namespace UI {
 
-	/** Image interface.
-	*/
-	class iImage: public iSharedObject {
-	public:
+#define S_COM_SMARTPTR_TYPEDEF(T) __if_not_exists(T##Ptr) {typedef _com_ptr_t<_com_IIID<T, &__uuidof(T)> > T ## Ptr ;}
 
-		STAMINA_OBJECT_CLASS(iImage, iSharedObject);
 
-	};
-
-} };

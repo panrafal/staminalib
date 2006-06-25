@@ -397,6 +397,11 @@ namespace Stamina { namespace UI {
 		strncpy(_cf.szFaceName , face, sizeof(_cf.szFaceName)-1);
 		if (apply) this->push();
 	}
+	void RichEditFormat::setAlignment(int align, bool apply) {
+		_pf.dwMask |= PFM_ALIGNMENT;
+		_pf.wAlignment = PFA_CENTER;
+		if (apply) this->push();
+	}
 
 
 } };

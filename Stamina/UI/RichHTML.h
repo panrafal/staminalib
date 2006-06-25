@@ -101,6 +101,14 @@ namespace Stamina { namespace UI {
 		void setColor(int color, bool apply=true);
 		void setSize(int size, bool apply=true);
 		void setFont(const CStdString& face, bool apply=true);
+		void setAlignment(int align, bool apply=true);
+
+		CHARFORMAT2& cf() {
+			return _cf;
+		}
+		PARAFORMAT2& pf() {
+			return _pf;
+		}
 
 		template <class TY> 
 		class FormatStack : public std::stack<TY> {

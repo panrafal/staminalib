@@ -23,6 +23,7 @@
 
 #include <boost/function.hpp>
 #include <boost/signal.hpp>
+#include <boost\smart_ptr.hpp>
 
 
 //#include <Stamina/VersionControl.h>

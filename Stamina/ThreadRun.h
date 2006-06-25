@@ -75,6 +75,8 @@ namespace Stamina {
 	class ThreadRunner: public SharedObject<iSharedObject, LockableObject<iSharedObject, Stamina::FastMutex> > {
 	public:
 
+		STAMINA_OBJECT_CLASS(ThreadRunner, iSharedObject);
+
 		static uintptr_t defaultRunner (const char* name, void * sec, unsigned stack,	fThreadProc cb, void * args, unsigned flag, unsigned * addr) {
 			unsigned int id;
 			uintptr_t handle = (uintptr_t) _beginthreadex(sec, stack, cb, args, flag, &id);
@@ -139,6 +141,8 @@ namespace Stamina {
 
 	class ThreadRunnerStore: public ThreadRunner {
 	public:
+
+		STAMINA_OBJECT_CLASS(ThreadRunnerStore, ThreadRunner);
 
 		ThreadRunnerStore(fBeginThread func = defaultRunner):ThreadRunner(func) {
 		}

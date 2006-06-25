@@ -184,13 +184,24 @@ PERLMOD_MAKEVAR_PREFIX =
 #---------------------------------------------------------------------------
 # Configuration options related to the preprocessor   
 #---------------------------------------------------------------------------
-ENABLE_PREPROCESSING   = YES
+ENABLE_PREPROCESSING   = NO
 MACRO_EXPANSION        = NO
 EXPAND_ONLY_PREDEF     = NO
 SEARCH_INCLUDES        = YES
 INCLUDE_PATH           = 
 INCLUDE_FILE_PATTERNS  = 
-PREDEFINED             = 
+PREDEFINED             = __DT_COLUMN__ \
+                         _STRING_ \
+                         _LIST_ \
+                         _STACK_ \
+                         _DEQUE_ \
+                         _WINDOWS_ \
+                         _WINDEF_ \
+                         _PCRE_H \
+                         STDSTRING_H \
+                         _WIN32_WINNT=0x0600 \
+                         _WIN32_WINDOWS=0x0600 \
+                         _INC_COMMCTRL
 EXPAND_AS_DEFINED      = 
 SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
@@ -208,14 +219,16 @@ CLASS_DIAGRAMS         = YES
 HIDE_UNDOC_RELATIONS   = YES
 HAVE_DOT               = YES
 CLASS_GRAPH            = YES
-COLLABORATION_GRAPH    = YES
+COLLABORATION_GRAPH    = NO
+GROUP_GRAPHS           = NO
 GROUP_GRAPHS           = YES
 UML_LOOK               = NO
-TEMPLATE_RELATIONS     = YES
-INCLUDE_GRAPH          = YES
-INCLUDED_BY_GRAPH      = YES
+TEMPLATE_RELATIONS     = NO
+INCLUDE_GRAPH          = NO
+INCLUDED_BY_GRAPH      = NO
 CALL_GRAPH             = NO
-GRAPHICAL_HIERARCHY    = YES
+GRAPHICAL_HIERARCHY    = NO
+DIRECTORY_GRAPH        = NO
 DIRECTORY_GRAPH        = YES
 DOT_IMAGE_FORMAT       = png
 DOT_PATH               = D:/c++/__tools/dot/Graphviz/bin
