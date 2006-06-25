@@ -33,7 +33,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cppunitd.lib stamina_d.lib datatable_d.lib listwnd_d.lib"
+				AdditionalDependencies="cppunitd.lib stamina_d.lib stamina_ui_d.lib Msimg32.lib comctl32.lib"
 				OutputFile="$(OutDir)/TestSuite_d.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\Lib;&quot;\c++\__source\cppunit\lib&quot;"
@@ -213,6 +213,25 @@
 				RelativePath="..\Test\TestStringBuffer.cpp">
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\Ui\Test\TestBrowser.cpp">
+			</File>
+			<File
+				RelativePath="..\DataTable\Test\TestColumns.cpp">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"/>

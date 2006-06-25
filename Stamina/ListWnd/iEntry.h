@@ -34,12 +34,16 @@ $Id$
 
 /* Include files */
 #include "..\Rect.h"
-#include "..\Menu.h"
+#include "..\UI\Menu.h"
 #include "ListWnd.h"
 #include "iItem.h"
 #include "iItemPlacer.h"
+
+
 namespace Stamina {
 namespace ListWnd {
+	using namespace Stamina::UI;
+
 	class ListView;
 	class iCollection;
 
