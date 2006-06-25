@@ -28,12 +28,12 @@ $Id$
 #include <boost\intrusive_ptr.hpp>
 #include <list>
 
-#include "Rect.h"
+#include "../Rect.h"
 #include "Region.h"
 #include "ToolTipX.h"
 
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	class Control: public SharedObject<iSharedObject> {
 	public:
@@ -212,4 +212,4 @@ namespace Stamina {
 
 	STAMINA_REGISTER_CLASS_VERSION(Control);
 
-};
+} };

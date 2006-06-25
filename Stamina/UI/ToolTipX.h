@@ -35,13 +35,13 @@ $Id$
 #include <map>
 
 #include "RichHtml.h"
-#include "Rect.h"
+#include "../Rect.h"
 #include "Region.h"
 #include "Image.h"
-#include "ObjectImpl.h"
+#include "../ObjectImpl.h"
 #include "iToolTipX.h"
 
-namespace Stamina { namespace ToolTipX {
+namespace Stamina { namespace UI { namespace ToolTipX {
 
 	class TipImpl:public SharedObject<iTip> {
 	};
@@ -327,5 +327,5 @@ namespace Stamina { namespace ToolTipX {
 	void mouseMovement(HWND hwnd, Point scroll = Point(-1, -1));
 
 
-} }
+} } }
 #endif

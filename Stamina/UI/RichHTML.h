@@ -30,7 +30,7 @@ $Id$
 #include <Richedit.h>
 #include <stdstring.h>
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	class RichEditFormat {
 	public:
@@ -152,4 +152,4 @@ namespace Stamina {
 	};
 
 
-};
+} };

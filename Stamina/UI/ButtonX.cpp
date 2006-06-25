@@ -33,11 +33,11 @@ $Id$
 
 #include "ToolTipX.h"
 #include "ButtonX.h"
-#include "WinHelper.h"
-#include "Rect.h"
-#include "Assert.h"
+#include "../WinHelper.h"
+#include "../Rect.h"
+#include "../Assert.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	WNDPROC ButtonX::buttonClassProc = 0;
 
@@ -357,4 +357,4 @@ namespace Stamina {
 
 
 
-};
+} };

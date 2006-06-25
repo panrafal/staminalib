@@ -28,12 +28,12 @@ $Id$
 
 
 #include <memory.h>
-#include "Rect.h"
+#include "../Rect.h"
 #include "Region.h"
 #include "iImage.h"
-#include "ObjectImpl.h"
+#include "../ObjectImpl.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	typedef SharedPtr<class Image> oImage;
 
@@ -342,4 +342,4 @@ namespace Stamina {
 
 #endif
 
-};
+} };

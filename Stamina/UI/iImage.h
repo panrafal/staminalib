@@ -26,9 +26,9 @@ $Id$
 
 #pragma once
 
-#include "Object.h"
+#include "../Object.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	/** Image interface.
 	*/
@@ -37,4 +37,4 @@ namespace Stamina {
 
 	};
 
-};
+} };

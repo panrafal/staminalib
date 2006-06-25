@@ -31,17 +31,19 @@ $Id$
 #include <IL/ilut.h> 
 
 #include "ImageIL.h"
-#include "Helpers.h"
-#include "WinHelper.h"
-#include "RegEx.h"
-#include "FileResource.h"
+#include "../Helpers.h"
+#include "../WinHelper.h"
+#include "../RegEx.h"
+#include "../FileResource.h"
 
-namespace Stamina {
+#include <stdstring.h>
+
+namespace Stamina { namespace UI {
 
 
 
 	oImage loadImageFromFile(const char* filenameString, loadImageParams loadParams) {
-		CStdString filename = Stamina::expandEnvironmentStrings( filenameString );
+		CStdString filename = Stamina::expandEnvironmentStrings( filenameString ).c_str();
 		const char * ext = strrchr(filename, '.');
 		if (filename.length() < 5 || !ext)
 			return oImage();
@@ -221,4 +223,4 @@ namespace Stamina {
 	}
 
 
-};
+} };

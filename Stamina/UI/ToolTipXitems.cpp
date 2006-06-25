@@ -34,7 +34,7 @@ $Id$
 using namespace std;
 #include "ToolTipX.h"
 
-namespace Stamina { namespace ToolTipX {
+namespace Stamina { namespace UI { namespace ToolTipX {
 
 bool iTarget::operator==(const iTarget & b) const {
 	return this == &b || this->getClass() == b.getClass();
@@ -392,4 +392,4 @@ int Tip::parentMessageProc(HWND hwnd, int message, WPARAM wParam, LPARAM lParam,
 	return 0;
 }
  
-} }
+} } }

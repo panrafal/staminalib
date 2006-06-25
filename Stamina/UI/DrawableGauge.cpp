@@ -28,7 +28,7 @@ $Id$
 #include <math.h>
 #include "DrawableGauge.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	void DrawableGaugeBasic::draw(HDC dc, const Point& origin) {
 		this->_drawn = true;
@@ -79,4 +79,4 @@ namespace Stamina {
 
 
 
-};
+} };

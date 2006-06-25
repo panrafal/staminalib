@@ -27,7 +27,7 @@ $Id$
 #include "stdafx.h"
 #include "Region.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	Region::Region(const Rect& rc) {
 		this->_rgn = createRectRgn(rc);
@@ -124,4 +124,4 @@ namespace Stamina {
 		return CreateRoundRectRgn(r.left, r.top, r.right, r.bottom, roundX, roundY);
 	}
 
-};
+} };

@@ -33,7 +33,7 @@ $Id$
 
 
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	typedef SharedPtr <class DrawableGaugeBasic> oDrawableGauge;
 
@@ -130,4 +130,4 @@ namespace Stamina {
 	};
 
 
-};
+} };

@@ -35,10 +35,10 @@ $Id$
 #endif
 
 #include "iToolTipX.h"
-#include "Object.h"
+#include "../Object.h"
 #include "Image.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 	/** ButtonX implements easy to use button class.
 
 	Each one button can be drawn with icon, image or text only.
@@ -176,7 +176,7 @@ namespace Stamina {
 	};
 
 
-};
+} };
 
 #endif
  

@@ -29,7 +29,7 @@ $Id$
 
 #include "Image.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 
 	struct loadImageParams {
@@ -60,4 +60,4 @@ namespace Stamina {
 	};
 
 
-};
+} };

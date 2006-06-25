@@ -28,7 +28,7 @@ $Id$
 #include "ToolTipX.h"
 #include "Control.h"
 
-namespace Stamina {
+namespace Stamina {  namespace UI {
 
 	void DrawableTipTarget::detachControl(const oDrawableControl& ctrl) {
 		ObjLocker lock(this, lockWrite);
@@ -138,4 +138,4 @@ namespace Stamina {
 
 
 
-};
+} };

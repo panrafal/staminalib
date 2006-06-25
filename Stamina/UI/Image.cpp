@@ -27,9 +27,9 @@ $Id$
 #include "stdafx.h"
 
 #include "Image.h"
-#include "WinHelper.h"
+#include "../WinHelper.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 //	const double pi = 3.141592653;
 
@@ -378,4 +378,4 @@ namespace Stamina {
 	}
 
 
-};
+} };

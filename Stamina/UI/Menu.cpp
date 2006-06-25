@@ -27,7 +27,7 @@ $Id$
 #include "stdafx.h"
 #include "Menu.h"
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	MenuW32::MenuW32():_useId(0) {
 
@@ -99,4 +99,4 @@ namespace Stamina {
 		mi.fState = _state;
 	}
 
-};
+} };

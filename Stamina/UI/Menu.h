@@ -26,12 +26,12 @@ $Id$
 
 #pragma once
 
-#include "ObjectImpl.h"
-#include "Rect.h"
+#include "../ObjectImpl.h"
+#include "../Rect.h"
 #include <list>
 #include <boost\function.hpp>
 
-namespace Stamina {
+namespace Stamina { namespace UI {
 
 	typedef SharedPtr<class iMenu> oMenu;
 	typedef SharedPtr<class iMenuItem> oMenuItem;
@@ -159,4 +159,4 @@ namespace Stamina {
 	STAMINA_REGISTER_CLASS_VERSION(iMenuItem);
 
 
-};
+} };
