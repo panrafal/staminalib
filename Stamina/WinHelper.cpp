@@ -516,13 +516,6 @@ end:
 	}
 
 
-	std::string expandEnvironmentStrings(const char * src, unsigned int size) {
-		CStdString buff;
-		ExpandEnvironmentStrings(src, buff.GetBuffer(500), size);
-		buff.ReleaseBuffer();
-		return buff;
-	}
-
 
 	bool _SetDllDirectory(const char * dir) {
 #ifdef UNICODE

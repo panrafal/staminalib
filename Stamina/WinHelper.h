@@ -151,23 +151,43 @@ namespace Stamina {
 	bool windowBelongsTo(HWND window, HWND parent);
 
 
-#ifdef _STRING_
-	std::string expandEnvironmentStrings(const char * src, unsigned int size=300);
-	inline std::string getFullPathName(LPCTSTR filename) {
-		TCHAR buffer [MAX_PATH + 1];
-		if (GetFullPathName(filename, MAX_PATH, buffer, 0))
-			return buffer;
-		else
+#ifdef _STRING_	
+	inline String expandEnvironmentStrings(const StringRef& src) {
+		String buff;
+		int size = ExpandEnvironmentStringsW(src.w_str(), 0, 0) + 1;
+		buff.releaseBuffer<wchar_t>( ExpandEnvironmentStringsW(src.w_str(), buff.useBuffer<wchar_t>(size), size+1) );
+		return PassStringRef( buff );
+	}
+
+	inline String getFullPathName(const StringRef& filename) {
+		String buffer;
+		if (GetFullPathNameW(filename.w_str(), MAX_PATH, buffer.useBuffer<wchar_t>(MAX_PATH), 0)) {
+			buffer.releaseBuffer<wchar_t>();
+			return PassStringRef( buffer );
+		} else {
 			return "";
+		}
 	}
 
 	inline String getEnvironmentVariable(const StringRef& name) {
-		TCHAR buff [1024];
-		GetEnvironmentVariable(name.c_str(), buff, 1024);
-		return buff;
+		String buff;
+		int size = GetEnvironmentVariableW(name.w_str(), 0, 0);
+		buff.releaseBuffer<wchar_t>( GetEnvironmentVariableW(name.w_str(), buff.useBuffer<wchar_t>(size), size+1) );
+		return PassStringRef( buff );
 	}
 
 	std::string getErrorMsg(int err = 0);
+
+	inline String getModuleFileName(HMODULE module) {
+		String buffer;
+		if (GetModuleFileNameW(module, buffer.useBuffer<wchar_t>(MAX_PATH), MAX_PATH)) {
+			buffer.releaseBuffer<wchar_t>();
+			return PassStringRef( buffer );
+		} else {
+			return "";
+		}
+	}
+
 
 #endif
 
