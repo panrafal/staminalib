@@ -101,9 +101,11 @@ namespace Stamina { namespace DT {
 			return getId();
 		}
 
+		/*
 		operator int() const {
 			return getId();
 		}
+		*/
 
 		tRowId getId() const {
 			if (this->get()) {
