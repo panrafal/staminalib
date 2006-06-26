@@ -54,13 +54,34 @@ namespace Stamina {
 	template <class OI, class LS = Stamina::CriticalSection, class OIMP = Object<OI> > class LockableObject: public OIMP {
 	public:
 
+		virtual void lock(enLockType type) const {
+			__if_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.lock(type);
+			}
+			__if_not_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.lock();
+			}
+		}
+
+		virtual void unlock(enLockType type) const {
+			__if_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.unlock(type);
+			}
+			__if_not_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.unlock();
+			}
+		}
+
 		virtual Lock& selectLock(enLockType type) const {
 			__if_exists(LS::selectLock) {
 				return const_cast<LockableObject*>(this)->_lock.selectLock(type);
 			}
 			__if_not_exists(LS::selectLock) {
-				return const_cast<LockableObject*>(this)->_lock;
+				__if_exists(LS::Lock) {
+					return const_cast<LockableObject*>(this)->_lock;
+				}
 			}
+			return iLockableObject::selectLock(type);
 		}
 
 		LS & lockSelector() {return _lock;}

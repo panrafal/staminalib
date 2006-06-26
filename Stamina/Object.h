@@ -213,14 +213,12 @@ namespace Stamina {
 	class iLockableObject: public iObject {
 	public:
 	    /** Blokuje dostêp do obiektu */
-		void lock(enLockType type) const {
-			selectLock(type).lock();
-		}
+		virtual void lock(enLockType type) const =0;
+
 		/** Odblokowuje dostêp do obiektu */
-		void unlock(enLockType type) const {
-			selectLock(type).unlock();
-		}
-		/** Zwraca obiekt blokuj¹cy o podanym typie */
+		virtual void unlock(enLockType type) const =0;
+
+		/** Zwraca obiekt blokuj¹cy o podanym typie, o ile obiekt blokuj¹cy jest zgodny ze Stamina::Lock */
 		virtual Lock& selectLock(enLockType type) const {
 			return Lock_blank::instance;
 		}
@@ -244,18 +242,21 @@ namespace Stamina {
 	class ObjLocker {
 	public:
 		__inline ObjLocker(const iLockableObject* lo, enLockType type) {
-			_lock = &lo->selectLock(type);
-			_lock->lock();
+			_type = type;
+			_obj = lo;
+			_obj->lock(_type);
 		}
 		__inline ObjLocker(const iLockableObject& lo, enLockType type) {
-			_lock = &lo.selectLock(type);
-			_lock->lock();
+			_type = type;
+			_obj = &lo;
+			_obj->lock(_type);
 		}
 		__inline ~ObjLocker(){
-			_lock->unlock();
+			_obj->unlock(_type);
 		}
 	protected:
-		Lock* _lock;
+		const iLockableObject* _obj;
+		enLockType _type;
 	};
 
 
@@ -264,8 +265,8 @@ namespace Stamina {
 		virtual bool hold() =0;
 		virtual void release() =0;
 		/** Returns true when it's safe to use the object */
-		virtual bool __stdcall isValid() =0;
-		virtual bool __stdcall isDestroyed() =0;
+		virtual bool isValid() =0;
+		virtual bool isDestroyed() =0;
 
 		/** Returns number of object instances in use. There are some special meanings.
 		0 means that object is being destroyed
