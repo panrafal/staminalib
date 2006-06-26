@@ -81,7 +81,7 @@ namespace Stamina {
 			ti.startName = Stamina::inttostr(thread->getId());
 		}
 		{
-			ObjLocker lock(rp->store);
+			ObjLocker lock(rp->store, lockWrite);
 			rp->store->_list.push_front( ti );
 		}
 		uintptr_t ret = rp->func(rp->args);
@@ -119,7 +119,7 @@ namespace Stamina {
 		while (1) {
 			this->lock(lockWrite);
 				if (this->_list.empty()) {
-					this->unlock();
+					this->unlock(lockWrite);
 					break;
 				}
 				ThreadItem ti = this->_list.front();

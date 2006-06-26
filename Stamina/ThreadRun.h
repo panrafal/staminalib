@@ -104,7 +104,7 @@ namespace Stamina {
 		}
 		
 		void setRunner(fBeginThread func) {
-			ObjLocker l (this);
+			ObjLocker l (this, lockWrite);
 			S_ASSERT(func != 0);
 			this->_beginThread = func;
 		}
