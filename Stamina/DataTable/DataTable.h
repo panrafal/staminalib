@@ -157,7 +157,7 @@ namespace Stamina { namespace DT {
 
 		oDataRow getRow(tRowId row) throw(...) {
 			row = this->getRowPos(row);
-			if (row == rowNotFound) return 0; // throw DTException(errNoRow);
+			if (row == rowNotFound || row >= this->_rows.size()) return 0; // throw DTException(errNoRow);
 			return this->_rows[row];
 		}
 

@@ -154,8 +154,9 @@ namespace Stamina {
 #ifdef _STRING_	
 	inline String expandEnvironmentStrings(const StringRef& src) {
 		String buff;
-		int size = ExpandEnvironmentStringsW(src.w_str(), 0, 0) + 1;
-		buff.releaseBuffer<wchar_t>( ExpandEnvironmentStringsW(src.w_str(), buff.useBuffer<wchar_t>(size), size+1) );
+		int size = ExpandEnvironmentStringsW(src.w_str(), 0, 0);
+		ExpandEnvironmentStringsW(src.w_str(), buff.useBuffer<wchar_t>(size+1), size);
+		buff.releaseBuffer<wchar_t>();
 		return PassStringRef( buff );
 	}
 
@@ -172,7 +173,8 @@ namespace Stamina {
 	inline String getEnvironmentVariable(const StringRef& name) {
 		String buff;
 		int size = GetEnvironmentVariableW(name.w_str(), 0, 0);
-		buff.releaseBuffer<wchar_t>( GetEnvironmentVariableW(name.w_str(), buff.useBuffer<wchar_t>(size), size+1) );
+		GetEnvironmentVariableW(name.w_str(), buff.useBuffer<wchar_t>(size+1), size);
+		buff.releaseBuffer<wchar_t>( );
 		return PassStringRef( buff );
 	}
 
