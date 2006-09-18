@@ -91,7 +91,11 @@ namespace Stamina {
 		LOGFONT lf;
 		memset(&lf, 0, sizeof(lf));
 		lf.lfCharSet = DEFAULT_CHARSET;
+#if (_MSC_VER >= 1400)
+		strcpy_s(lf.lfFaceName, face);
+#else
 		strcpy(lf.lfFaceName, face);
+#endif
 		lf.lfWeight = weight == 1 ? FW_BOLD : weight;
 		lf.lfHeight = size;
 		lf.lfUnderline = underline;
@@ -217,11 +221,11 @@ namespace Stamina {
 
 
 	int ListView_ItemFromPoint(HWND hwnd , POINT pt);
-	ListView_Deselect(HWND hwnd);
+	int ListView_Deselect(HWND hwnd);
 	int ListView_GetSelItems(HWND hwnd , int count , int * buff);
-	ListView_SetCurSel (HWND hwnd , int pos);
+	int ListView_SetCurSel (HWND hwnd , int pos);
 	int ListView_AddString(HWND hwnd , const char * txt , int image = 0 , LPARAM param = 0);
-	ListView_SetString(HWND hwnd , int item , int subitem , char * txt);
+	int ListView_SetString(HWND hwnd , int item , int subitem , char * txt);
 	int ListView_AddColumn(HWND hwnd , const char * txt , int cx);
 	int ListView_MoveItem(HWND hwnd , int pos , int newPos);
 

@@ -48,7 +48,12 @@ namespace Stamina {
 
 	bool SXML::loadFile(const char *  fileName) {
 		string _src="";
-		FILE * f = fopen (fileName , "rt");
+		FILE * f;
+#if (_MSC_VER >= 1400)
+		fopen_s(&f, fileName, "rt");
+#else
+		f = fopen (fileName , "rt");
+#endif
 		if (!f) return false;
 		char temp [251];
 		size_t r;
@@ -83,7 +88,11 @@ namespace Stamina {
 
 	string __stdcall encodeCallback(class RegEx * p , void * param) {
 		char v [7] = "&#\0\0\0\0";
+#if (_MSC_VER >= 1400)
+		_itoa_s(*p->getByVector(0), v+2, 5, 10); 
+#else
 		itoa(*p->getByVector(0) , v+2 , 10);
+#endif
 		v[strlen(v)]=';';
 		return v;
 	}

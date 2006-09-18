@@ -98,7 +98,7 @@ namespace Stamina {
 
 		inline static bool charEq(const char* a, const char* b, bool noCase) {
 			if (noCase) {
-				return strnicmp(a, b, 1) == 0;
+				return _strnicmp(a, b, 1) == 0;
 			} else {
 				return *a == *b;
 			}
@@ -127,7 +127,7 @@ namespace Stamina {
 
 		inline static bool charEq(const wchar_t* a, const wchar_t* b, bool noCase) {
 			if (noCase) {
-				return wcsnicmp(a, b, 1) == 0;
+				return _wcsnicmp(a, b, 1) == 0;
 			} else {
 				return *a == *b;
 			}
@@ -272,7 +272,7 @@ namespace Stamina {
 		inline static int charCmp(const char* a, const char* b, bool noCase) {
 			if (isAscii(a) && isAscii(b)) {
 				if (noCase) {
-					return strnicmp(a, b, 1);
+					return _strnicmp(a, b, 1);
 				} else {
 					return strncmp(a, b, 1);
 				}

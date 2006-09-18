@@ -46,10 +46,14 @@ namespace Stamina {
 	tm Time64::to_tm() const {
 		tm timer;
 		memset(&timer , 0 , sizeof(tm));
-		tm * tmp = _localtime64(&sec);
+#if (_MSC_VER >= 1400)
+		_localtime64_s(&timer, &sec);
+#else
+		tm *tmp = _localtime64(&sec);
 		if (tmp) {
 			timer = *tmp;
 		}
+#endif
 		return timer;
 	}
 
@@ -110,13 +114,17 @@ namespace Stamina {
 
 
 	std::string Time64::getTimeString(const char* hourStr, const char* minStr, const char* secStr, bool needHour, bool needMin, bool needSec) const {
-		int hour = this->sec / (60*60);
-		int min = (this->sec % (60*60)) / 60;
-		int sec = (this->sec % (60));
+		int hour = (int)this->sec / (60*60);
+		int min = (int)(this->sec % (60*60)) / 60;
+		int sec = (int)(this->sec % (60));
 		std::string str;
 		char buff [20];
 		if (hour || needHour) {
+#if (_MSC_VER >= 1400)
+			sprintf_s(buff, 20, "%02d", hour);
+#else
 			sprintf(buff, "%02d", hour);
+#endif
 			str += buff;
 			if (hourStr)
 				str += hourStr;
@@ -124,7 +132,11 @@ namespace Stamina {
 				str += ":";
 		}
 		if (min || (!hourStr && hour) || needMin) {
+#if (_MSC_VER >= 1400)
+			sprintf_s(buff, 20, "%02d", min);
+#else
 			sprintf(buff, "%02d", min);
+#endif
 			str += buff;
 			if (minStr)
 				str += minStr;
@@ -133,7 +145,11 @@ namespace Stamina {
 
 		}
 		if (sec || (!hourStr && hour) || (!minStr && min) || needSec) {
+#if (_MSC_VER >= 1400)
+			sprintf_s(buff, 20, "%02d", sec);
+#else
 			sprintf(buff, "%02d", sec);
+#endif
 			str += buff;
 			if (secStr)
 				str += secStr;
@@ -179,14 +195,29 @@ namespace Stamina {
 
 
 	void Date64::from_time_t(time_t timer) {
-		from_tm(*localtime(&timer));
+#if (_MSC_VER >= 1400)
+		tm t;
+		localtime_s(&t, &timer);
+		from_tm(t);
+#else
+		tm * t = localtime(&timer);
+		from_tm(*t);
+#endif
 	}
 	void Date64::from_time64_t(__time64_t timer) {
 		if (!timer) {
 			memcpy(this , &timer , 8);
 			desc = 1;
-		} else
-			from_tm(*_localtime64(&timer));
+		} else {
+#if (_MSC_VER >= 1400)
+			tm t;
+			_localtime64_s(&t, &timer);
+			from_tm(t);
+#else
+			tm *t = _localtime64(&timer);
+			from_tm(*t);
+#endif
+		}
 	}
 
 	void Date64::from_int64(__int64 timer) {

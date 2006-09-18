@@ -97,7 +97,7 @@ namespace Stamina {
 		virtual String toString(iStringFormatter* format=0) const;
 
 		virtual iObject* cloneObject() const {
-			S_DEBUG_ERROR("not cloneable!");
+			S_DEBUG_ERROR(L"not cloneable!");
 			return 0;
 		}
 

@@ -114,18 +114,40 @@ namespace Stamina {
 			char buff [10];
 			std::string s;
 			if (elements > 0 || major || minor || release || build)
-				s += itoa(major, buff, 10);
+#if (_MSC_VER >= 1400)
+			{
+				_itoa_s(major, buff, strlen(buff), 10);
+				s += buff;
+			}
+#else
+				s += _itoa(major, buff, 10);
+#endif
 			if (elements > 1 || minor || release || build) {
 				s += ".";
-				s += itoa(minor, buff, 10);
+#if (_MSC_VER >= 1400)
+				_itoa_s(minor, buff, strlen(buff), 10);
+				s += buff;
+#else
+				s += _itoa(minor, buff, 10);
+#endif
 			}
 			if (elements > 2 || release || build) {
 				s += ".";
-				s += itoa(release, buff, 10);
+#if (_MSC_VER >= 1400)
+				_itoa_s(release, buff, strlen(buff), 10);
+				s += buff;
+#else
+				s += _itoa(release, buff, 10);
+#endif
 			}
 			if (elements > 3 || build) {
 				s += ".";
-				s += itoa(build, buff, 10);
+#if (_MSC_VER >= 1400)
+				_itoa_s(build, buff, strlen(buff), 10);
+				s += buff;
+#else
+				s += _itoa(build, buff, 10);
+#endif
 			}
 			return s;
 		}
@@ -154,7 +176,7 @@ namespace Stamina {
 		}
 
 		bool operator == (const ModuleVersion&b) {
-			return _category == b._category && stricmp(_name, b._name) == 0 && _version == b._version;
+			return _category == b._category && _stricmp(_name, b._name) == 0 && _version == b._version;
 		}
 
 		enVersionCategory getCategory() const {

@@ -71,7 +71,12 @@ namespace Stamina {
         int len;
         unsigned char buffer[1024];
 
-        if ((file = fopen (filename, "rb")) == NULL) {
+#if (_MSC_VER >= 1400)
+		fopen_s(&file, filename, "rb");
+#else
+		file = fopen(filename, "rb");
+#endif
+        if (file == NULL) {
 			this->reset();
             return;
         } else {

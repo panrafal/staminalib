@@ -168,9 +168,9 @@ namespace ListWnd
 				itemHit = item->getRect().contains(itemPos);
 				if (shift && oldActive.isValid()) {
 					ItemWalk::walk(this
-						, boost::bind(Item::setSelected
-							, boost::bind(oItem::get, _1)
-							, boost::bind(ItemWalk::getListView,_2), true)
+						, boost::bind(&Item::setSelected
+							, boost::bind(&oItem::get, _1)
+							, boost::bind(&ItemWalk::getListView,_2), true)
 						, oldActive, item, true, true);
 				} else if (ctrl/* && item != oldActive*/) {
 					item->setSelected(this, !item->isSelected());
@@ -301,7 +301,7 @@ namespace ListWnd
 
 	ListView * ListView::fromHWND(HWND wnd) {
 		ListView * lv = (ListView*)GetWindowLong(wnd, GWL_USERDATA);
-		S_ASSERT_MSG(lv, "Stamina::ListWnd::ListView control is not initialized properly!");
+		S_ASSERT_MSG(lv, L"Stamina::ListWnd::ListView control is not initialized properly!");
 		return lv;
 	}
 

@@ -31,6 +31,10 @@ $Id$
 #include <stdstring.h>
 #include "Helpers.h"
 
+#if (_MSC_VER >= 1400)
+#include <errno.h>
+#endif
+
 
 using namespace std;
 
@@ -38,7 +42,7 @@ namespace Stamina {
 
 	struct __initializer {
 		__initializer() {
-			srand(time(0));
+			srand((int)time(0));
 		}
 	} _initializer;
 
@@ -65,8 +69,13 @@ namespace Stamina {
 
 
 	const char * inttoch(int v , char * s , int radix , int max , bool upper) {
+#if (_MSC_VER >= 1400)
+		if (_itoa_s(v, s, max, radix) == EINVAL)
+			strcpy_s(s, max, "0");
+#else
 		_itoa(v , s , radix);
 		if (!*s) strcpy(s , "0");
+#endif
 		if (max>0 && strlen(s)!=(unsigned)max) {
 			int sz=strlen(s);
 			if (sz>max) {
@@ -83,7 +92,12 @@ namespace Stamina {
 			s[max]='\0';
 
 		}
-		if (radix>10 && upper) strupr(s);
+		if (radix>10 && upper) 
+#if (_MSC_VER >= 1400)
+			_strupr_s(s, max);
+#else
+			strupr(s);
+#endif
 		return s;
 	}
 
@@ -177,7 +191,7 @@ namespace Stamina {
 		if (!str || !chIn || !chOut || !*chIn || !*chOut || strlen(chIn)!=strlen(chOut)) return str;
 		char * c = str;
 		while (*c) {
-			char * pos = strchr(chIn , *c);
+			char * pos = strchr((char*)chIn , *c);
 			if (pos) {
 				*c = chOut[pos - chIn];
 			}
@@ -195,7 +209,7 @@ namespace Stamina {
 				if (ar[i][findLen] != 0 && ar[i][findLen] != '=')
 					continue;
 				if (getValue) {
-					char * value = strchr(ar[i] , '=');
+					char * value = strchr((char*)ar[i] , '=');
 					if (!value) 
 						return 0;
 					return value + 1;
@@ -324,7 +338,11 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 		for (str_it=str.begin(); str_it != str.end(); str_it++) {
 			if ((!noChange || !strchr(noChange , *str_it))&&(*str_it<'0'||*str_it>'9')&&(*str_it<'a'||*str_it>'z')&&(*str_it<'A'||*str_it>'Z')) {
 				res.append(1 , special);
+#if (_MSC_VER >= 1400)
+				_itoa_s((unsigned char)*str_it, buff, 4, 16);
+#else
 				itoa((unsigned char)*str_it , buff , 16);
+#endif
 				if (!buff[1]) {buff[2]=0;buff[1]=buff[0];buff[0]='0';}
 				res.append(buff);
 			} else {res.append(1, *str_it);}
@@ -375,7 +393,11 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 
 	int ipToLong(const char * ip) {
 		int a , b , c , d;
+#if (_MSC_VER >= 1400)
+		sscanf_s(ip, "%u.%u.%u.%u" , &a , &b , &c , &d);
+#else
 		sscanf(ip , "%u.%u.%u.%u" , &a , &b , &c , &d);
+#endif
 		return ((BYTE)d << 24) | ((BYTE)c<<16) | ((BYTE)b<<8) | (BYTE)a;
 	}
 
@@ -398,7 +420,11 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					c += removeDirTree(file);
 				} else {
+#if (_MSC_VER >= 1400)
+					_unlink(file.c_str());
+#else
 					unlink(file.c_str());
+#endif
 					c++;
 				}
 			}

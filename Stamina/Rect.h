@@ -321,7 +321,7 @@ namespace Stamina {
 		}
 
 		operator bool() const {
-			return isSet;
+			return isSet();
 		}
 
 		Rect operator - (const Point& pt) const {

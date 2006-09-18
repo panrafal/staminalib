@@ -70,7 +70,11 @@ namespace Stamina { namespace UI {
 			}
 			inline void setFont(const CStdString& face) {
 				cf.dwMask |= CFM_FACE;
+#if (_MSC_VER >= 1400)
+				strncpy_s(cf.szFaceName, sizeof(cf.szFaceName), face, sizeof(cf.szFaceName)-1);
+#else
 				strncpy(cf.szFaceName , face, sizeof(cf.szFaceName)-1);
+#endif
 			}
 
 			inline int getSize() {

@@ -174,8 +174,11 @@ namespace Stamina { namespace DT {
 		if (_table->_timeCreated.empty()) 
 			_table->_timeCreated.now();
 
-
+#if (_MSC_VER >= 1400)
+		fopen_s(&_file, this->getOpenedFileName().c_str(), openmode);
+#else
 		_file=fopen(this->getOpenedFileName().c_str(), openmode);
+#endif
 
 		if (_file && useTempFile && (mode & fileWrite)) {
 			_temp_enabled = true;

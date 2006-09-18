@@ -68,12 +68,13 @@ namespace Stamina {
 		inline Time64(time_t timer) {
 			from_time_t(timer);
 		}
-
+#if (_MSC_VER < 1400)
 		/** Constructor
 		*/
 		inline Time64(__int64 timer) {
 			from_int64(timer);
 		}
+#endif
 #ifdef _WINDOWS_
 		/** Constructor
 		*/
@@ -251,12 +252,13 @@ namespace Stamina {
 		Date64(time_t timer) {
 			from_time_t(timer);
 		}
-
+#if (_MSC_VER < 1400)
 		/** Constructor
 		*/
 		Date64(__int64 timer) {
 			from_int64(timer);
 		}
+#endif
 #ifdef _WINDOWS_
 		/** Constructor
 		*/

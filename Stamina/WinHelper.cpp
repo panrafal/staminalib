@@ -117,8 +117,14 @@ namespace Stamina {
 
 	int removeDirTree(const char * path) {
 		char * ch = (char*)malloc(strlen(path) + 255);
+#if (_MSC_VER >= 1400)
+		int chl = strlen(path) + 255;
+		strcpy_s(ch, chl, path);
+		strcat_s(ch, chl, "\\*.*");
+#else
 		strcpy(ch , path);
 		strcat(ch , "\\*.*");
+#endif
 		WIN32_FIND_DATA fd;
 		HANDLE hFile;
 		BOOL found;
@@ -129,11 +135,19 @@ namespace Stamina {
 		{
 			if (*fd.cFileName != '.') {
 				ch[strlen(path)+1] = 0;
-				strcat(ch , fd.cFileName);
+#if (_MSC_VER >= 1400)
+				strcat_s(ch, chl, fd.cFileName);
+#else
+				strcat(ch, chl, fd.cFileName);
+#endif
 				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					removeDirTree(ch);
 				} else {
+#if (_MSC_VER >= 1400)
+					_unlink(ch);
+#else
 					unlink(ch);
+#endif
 				}
 			}
 			if (!FindNextFile(hFile , &fd)) break; 
@@ -313,7 +327,12 @@ namespace Stamina {
 		int imageType=-1;
 		void * p = 0;
 		if (!hInst) {
+#if (_MSC_VER >= 1400)
+			FILE *file;
+			fopen_s(&file, id, "rb");
+#else
 			FILE * file = fopen(id , "rb");
+#endif
 			if (!file) goto end;
 			fseek(file , 0 , SEEK_END);
 			int size = ftell(file);
@@ -564,7 +583,7 @@ end:
 		return vhti.iItem;
 	}
 
-	ListView_Deselect(HWND hwnd) {
+	int ListView_Deselect(HWND hwnd) {
 		int pos;
 		int c = ListView_GetItemCount(hwnd);
 		//   while ((pos = ListView_GetSelectionMark(hwnd))>=0)
@@ -588,7 +607,7 @@ end:
 		return i;
 	}
 
-	ListView_SetCurSel (HWND hwnd , int pos) {
+	int ListView_SetCurSel (HWND hwnd , int pos) {
 		ListView_Deselect(hwnd);
 		ListView_SetItemState(hwnd , pos , LVIS_SELECTED , LVIS_SELECTED);
 		ListView_SetSelectionMark(hwnd , pos);
@@ -609,7 +628,7 @@ end:
 		return ListView_InsertItem(hwnd , &lvi);
 	}
 
-	ListView_SetString(HWND hwnd , int item , int subitem , char * txt) {
+	int ListView_SetString(HWND hwnd , int item , int subitem , char * txt) {
 		LVITEM lvi;
 		lvi.mask = LVIF_TEXT;
 		lvi.iItem = item;

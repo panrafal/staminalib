@@ -40,7 +40,11 @@ namespace Stamina {
 		int size = _vscprintf(format, va);
 		char * buff = new char [size + 2];
 		buff[size + 1] = 0;
+#if (_MSC_VER >= 1400)
+		size = _vsnprintf_s(buff, size+1, size, format, va);
+#else
 		size = _vsnprintf(buff, size+1, format, va);
+#endif
 		buff[size] = 0;
 		this->logMsg(level, module, where, buff);
 		delete [] buff;
