@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 
 #pragma once
 
@@ -16,6 +33,7 @@
 
 #include "Object.h"
 #include "CriticalSection.h"
+#include "Mutex.h"
 
 
 
@@ -31,24 +49,46 @@ namespace Stamina {
 	/** iLockableObj implementation template
 	@param OI - object's interface
 	@param OIMP - Object implementation (iObject)
-	@param TCS - locker class to use (needs functions lock() and unlock())
+	@param LS - lock selector class to use (needs function selectLock()), or Lock object descendant (will be used for all types of locks...)
 	*/
-	template <class OI, class TCS = Stamina::CriticalSection, class OIMP = Object<OI> > class LockableObject: public OIMP {
+	template <class OI, class LS = Stamina::CriticalSection, class OIMP = Object<OI> > class LockableObject: public OIMP {
 	public:
-		void __stdcall lock() const {
-			const_cast<LockableObject*>(this)->_cs.lock();
+
+		virtual void lock(enLockType type) const {
+			__if_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.lock(type);
+			}
+			__if_not_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.lock();
+			}
 		}
-		/** Odblokowuje dostêp do obiektu */
-		void __stdcall unlock() const {
-			const_cast<LockableObject*>(this)->_cs.unlock();
+
+		virtual void unlock(enLockType type) const {
+			__if_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.unlock(type);
+			}
+			__if_not_exists(LS::selectLock) {
+				const_cast<LockableObject*>(this)->_lock.unlock();
+			}
 		}
-		TCS & CS() {return _cs;}
+
+		virtual Lock& selectLock(enLockType type) const {
+			__if_exists(LS::selectLock) {
+				return const_cast<LockableObject*>(this)->_lock.selectLock(type);
+			}
+			__if_not_exists(LS::selectLock) {
+				__if_exists(LS::Lock) {
+					return const_cast<LockableObject*>(this)->_lock;
+				}
+			}
+			return iLockableObject::selectLock(type);
+		}
+
+		LS & lockSelector() {return _lock;}
 	private:
-		TCS _cs;
+		LS _lock;
 	};
 
-
-	typedef LockerTmpl<const iLockableObject> ObjLocker;
 
 	/** iSharedObj implementation
 	@param IO - object's interface
@@ -64,16 +104,16 @@ namespace Stamina {
 			// je¿eli ani razu nie wywo³amy hold/release znaczy ¿e obiekt by³ utworzony i usuniêty bez u¿ycia SharedPtr i ma _useCount == 1
 			S_ASSERT(this->_useCount == 0 || this->_useCount == 1);
 		}
-		bool __stdcall hold() {
-			LockerTmpl<LO>(this);
+		bool hold() {
+			ObjLocker(this, lockSharedMutex);
 			if (this->_useCount == 0)
 				return false;
 			this->_useCount++;
 			return true;
 		}
-		void __stdcall release() {
+		void release() {
 			{
-				LockerTmpl<LO>(this);
+				ObjLocker(this, lockSharedMutex);
 				if (this->_useCount < 1) {
 					//IMDEBUG(DBG_ASSERT, "SharedObj released during destroy");
 					return;
@@ -90,21 +130,21 @@ namespace Stamina {
 		}
 		/** Zwraca true je¿eli z obiektu mo¿na korzystaæ
 		*/
-		bool __stdcall isValid() {
-			LockerTmpl<LO>(this);
+		bool isValid() {
+			ObjLocker(this, lockSharedMutex);
 			return this->_useCount != 0;
 		}
-		bool __stdcall isDestroyed() {
-			LockerTmpl<LO>(this);
+		bool isDestroyed() {
+			ObjLocker(this, lockSharedMutex);
 			return this->_useCount == 0;
 		}
-		virtual void __stdcall destroy() {
-			LockerTmpl<LO>(this);
+		virtual void destroy() {
+			ObjLocker(this, lockSharedMutex);
 			S_ASSERT(this->_useCount == 0);
 			delete this;
 		}
-		unsigned int __stdcall getUseCount() {
-			LockerTmpl<LO>(this);
+		unsigned int getUseCount() {
+			ObjLocker(this, lockSharedMutex);
 			return this->_useCount;
 		}
 		/** The object won't be ever deleted automatically. Use ONLY for heap allocated objects! */

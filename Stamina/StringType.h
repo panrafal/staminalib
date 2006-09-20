@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id: String.h 51 2005-07-18 10:13:35Z hao $
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id: $
+
+*/
+
 
 #ifndef __STAMINA_STRINGTYPE__
 #define __STAMINA_STRINGTYPE__
@@ -518,7 +535,7 @@ namespace Stamina {
 		static bool equal(const char* abegin, const char* aend, const char* bbegin, const char* bend, bool noCase) {
 			if (aend - abegin != bend - bbegin) return false;
 			if (noCase) {
-				return strnicmp(abegin, bbegin, (aend - abegin)) == 0;
+				return _strnicmp(abegin, bbegin, (aend - abegin)) == 0;
 			} else {
 				// dzia³a dla wszystkich, wiêc mo¿e byæ tu u¿yte...
 				return memcmp(abegin, bbegin, (aend - abegin)) == 0;
@@ -550,7 +567,7 @@ namespace Stamina {
 		static bool equal(const wchar_t* abegin, const wchar_t* aend, const wchar_t* bbegin, const wchar_t* bend, bool noCase) {
 			if (aend - abegin != bend - bbegin) return false;
 			if (noCase) {
-				return wcsnicmp(abegin, bbegin, (aend - abegin)) == 0;
+				return _wcsnicmp(abegin, bbegin, (aend - abegin)) == 0;
 			} else {
 				// dzia³a dla wszystkich, wiêc mo¿e byæ tu u¿yte...
 				return memcmp(abegin, bbegin, (aend - abegin) * 2) == 0;

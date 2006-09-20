@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id: iColumn.h 93 2005-08-22 00:23:52Z hao $
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id: $
+
+*/
+
 #pragma once
 #ifndef __DT_COLUMNTYPES__
 #define __DT_COLUMNTYPES__
@@ -157,7 +174,7 @@ namespace Stamina { namespace DT {
 		}
 		virtual String getString(const iRow* row, GetSet flags) const {
 			if (flags & getCopy) {
-				ObjLocker l (getRowLocker(row));
+				ObjLocker l (getRowLocker(row), lockRead);
 				String s = get<ColumnType_string>(row, flags);
 				s.makeUnique();
 				return PassStringRef(s);
@@ -167,7 +184,7 @@ namespace Stamina { namespace DT {
 		}
 		virtual ByteBuffer getBin(const iRow* row, GetSet flags) const { 
 			if (flags & getCopy) {
-				ObjLocker l (getRowLocker(row));
+				ObjLocker l (getRowLocker(row), lockRead);
 				ByteBuffer b = get<ColumnType_bin>(row, flags);
 				b.makeUnique();
 				return b;
@@ -246,7 +263,7 @@ namespace Stamina { namespace DT {
 
 		template <class TO>
 		typename TO::tConvert get(const iRow* row, GetFlags flags) const {
-			ObjLocker l (getRowLocker(row));
+			ObjLocker l (getRowLocker(row), lockRead);
 			tGetTypeData val = this->getTypeData(row, true);
 			if (this->getHandler.empty() == false) {
 				tValue current (val);
@@ -260,7 +277,7 @@ namespace Stamina { namespace DT {
 
 		template <typename FROM>
 		bool set(iRow* row, typename FROM::tCRef val, SetFlags flags) const {
-			ObjLocker l (getRowLocker(row));
+			ObjLocker l (getRowLocker(row), lockWrite);
 			if (setHandler.empty() == false) {
 				FROM::tValue current (val);
 				current.disableRefCount();

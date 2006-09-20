@@ -1,20 +1,38 @@
+/*
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 #pragma once
 #ifndef __DT_FILEBIN__
 #define __DT_FILEBIN__
 
-/*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
 
 #include <io.h>
 #include "FileBase.h"
 #include <Stamina\Helpers.h>
+#include <Stamina\FindFileFiltered.h>
 
 namespace Stamina { namespace DT {
 
@@ -200,7 +218,7 @@ namespace Stamina { namespace DT {
 		void backupFile(bool move = true);
 
 		static String makeBackupFilename(const StringRef& filename, const Time64& time = Time64(true)) {
-			return filename + time.strftime(".%d-%m-%Y %H-%M-%S.bak");
+			return filename + time.strftime(".%Y-%m-%d %H-%M-%S.bak");
 		}
 
 		/** Removes old backups leaving only few of them.
@@ -215,7 +233,7 @@ namespace Stamina { namespace DT {
 		bool restoreLastBackup(const StringRef& filename = "");
 
 		Date64 findLastBackupDate(const StringRef& filename = "");
-		String findLastBackupFile(const StringRef& filename = "");
+		String findLastBackupFile(const StringRef& filename = "", Date64* date = 0);
 
 
 	protected:
@@ -238,8 +256,12 @@ namespace Stamina { namespace DT {
 			if (fread(buffer, size, 1, _file) < 1) {
 				throw DTFileException();
 			}
-			if (decrement)
+			if (decrement) {
+				if (*decrement < size) {
+					throw DTException(errBadFormat);
+				}
 				*decrement -= size;
+			}
 		}
 
 		inline void writeData(const void* buffer, int size, unsigned int* increment = 0) throw(...) {

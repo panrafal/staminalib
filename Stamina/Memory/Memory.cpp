@@ -1,3 +1,29 @@
+/*
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id: $
+
+*/
+
 // Memory.cpp : Defines the entry point for the DLL application.
 //
 
@@ -61,5 +87,34 @@ void __stdcall sm_free(void* buff) {
 
 DECLARE_POOLED_BUFFER(char, 8, 32, 128);
 DECLARE_POOLED_BUFFER(wchar_t, 16, 32, 128);
+DECLARE_POOLED_BUFFER(int, 32, 16, 64);
+
+
+void* __stdcall sm_allocBuffer(unsigned int& size, unsigned int itemSize) {
+	switch (itemSize) {
+		case 1:
+			return sm_allocBuffer8(size);
+		case 2:
+			return sm_allocBuffer16(size);
+		case 4:
+			return sm_allocBuffer32(size);
+		default:
+			return sm_malloc(size * itemSize);
+	};
+}
+
+void __stdcall sm_freeBuffer(void* buff, unsigned int size, unsigned int itemSize) {
+	switch (itemSize) {
+		case 1:
+			return sm_freeBuffer8((char*)buff, size);
+		case 2:
+			return sm_freeBuffer16((wchar_t*)buff, size);
+		case 4:
+			return sm_freeBuffer32((int*)buff, size);
+		default:
+			return sm_free(buff);
+	};
+}
+
 
 } }

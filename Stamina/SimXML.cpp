@@ -1,12 +1,28 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
 
 #include "stdafx.h"
 #include <windows.h>
@@ -32,7 +48,12 @@ namespace Stamina {
 
 	bool SXML::loadFile(const char *  fileName) {
 		string _src="";
-		FILE * f = fopen (fileName , "rt");
+		FILE * f;
+#if (_MSC_VER >= 1400)
+		fopen_s(&f, fileName, "rt");
+#else
+		f = fopen (fileName , "rt");
+#endif
 		if (!f) return false;
 		char temp [251];
 		size_t r;
@@ -67,7 +88,11 @@ namespace Stamina {
 
 	string __stdcall encodeCallback(class RegEx * p , void * param) {
 		char v [7] = "&#\0\0\0\0";
+#if (_MSC_VER >= 1400)
+		_itoa_s(*p->getByVector(0), v+2, 5, 10); 
+#else
 		itoa(*p->getByVector(0) , v+2 , 10);
+#endif
 		v[strlen(v)]=';';
 		return v;
 	}

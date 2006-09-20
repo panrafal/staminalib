@@ -1,13 +1,30 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
 
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+#ifndef __STAMINA_HELPERS_H__
+#define __STAMINA_HELPERS_H__
 #pragma once
 
 #include <stdlib.h>
@@ -22,7 +39,7 @@ namespace Stamina {
 
 	inline int round(double val) {
 		return (int)floor(val + 0.5);
-	};
+	}
 
 	inline void randomSeed() {
 #ifdef _WINDOWS_
@@ -193,12 +210,16 @@ namespace Stamina {
 	@return number of deleted files/dirs
 	*/
 	int removeDirTree(const std::string& path);
+
 	/**Creates all missing directories on provided path.
 	@return number of created directories
 	*/
 	int createDirectories(const std::string& path);
 
-	/** Returns the name of last path part */
+	/** Returns the name of last path part 
+
+	ie. "bar.html" from "/foor/bar.html"
+	*/
 	inline std::string getFileName(const std::string& path) {
 		return path.substr(path.find_last_of("\\/") + 1);
 	}
@@ -218,10 +239,18 @@ namespace Stamina {
 	std::string getCurrentDirectory();
 
 #ifdef _WINDOWS_
-	template<class LIST> int deleteFiles(const LIST& files) {
+	template<class FILE> bool deleteFile(const FILE& file);
+
+	__if_exists(StringRef) {
+		template<> inline int deleteFile<StringRef>(const StringRef& file) {
+			return ::DeleteFile(file.a_str());
+		}
+	}
+
+	template<class LIST> inline int deleteFiles(const LIST& files) {
 		int c = 0;
 		for (LIST::const_iterator it = files.begin(); it != files.end(); ++it) {
-			if (DeleteFile(it->c_str())) {
+			if (deleteFile(*it)) {
 				c++;
 			}
 		}
@@ -237,3 +266,4 @@ namespace Stamina {
 	bool isDirectory(const char* path);
 
 };
+#endif	// __STAMINA_HELPERS_H__

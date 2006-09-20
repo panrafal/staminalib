@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 
 #include "stdafx.h"
 
@@ -100,8 +117,14 @@ namespace Stamina {
 
 	int removeDirTree(const char * path) {
 		char * ch = (char*)malloc(strlen(path) + 255);
+#if (_MSC_VER >= 1400)
+		int chl = strlen(path) + 255;
+		strcpy_s(ch, chl, path);
+		strcat_s(ch, chl, "\\*.*");
+#else
 		strcpy(ch , path);
 		strcat(ch , "\\*.*");
+#endif
 		WIN32_FIND_DATA fd;
 		HANDLE hFile;
 		BOOL found;
@@ -112,11 +135,19 @@ namespace Stamina {
 		{
 			if (*fd.cFileName != '.') {
 				ch[strlen(path)+1] = 0;
-				strcat(ch , fd.cFileName);
+#if (_MSC_VER >= 1400)
+				strcat_s(ch, chl, fd.cFileName);
+#else
+				strcat(ch, chl, fd.cFileName);
+#endif
 				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					removeDirTree(ch);
 				} else {
+#if (_MSC_VER >= 1400)
+					_unlink(ch);
+#else
 					unlink(ch);
+#endif
 				}
 			}
 			if (!FindNextFile(hFile , &fd)) break; 
@@ -296,7 +327,12 @@ namespace Stamina {
 		int imageType=-1;
 		void * p = 0;
 		if (!hInst) {
+#if (_MSC_VER >= 1400)
+			FILE *file;
+			fopen_s(&file, id, "rb");
+#else
 			FILE * file = fopen(id , "rb");
+#endif
 			if (!file) goto end;
 			fseek(file , 0 , SEEK_END);
 			int size = ftell(file);
@@ -499,13 +535,6 @@ end:
 	}
 
 
-	std::string expandEnvironmentStrings(const char * src, unsigned int size) {
-		CStdString buff;
-		ExpandEnvironmentStrings(src, buff.GetBuffer(500), size);
-		buff.ReleaseBuffer();
-		return buff;
-	}
-
 
 	bool _SetDllDirectory(const char * dir) {
 #ifdef UNICODE
@@ -554,7 +583,7 @@ end:
 		return vhti.iItem;
 	}
 
-	ListView_Deselect(HWND hwnd) {
+	int ListView_Deselect(HWND hwnd) {
 		int pos;
 		int c = ListView_GetItemCount(hwnd);
 		//   while ((pos = ListView_GetSelectionMark(hwnd))>=0)
@@ -578,7 +607,7 @@ end:
 		return i;
 	}
 
-	ListView_SetCurSel (HWND hwnd , int pos) {
+	int ListView_SetCurSel (HWND hwnd , int pos) {
 		ListView_Deselect(hwnd);
 		ListView_SetItemState(hwnd , pos , LVIS_SELECTED , LVIS_SELECTED);
 		ListView_SetSelectionMark(hwnd , pos);
@@ -599,7 +628,7 @@ end:
 		return ListView_InsertItem(hwnd , &lvi);
 	}
 
-	ListView_SetString(HWND hwnd , int item , int subitem , char * txt) {
+	int ListView_SetString(HWND hwnd , int item , int subitem , char * txt) {
 		LVITEM lvi;
 		lvi.mask = LVIF_TEXT;
 		lvi.iItem = item;
@@ -650,6 +679,19 @@ end:
 		ListView_EnsureVisible(hwnd , newPos , 0);
 		ListView_DeleteItem(hwnd , pos);
 		return 1;
+	}
+
+
+	Size toolBar_getSize(HWND hwnd) {
+		int c = SendMessage(hwnd , TB_BUTTONCOUNT , 0 , 0);
+		Rect rc;
+		Rect tbrc;
+		for (int i=0; i < c; i++) {
+			if (SendMessage(hwnd , TB_GETITEMRECT , i , (LPARAM)rc.ref())) {
+				tbrc.include(rc);
+			}
+		}
+		return tbrc.getSize();
 	}
 
 

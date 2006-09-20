@@ -14,6 +14,7 @@
 
 #include <windows.h>
 #include "Lock.h"
+#include "Assert.h"
 /*
 cCriticalSection to bardzo prosta, obiektowa, niekoniecznie szybsza
 wersja obslugi sekcji krytycznych. Dodatkowa opcja, jest mozliwosc
@@ -32,13 +33,33 @@ timeout'owania oczekiwania sekcji wyjatkiem strukturalnym.
 namespace Stamina {
 
 
+	/** Empty Critical section class.
+	*/
+	class iCriticalSection:public Lock {
+	public:
+
+		STAMINA_OBJECT_CLASS(iCriticalSection, Lock);
+
+	private:
+
+		virtual void zzPlaceHolder_iCriticalSection1() {}
+		virtual void zzPlaceHolder_iCriticalSection2() {}
+		virtual void zzPlaceHolder_iCriticalSection3() {}
+		virtual void zzPlaceHolder_iCriticalSection4() {}
+
+	};
+
+
 	// =========================================================================
 
 	// struktura do bezposredniej obslugi blokowania dostepu
 	/** Simple class to direct use of blocking access.
 	*/
-	class CriticalSection_w32:public Lock {
+	class CriticalSection_w32:public iCriticalSection {
 	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_w32, iCriticalSection);
+
 		CRITICAL_SECTION cs;
 
 		CriticalSection_w32();
@@ -53,10 +74,48 @@ namespace Stamina {
 
 	};
 
+	class CriticalSection_simple: public iCriticalSection {
+	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_simple, iCriticalSection);
+
+		__inline CriticalSection_simple() {
+			_occupied = 0;
+			_thread = 0;
+		}
+		void lock() {
+			LONG current = GetCurrentThreadId();
+			LONG result;
+			while ((result = InterlockedCompareExchange(&_thread, current, 0)) != current && result != 0){
+				Sleep(1);
+			}
+			InterlockedIncrement(&_occupied);
+		}
+		void unlock() {
+			if (InterlockedDecrement(&_occupied) == 0) {
+				LONG current = GetCurrentThreadId();
+				S_ASSERT_RUN( InterlockedCompareExchange(&_thread, 0, current) == current );
+			}
+		}
+		bool canAccess() {
+			return _occupied != 1;
+		}
+		int getLockCount() {
+			return _occupied;
+		}
+	private:
+        volatile LONG _occupied;
+		volatile LONG _thread;
+	};
+
+
 	/** Empty Critical section class.
 	*/
-	class CriticalSection_blank:public Lock {
+	class CriticalSection_blank:public iCriticalSection {
 	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_blank, iCriticalSection);
+
 		__inline void lock() {} 
 		__inline void unlock() {} 
 		int getLockCount() {return 0;}
@@ -66,8 +125,11 @@ namespace Stamina {
 	// struktura do bezposredniej obslugi blokowania dostepu
 	/** Class to direct use of blocking access.
 	*/
-	class CriticalSection_:public Lock {
+	class CriticalSection_:public iCriticalSection {
 	public:
+
+		STAMINA_OBJECT_CLASS(CriticalSection_, iCriticalSection);
+
 		CriticalSection_();
 		~CriticalSection_();
 		void lock(); // Zwraca liczbê wczeœniej za³o¿onych blokad

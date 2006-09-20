@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 
 /* Model statyczny */
 #include "stdafx.h"
@@ -67,7 +84,7 @@ namespace ListWnd
 	void ListView::setActiveItem(const oItem& item)
 	{
 		{
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (this->_activeItem == item) return;
 			this->lockPaint();
 			this->lockRefresh();
@@ -93,9 +110,9 @@ namespace ListWnd
 	void ListView::selectionToActive() {
 		lockPaint();
 		ItemWalk::walk(this
-			, boost::bind(Item::setSelected
-				, boost::bind(oItem::get, _1)
-				, boost::bind(ItemWalk::getListView,_2), false)
+			, boost::bind(&Item::setSelected
+				, boost::bind(&oItem::get, _1)
+				, boost::bind(&ItemWalk::getListView,_2), false)
 			, oItem(), oItem(), true, false);
 		if (this->_activeItem)
 			this->_activeItem->setSelected(this, true);
@@ -106,7 +123,7 @@ namespace ListWnd
 	{
 		Point pos;
 		{
-			ObjLocker lock(this);
+			ObjLocker lock(this, lockWrite);
 			if (!this->_activeItem) return;
 			InView in = this->isInView(this->_activeItem);
 			pos = this->getScrollPos();
@@ -134,8 +151,8 @@ namespace ListWnd
 	}
 
 	InView ListView::isInView(oItem itemObj) {
-		ObjLocker lock(this);
-        S_ASSERT(itemObj);
+		ObjLocker lock(this, lockRead);
+		S_ASSERT(itemObj.isValid());
 		/*Lepiej przewin¹æ siê nie da, wiêc musimy pozwalaæ na czêœciowe*/
 		/*if (this->getScrollPos() == item->getPos()) {
 			canBePartial = true;
@@ -245,14 +262,14 @@ namespace ListWnd
 
 	HDC ListView::getDC()
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		this->_dcCount++;
 		return this->_paintdc ? this->_paintdc : this->_dc ? this->_dc : this->_dc = GetDC(this->_hwnd);	
 	}
 
 	void ListView::releaseDC(HDC dc)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		S_ASSERT(this->_dcCount > 0);
 		this->_dcCount--;
 		if (dc == this->_paintdc) return;
@@ -264,7 +281,7 @@ namespace ListWnd
 	}
 
 	void ListView::refreshItems(RefreshFlags refresh) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (!this->canRefresh()) {
 			this->_refreshNeeded = true;
 			return;
@@ -278,7 +295,7 @@ namespace ListWnd
 		}
 	}
 	void ListView::repaintView() {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (!this->canPaint()) {
 			this->_paintNeeded = true;
 			return;

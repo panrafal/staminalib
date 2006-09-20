@@ -1,8 +1,34 @@
+/*
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id: $
+
+*/
 #include <stdafx.h>
 #include <list>
 #include <ostream>
 #include <cppunit/extensions/HelperMacros.h>
 #include <Stamina/VersionControl.h>
+#include <Stamina\FindFile.h>
 #include "..\DataTable.h"
 #include "..\FileBin.h"
 #include "..\InterfaceBasic.h"
@@ -637,7 +663,7 @@ protected:
 		backup = fb.findLastBackupFile();
 		CPPUNIT_ASSERT(backup.empty() == false);
 		// sprawdzamy wyszukiwanie najnowszych...
-		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - 120).strftime(".%d-%m-%Y %H-%M-%S.bak")).c_str(), false);
+		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - 120).strftime(".%Y-%m-%d %H-%M-%S.bak")).c_str(), false);
 		CPPUNIT_ASSERT_EQUAL(String(backup), fb.findLastBackupFile());
 
 		// przywracanie
@@ -675,7 +701,7 @@ protected:
 		remove.push_back(Time64(true) - (12 * 60 * 60)); // sprzed 6 godzin
 		remove.push_back(Time64(true) - 1000); // najnowsze
 
-		std::string format = getFileName("testCleanup") + ".%d-%m-%Y %H-%M-%S.bak";
+		std::string format = getFileName("testCleanup") + ".%Y-%m-%d %H-%M-%S.bak";
 
 		for (tList::iterator it = keep.begin(); it != keep.end(); it++) {
 			CopyFile("TestFileBinOld.dtb", it->strftime(format.c_str()).c_str() , false);
@@ -684,8 +710,8 @@ protected:
 			CopyFile("TestFileBinOld.dtb", it->strftime(format.c_str()).c_str() , false);
 		}
 
-		std::string testAll1 = getFileName("testCleanupAll") + ".10-06-2001 12-00-00.bak";
-		std::string testAll2 = getFileName("testCleanupAll") + ".09-06-2001 12-00-00.bak";
+		std::string testAll1 = getFileName("testCleanupAll") + ".2001-06-10 12-00-00.bak";
+		std::string testAll2 = getFileName("testCleanupAll") + ".2001-06-09 12-00-00.bak";
 		CopyFile("TestFileBinOld.dtb", testAll1.c_str(), false);
 		CopyFile("TestFileBinOld.dtb", testAll2.c_str(), false);
 
@@ -731,21 +757,21 @@ protected:
 			std::cout << endl << title << endl  << msg << endl;
 		}
 
-		virtual Result handleFailedLoad(FileBase* file, DTException* e, int retry) {
-			cout << "handleFailedLoad(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleFailedLoad(FileBase* file, DTException& e, int retry) {
+			cout << "handleFailedLoad(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedLoad(file, e, retry);
 		}
-		virtual Result handleFailedSave(FileBase* file, DTException* e, int retry) {
-			cout << "handleFailedSave(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleFailedSave(FileBase* file, DTException& e, int retry) {
+			cout << "handleFailedSave(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedSave(file, e, retry);
 		}
-		virtual Result handleFailedAppend(FileBase* file, DTException* e, int retry) {
-			cout << "handleFailedAppend(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleFailedAppend(FileBase* file, DTException& e, int retry) {
+			cout << "handleFailedAppend(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleFailedAppend(file, e, retry);
 		}
 
-		virtual Result handleRestoreBackup(FileBin* file, DTException* e, int retry) {
-			cout << "handleRestoreBackup(" << file->getFilename() << ", " << e->getReason() << ", " << retry << ")" << endl;
+		virtual Result handleRestoreBackup(FileBin* file, DTException& e, int retry) {
+			cout << "handleRestoreBackup(" << file->getFilename() << ", " << e.getReason() << ", " << retry << ")" << endl;
 			return __super::handleRestoreBackup(file, e, retry);
 		}
 
@@ -794,7 +820,8 @@ protected:
 		result = fb.loadAll(filename);
 		CPPUNIT_ASSERT(result == DT::success);
 
-		CPPUNIT_ASSERT_EQUAL((int)1, iface->passAsked);
+		// iface domyœlnie sprawdza puste has³o i o nie nie pyta!
+		CPPUNIT_ASSERT_EQUAL((int)(password == "" ? 0 : 1), iface->passAsked);
 
 		dt.setPassword("z³e has³o");
 		dt.setInterface(0);
@@ -803,7 +830,7 @@ protected:
 		CPPUNIT_ASSERT(result == DT::errNotAuthenticated);
 
 		dt.setInterface(iface);
-		result = fb.append(filename);
+		result = fb.append(filename); // powinien odnaleŸæ odpowiednie has³o...
 		CPPUNIT_ASSERT(result == DT::success);
 		
 	}

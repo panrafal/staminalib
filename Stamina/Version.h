@@ -1,14 +1,32 @@
+/*
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 #pragma once
 
-/*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
 
 #include <string.h>
 
@@ -96,18 +114,40 @@ namespace Stamina {
 			char buff [10];
 			std::string s;
 			if (elements > 0 || major || minor || release || build)
-				s += itoa(major, buff, 10);
+#if (_MSC_VER >= 1400)
+			{
+				_itoa_s(major, buff, strlen(buff), 10);
+				s += buff;
+			}
+#else
+				s += _itoa(major, buff, 10);
+#endif
 			if (elements > 1 || minor || release || build) {
 				s += ".";
-				s += itoa(minor, buff, 10);
+#if (_MSC_VER >= 1400)
+				_itoa_s(minor, buff, strlen(buff), 10);
+				s += buff;
+#else
+				s += _itoa(minor, buff, 10);
+#endif
 			}
 			if (elements > 2 || release || build) {
 				s += ".";
-				s += itoa(minor, buff, 10);
+#if (_MSC_VER >= 1400)
+				_itoa_s(release, buff, strlen(buff), 10);
+				s += buff;
+#else
+				s += _itoa(release, buff, 10);
+#endif
 			}
 			if (elements > 3 || build) {
 				s += ".";
-				s += itoa(minor, buff, 10);
+#if (_MSC_VER >= 1400)
+				_itoa_s(build, buff, strlen(buff), 10);
+				s += buff;
+#else
+				s += _itoa(build, buff, 10);
+#endif
 			}
 			return s;
 		}
@@ -136,7 +176,7 @@ namespace Stamina {
 		}
 
 		bool operator == (const ModuleVersion&b) {
-			return _category == b._category && stricmp(_name, b._name) == 0 && _version == b._version;
+			return _category == b._category && _stricmp(_name, b._name) == 0 && _version == b._version;
 		}
 
 		enVersionCategory getCategory() const {
@@ -154,7 +194,7 @@ namespace Stamina {
 	private:
 		enVersionCategory _category;
 		const char* _name;
-		const Version& _version;
+		const Version _version;
 	};
 
 };

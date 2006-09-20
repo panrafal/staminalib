@@ -1,3 +1,29 @@
+/*
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id: $
+
+*/
+
 #include <stdafx.h>
 #include <math.h>
 #include <cppunit/extensions/HelperMacros.h>
@@ -524,7 +550,7 @@ public:
 		}
 		{
 			String a ("Hello ");
-			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), StringRef(a + "world!") );
+			CPPUNIT_ASSERT_EQUAL( StringRef("Hello world!"), StringRef(a + String("world!")) );
 			CPPUNIT_ASSERT_EQUAL( String("Hello "), a );
 		}
 		{ // StringRef
@@ -859,24 +885,25 @@ public:
 	}
 
 	void testUseBuffer() {
+		Buffer<CHAR> b;
 		{
 			String a;
 			CHAR * ch = a.useBuffer<CHAR>(10);
-			StringBuffer<CHAR>::copy(ch, testString(L"01234").c_str(), 6);
+			b.copy(ch, testString(L"01234").c_str(), 6);
 			a.releaseBuffer<CHAR>();
 			CPPUNIT_ASSERT_EQUAL( String("01234"), a );
 		}
 		{
 			String a;
 			CHAR * ch = a.useBuffer<CHAR>(10);
-			StringBuffer<CHAR>::copy(ch, testString(L"01234").c_str(), 5);
+			b.copy(ch, testString(L"01234").c_str(), 5);
 			a.releaseBuffer<CHAR>(5);
 			CPPUNIT_ASSERT_EQUAL( String("01234"), a );
 		}
 		{ // dlugosc rowna buforowi
 			String a;
 			CHAR * ch = a.useBuffer<CHAR>(10);
-			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			b.copy(ch, testString(L"0123456789").c_str(), 11);
 			a.releaseBuffer<CHAR>();
 			CPPUNIT_ASSERT_EQUAL( String("0123456789"), a );
 		}
@@ -884,7 +911,7 @@ public:
 			String a (testString(L"abcdefghij"));
 			const CHAR * old = a.getData<CHAR>();
 			CHAR * ch = a.useBuffer<CHAR>(10);
-			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			b.copy(ch, testString(L"0123456789").c_str(), 11);
 			a.releaseBuffer<CHAR>();
 			CPPUNIT_ASSERT_EQUAL( String("0123456789"), a );
 			CPPUNIT_ASSERT( ch == old );
@@ -892,7 +919,7 @@ public:
 		{ // zmiana typu
 			String a (otherString(L"abcdefghijklmno"));
 			CHAR * ch = a.useBuffer<CHAR>(10);
-			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			b.copy(ch, testString(L"0123456789").c_str(), 11);
 			a.releaseBuffer<CHAR>();
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghijklmno" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghijklmno" );
@@ -902,7 +929,7 @@ public:
 			String a (otherString(L"abcdefghijklmno"));
 			a.setTypeLock(true); // blokujemy na OTHER
 			CHAR * ch = a.useBuffer<CHAR>(10);
-			StringBuffer<CHAR>::copy(ch, testString(L"0123456789").c_str(), 11);
+			b.copy(ch, testString(L"0123456789").c_str(), 11);
 			a.releaseBuffer<CHAR>(); // konwersja do OTHER
 			CPPUNIT_ASSERT( StringRef(a.getData<CHAR>()) != "abcdefghijklmno" );
 			CPPUNIT_ASSERT( StringRef(a.getData<OTHER>()) != "abcdefghijklmno" );

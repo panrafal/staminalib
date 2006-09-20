@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 
 #ifndef __STAMINA_VERSIONCONTROL__
 #define __STAMINA_VERSIONCONTROL__
@@ -28,16 +45,19 @@ namespace Stamina {
 
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::VersionControl, iObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(VersionControl, iObject, Version(1,1,0,0));
+
+		VersionControl() {}
 
 		virtual String toString(iStringFormatter* format=0) const {
 			return "";
 		}
 
-		__declspec(dllexport) static VersionControl* instance() {
-			static VersionControl vcInstance;
-			return &vcInstance;		
+		static __declspec(dllexport) __declspec(noinline) VersionControl* instance() {
+			static VersionControl vc;
+			return &vc;
 		}
+
 
 		bool registerModule(const ModuleVersion& module) {
 			//OutputDebugString("registerModule: ");
@@ -57,9 +77,9 @@ namespace Stamina {
 			do {
 				if (registerModule(it->getModuleVersion()) == false)
 					break;
-				it = it->getBaseInfo();
+				it = &it->getBaseInfo();
 				//break;
-			} while (it);
+			} while (it->isValid());
 		}
 
 		template <class CLASS>
@@ -82,7 +102,7 @@ namespace Stamina {
 		}
 
 		tModuleList::const_iterator end() const {
-			return _list.begin();
+			return _list.end();
 		}
 
 		unsigned int size() const {
@@ -94,12 +114,11 @@ namespace Stamina {
 		}
 
 	private:
-		VersionControl() {
-		}
 	private:
 		tModuleList _list;        
 
 	};
+
 
 	inline void registerVersion(const ModuleVersion& module) {
 		VersionControl::instance()->registerModule(module);
@@ -134,9 +153,11 @@ namespace Stamina {
 		ModuleVersion version;
 	};
 
+#undef STAMINA_REGISTER_VERSION
 #define STAMINA_REGISTER_VERSION(NAME, MODULE) \
 	extern __declspec(dllexport) __declspec(selectany) const ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
 
+#undef STAMINA_REGISTER_CLASS_VERSION
 #define STAMINA_REGISTER_CLASS_VERSION(CLASS) \
 	STAMINA_REGISTER_VERSION(CLASS, CLASS::staticClassInfo())
 
@@ -146,7 +167,10 @@ namespace Stamina {
 	STAMINA_REGISTER_CLASS_VERSION(iSharedObject); // w object.h nie ma mo¿liwoœci rejestracji...
 	STAMINA_REGISTER_CLASS_VERSION(VersionControl);
 	STAMINA_REGISTER_VERSION(StaminaLib, Lib::version);
+	STAMINA_REGISTER_VERSION(Buffer, Buffer<char>::version);
 
+	STAMINA_REGISTER_CLASS_VERSION(iString);
+	STAMINA_REGISTER_CLASS_VERSION(Lock);
 
 };
 

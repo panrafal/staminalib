@@ -1,35 +1,50 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa≥ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa≥ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa≥ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
+#include "Object.h"
 
 #ifndef __STAMINA_STRING__
 #define __STAMINA_STRING__
 
-#pragma once
-
 #include <string>
-#include "Object.h"
 //#include "WideChar.h"
-#include "StringBuffer.h"
+#include "Buffer.h"
 #include "StringType.h"
 
 namespace Stamina {
 
 	class iString: public iObject {
 	public:
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iString, iObject, Version(0,1,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iString, iObject, Version(1,0,0,0));
 
 		virtual unsigned int getCodePage() const =0;
 
 	};
 
-	/** Universal String class. Transparently supports both MultiByte(template specified CorePage) and WideChar (UTF-16) encodings at the same time.
+	/** Universal String class. Transparently supports both MultiByte(template specified CodePage) and WideChar (UTF-16) encodings at the same time.
 	Default codepage is CP_ACP (default system codepage).
 
 	All positions refer to character positions - ie. in polish word "≥Ûdü" a letter 'd' is in UTF-8 stored at byte 4, however it's real character position is 2
@@ -41,7 +56,7 @@ namespace Stamina {
 	@code
 
 	String fun(const StringRef& ref, StringRef quick) {
-		// _both_ 'ref' and 'quick' are passed without copying data! It's almost as fast as using direct pointers to data, however leaves you with plenty of function to play with. Keep in mind, that conversion buffers are also referenced!
+		// _both_ 'ref' and 'quick' are passed without copying data! It's almost as fast as using direct pointers to data, however leaves you with plenty of functionality to play with. Keep in mind, that conversion buffers are also referenced!
 		printf("Referenced const ref: %s", ref.a_str());
 		printf("Referenced quick: %s", quick.a_str());
 		// Here is where the magic goes. 'quick' holds an reference to data, as long as you don't try to modify it. If You do modify, a local copy is allocated - so the referenced string is still safe and left unchanged.
@@ -76,7 +91,7 @@ namespace Stamina {
 
 		typedef StringRefT<TYPE> StringRef;
 
-		STAMINA_OBJECT_CLASS(Stamina::StringRefT<TYPE>, iString);
+		STAMINA_OBJECT_CLASS(StringRefT<TYPE>, iString);
 
 	protected:
 
@@ -145,6 +160,7 @@ namespace Stamina {
 		The best way to use it safely is to declare static Strings and function arguments as const. Then it just won't compile.
 
 		@warning Don't use it as a variable type! It should be used only as a proxy!
+		@warning Use with QUADRUPLE caution!
 		*/
 		class PassStringRef: public StringRef {
 		public:
@@ -381,18 +397,18 @@ namespace Stamina {
 		}
 
 		template <typename CHAR>
-		const StringBuffer<CHAR>& getDataBuffer() const;
+		const Buffer<CHAR>& getDataBuffer() const;
 
 		template <typename CHAR>
-		const StringBuffer<CHAR>& getCDataBuffer() const {
+		const Buffer<CHAR>& getCDataBuffer() const {
 			return getDataBuffer<CHAR>();
 		}
 
-		template <> inline const StringBuffer<char>& getDataBuffer<char>() const {
+		template <> inline const Buffer<char>& getDataBuffer<char>() const {
 			return _a;
 		}
 
-		template <> inline const StringBuffer<wchar_t>& getDataBuffer<wchar_t>() const {
+		template <> inline const Buffer<wchar_t>& getDataBuffer<wchar_t>() const {
 			return _w;
 		}
 
@@ -403,7 +419,6 @@ namespace Stamina {
 		}
 		*/
 
-		template <typename CHAR>
 		inline StringRef getRef() const {
 			return StringRef(*this);
 		}
@@ -866,9 +881,9 @@ namespace Stamina {
 			return c;
 		}
 
-		/** Replaces characters found in @a from with according characters in @to (or with last character @a to, or removes them) 
+		/** Replaces characters found in @a from with according characters in @a to (or with last character @a to, or removes them) 
 
-		@warning You CAN'T use character pairs in from/to values if @a to representation takes more bytes per character than @a from (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @to to use Wide type instead.
+		@warning You CAN'T use character pairs in from/to values if @a to representation takes more bytes per character than @a from (ie. all non-ANSI characters in UTF-8)! Force @a this, @a from or @a to to use Wide type instead.
 		
 		It's always safe to erase (when @a to is empty) multi byte characters.
 		It's always safe to replace characters into smaller types (ie. special language-specific characters into ANSI)
@@ -1146,21 +1161,21 @@ namespace Stamina {
 		// ------ buffer handling
 
 		template <typename CHAR>
-		StringBuffer<CHAR>& getDataBuffer();
+		Buffer<CHAR>& getDataBuffer();
 
-		template <>inline StringBuffer<char>& getDataBuffer<char>() {
+		template <>inline Buffer<char>& getDataBuffer<char>() {
 			return _a;
 		}
 
-		template <> inline StringBuffer<wchar_t>& getDataBuffer<wchar_t>() {
+		template <> inline Buffer<wchar_t>& getDataBuffer<wchar_t>() {
 			return _w;
 		}
 
 
 	protected:
 
-		StringBuffer<char> _a;
-		StringBuffer<wchar_t> _w;
+		Buffer<char> _a;
+		Buffer<wchar_t> _w;
 
 		unsigned int _length;
 		int _flags;
@@ -1172,7 +1187,7 @@ namespace Stamina {
 	class StringT: public StringRefT<TYPE> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::StringT<TYPE>, StringRefT<TYPE>);
+		STAMINA_OBJECT_CLASS(StringT<TYPE>, StringRefT<TYPE>);
 
 		StringT() {}
 
@@ -1207,7 +1222,7 @@ namespace Stamina {
 	class String: public StringRefT<stACP> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::String, StringRef);
+		STAMINA_OBJECT_CLASS(String, StringRef);
 
 		String() {}
 

@@ -1,12 +1,28 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
 
 #pragma once
 
@@ -24,7 +40,7 @@ namespace Stamina { namespace Unique {
 	class Range:public SharedObject<iRange> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::Unique::Range, iRange);
+		STAMINA_OBJECT_CLASS(Unique::Range, iRange);
 
 
 		Range(tRangeId rangeId, enType type, unsigned int priority,  unsigned int minimum = 1, unsigned int maximum = 0x7FFFFFFF, unsigned int uniqueStart=-1)
@@ -34,10 +50,10 @@ namespace Stamina { namespace Unique {
 		}
 
 
-		virtual tId __stdcall createUniqueId() {
+		virtual tId createUniqueId() {
 			return this->_nextUnique++;
 		}
-		virtual bool __stdcall canRegisterId(tId id) const {
+		virtual bool canRegisterId(tId id) const {
 			if (this->_type == typeUnique)
 				return false;
 			if (!this->containsId(id))
@@ -46,29 +62,29 @@ namespace Stamina { namespace Unique {
 				return false;
 			return true;
 		}
-		virtual bool __stdcall canRegisterName() const {
+		virtual bool canRegisterName() const {
 			return (this->_type != typeStatic);
 		}
-		virtual bool __stdcall containsId(tId id) const {
+		virtual bool containsId(tId id) const {
 			return id <= this->_maximum && id >= this->_minimum;
 		}
 
-		virtual tRangeId __stdcall getRangeId() const {
+		virtual tRangeId getRangeId() const {
 			return _rangeId;
 		}
-		virtual unsigned int __stdcall getPriority() const {
+		virtual unsigned int getPriority() const {
 			return _priority;
 		}
-		virtual enType __stdcall getType() const {
+		virtual enType getType() const {
 			return _type;
 		}
-		virtual unsigned int __stdcall getMinimum() const {
+		virtual unsigned int getMinimum() const {
 			return _minimum;
 		}
-		virtual unsigned int __stdcall getMaximum() const {
+		virtual unsigned int getMaximum() const {
 			return _maximum;
 		}
-		virtual unsigned int __stdcall getNextUnique() const {
+		virtual unsigned int getNextUnique() const {
 			return _nextUnique;
 		}
 
@@ -89,36 +105,36 @@ namespace Stamina { namespace Unique {
 		typedef std::map<tRangeId, oRange> tRanges;
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::Unique::Domain, iDomain);
+		STAMINA_OBJECT_CLASS(Unique::Domain, iDomain);
 
 		Domain(tDomainId domainId, const StringRef& domainName):_domainId(domainId),_domainName(domainName) {}
 
-		virtual tDomainId __stdcall getDomainId() const {return _domainId;}
-		virtual StringRef __stdcall getDomainName() const {return _domainName;}
+		virtual tDomainId getDomainId() const {return _domainId;}
+		virtual StringRef getDomainName() const {return _domainName;}
 
-		virtual tId __stdcall getId(const StringRef& name) const;
-		virtual StringRef __stdcall getName(tId id) const;
-		virtual oRange __stdcall inRange(tId id, Range::enType check = Range::typeBoth) const;
+		virtual tId getId(const StringRef& name) const;
+		virtual StringRef getName(tId id) const;
+		virtual oRange inRange(tId id, Range::enType check = Range::typeBoth) const;
 		tIdMap::iterator findId(tId id);
 		tIdMap::iterator findId(const StringRef& name);
 		tIdMap::const_iterator findId(tId id) const;
 		tIdMap::const_iterator findId(const StringRef& name) const;
 
-		virtual bool __stdcall registerId(tId id, const StringRef& name);
-		virtual tId __stdcall registerName(const StringRef& name, const oRange& range);
+		virtual bool registerId(tId id, const StringRef& name);
+		virtual tId registerName(const StringRef& name, const oRange& range);
 		tId registerName(const StringRef& name, tRangeId range) {
 			return registerName(name, getRange(range));
 		}
 
-		virtual bool __stdcall unregister(tId id) {
+		virtual bool unregister(tId id) {
 			return unregister(getName(id));
 		}
-		virtual bool __stdcall unregister(const StringRef& name);
+		virtual bool unregister(const StringRef& name);
 
 		tRanges & getRanges() {return _ranges;}
-		virtual bool __stdcall addRange(const oRange& range, bool setAsDefault = false);
-		virtual oRange __stdcall getRange(tRangeId rangeId);
-        virtual bool __stdcall removeRange(const oRange& range);
+		virtual bool addRange(const oRange& range, bool setAsDefault = false);
+		virtual oRange getRange(tRangeId rangeId);
+        virtual bool removeRange(const oRange& range);
 
 	private:
 		tDomainId _domainId;
@@ -135,31 +151,31 @@ namespace Stamina { namespace Unique {
 		typedef std::map<tDomainId, oDomain> tMap;
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::Unique::DomainList, iDomainList);
+		STAMINA_OBJECT_CLASS(Unique::DomainList, iDomainList);
 
-		virtual oDomain __stdcall getDomain(tDomainId id) const {
-			ObjLocker lock(this);
+		virtual oDomain getDomain(tDomainId id) const {
+			ObjLocker lock(this, lockRead);
 			tMap::const_iterator found = _map.find(id);
 			if (found == _map.end()) return oDomain();
 			return found->second;
 		}
 
-		virtual oDomain __stdcall getDomain(const StringRef& name) const {
-			ObjLocker lock(this);
+		virtual oDomain getDomain(const StringRef& name) const {
+			ObjLocker lock(this, lockRead);
 			for (tMap::const_iterator it = _map.begin(); it != _map.end(); ++it) {
 				if (it->second->getDomainName() == name) return it->second;
 			}
 			return oDomain();
 		}
 
-		virtual void __stdcall registerDomain(const oDomain& domain) {
-			ObjLocker lock(this);
+		virtual void registerDomain(const oDomain& domain) {
+			ObjLocker lock(this, lockWrite);
 			if (domain->getDomainId() == domainNotFound) return;
 			if (domainExists(domain->getDomainId())) return;
 			_map[domain->getDomainId()] = domain;
 		}
-		virtual void __stdcall unregisterDomain(const oDomain& domain) {
-			ObjLocker lock(this);
+		virtual void unregisterDomain(const oDomain& domain) {
+			ObjLocker lock(this, lockWrite);
 			_map.erase(domain->getDomainId());
 		}
 

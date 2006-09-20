@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id: String.h 86 2005-07-29 15:07:08Z hao $
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id: $
+
+*/
+
 
 #ifndef __STAMINA_STRINGSTL__
 #define __STAMINA_STRINGSTL__
@@ -33,7 +50,7 @@ namespace Stamina {
 	template <typename CHAR>
 	class StringRefSTL: public StringRefT<stACP> {
 	public:
-		STAMINA_OBJECT_CLASS(Stamina::StringRefSTL<CHAR>, StringRefT<stACP>);
+		STAMINA_OBJECT_CLASS(StringRefSTL<CHAR>, StringRefT<stACP>);
 
 
 	public:
@@ -96,10 +113,18 @@ namespace Stamina {
 			return *this;
 		}
 
-
+	public:
 
 		const CHAR* c_str() const {
 			return this->str<CHAR>();
+		}
+
+		const CHAR operator [] (int i) const {
+			return this->str<CHAR>()[i];
+		}
+
+		CHAR& operator [] (int i) {
+			return this->getDataBuffer<CHAR>().getBuffer()[i];
 		}
 
 	protected:
@@ -120,7 +145,7 @@ namespace Stamina {
 	class StringSTL: public StringRefSTL<CHAR> {
 	public:
 
-		STAMINA_OBJECT_CLASS(Stamina::StringSTL<CHAR>, StringRefSTL<CHAR>);
+		STAMINA_OBJECT_CLASS(StringSTL<CHAR>, StringRefSTL<CHAR>);
 
 	public:
 

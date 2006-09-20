@@ -1,14 +1,31 @@
-#pragma once
-
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
+
+#pragma once
 
 #include "Rect.h"
 
@@ -29,6 +46,8 @@ namespace Stamina {
 	inline HINSTANCE getHInstance() {
 		return getInstance();
 	}
+
+
 
 	int parseScrollRequest(HWND hwnd, short bar, short trackPos, short request, short line);
 	
@@ -72,7 +91,11 @@ namespace Stamina {
 		LOGFONT lf;
 		memset(&lf, 0, sizeof(lf));
 		lf.lfCharSet = DEFAULT_CHARSET;
+#if (_MSC_VER >= 1400)
+		strcpy_s(lf.lfFaceName, face);
+#else
 		strcpy(lf.lfFaceName, face);
+#endif
 		lf.lfWeight = weight == 1 ? FW_BOLD : weight;
 		lf.lfHeight = size;
 		lf.lfUnderline = underline;
@@ -132,23 +155,45 @@ namespace Stamina {
 	bool windowBelongsTo(HWND window, HWND parent);
 
 
-#ifdef _STRING_
-	std::string expandEnvironmentStrings(const char * src, unsigned int size=300);
-	inline std::string getFullPathName(LPCTSTR filename) {
-		TCHAR buffer [MAX_PATH + 1];
-		if (GetFullPathName(filename, MAX_PATH, buffer, 0))
-			return buffer;
-		else
+#ifdef _STRING_	
+	inline String expandEnvironmentStrings(const StringRef& src) {
+		String buff;
+		int size = ExpandEnvironmentStringsW(src.w_str(), 0, 0);
+		ExpandEnvironmentStringsW(src.w_str(), buff.useBuffer<wchar_t>(size+1), size);
+		buff.releaseBuffer<wchar_t>();
+		return PassStringRef( buff );
+	}
+
+	inline String getFullPathName(const StringRef& filename) {
+		String buffer;
+		if (GetFullPathNameW(filename.w_str(), MAX_PATH, buffer.useBuffer<wchar_t>(MAX_PATH), 0)) {
+			buffer.releaseBuffer<wchar_t>();
+			return PassStringRef( buffer );
+		} else {
 			return "";
+		}
 	}
 
 	inline String getEnvironmentVariable(const StringRef& name) {
-		TCHAR buff [1024];
-		GetEnvironmentVariable(name.c_str(), buff, 1024);
-		return buff;
+		String buff;
+		int size = GetEnvironmentVariableW(name.w_str(), 0, 0);
+		GetEnvironmentVariableW(name.w_str(), buff.useBuffer<wchar_t>(size+1), size);
+		buff.releaseBuffer<wchar_t>( );
+		return PassStringRef( buff );
 	}
 
 	std::string getErrorMsg(int err = 0);
+
+	inline String getModuleFileName(HMODULE module) {
+		String buffer;
+		if (GetModuleFileNameW(module, buffer.useBuffer<wchar_t>(MAX_PATH), MAX_PATH)) {
+			buffer.releaseBuffer<wchar_t>();
+			return PassStringRef( buffer );
+		} else {
+			return "";
+		}
+	}
+
 
 #endif
 
@@ -176,14 +221,15 @@ namespace Stamina {
 
 
 	int ListView_ItemFromPoint(HWND hwnd , POINT pt);
-	ListView_Deselect(HWND hwnd);
+	int ListView_Deselect(HWND hwnd);
 	int ListView_GetSelItems(HWND hwnd , int count , int * buff);
-	ListView_SetCurSel (HWND hwnd , int pos);
+	int ListView_SetCurSel (HWND hwnd , int pos);
 	int ListView_AddString(HWND hwnd , const char * txt , int image = 0 , LPARAM param = 0);
-	ListView_SetString(HWND hwnd , int item , int subitem , char * txt);
+	int ListView_SetString(HWND hwnd , int item , int subitem , char * txt);
 	int ListView_AddColumn(HWND hwnd , const char * txt , int cx);
 	int ListView_MoveItem(HWND hwnd , int pos , int newPos);
 
+	Size toolBar_getSize(HWND hwnd);
 
 
 };

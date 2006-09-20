@@ -1,12 +1,28 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
 
 #pragma once
 
@@ -49,7 +65,7 @@ namespace Stamina { namespace Unique {
 	class iRange: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Unique::iRange, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Unique::iRange, iSharedObject, Version(1,0,0,0));
 
 		/** Rodzaj zakresu		
 		*/
@@ -61,17 +77,17 @@ namespace Stamina { namespace Unique {
 			typeUnique = 2
 		};
 
-		virtual tId __stdcall createUniqueId() =0;
-		virtual bool __stdcall canRegisterId(tId id) const =0;
-		virtual bool __stdcall canRegisterName() const =0;
-		virtual bool __stdcall containsId(tId id) const =0;
+		virtual tId createUniqueId() =0;
+		virtual bool canRegisterId(tId id) const =0;
+		virtual bool canRegisterName() const =0;
+		virtual bool containsId(tId id) const =0;
 
-		virtual tRangeId __stdcall getRangeId() const =0;
-		virtual unsigned int __stdcall getPriority() const =0;
-		virtual enType __stdcall getType() const =0;
-		virtual unsigned int __stdcall getMinimum() const =0;
-		virtual unsigned int __stdcall getMaximum() const =0;
-		virtual unsigned int __stdcall getNextUnique() const =0;
+		virtual tRangeId getRangeId() const =0;
+		virtual unsigned int getPriority() const =0;
+		virtual enType getType() const =0;
+		virtual unsigned int getMinimum() const =0;
+		virtual unsigned int getMaximum() const =0;
+		virtual unsigned int getNextUnique() const =0;
 
 	protected:
 	};
@@ -94,15 +110,15 @@ namespace Stamina { namespace Unique {
 	class iDomain: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Unique::iDomain, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Unique::iDomain, iSharedObject, Version(1,0,0,0));
 
 
-		virtual tDomainId __stdcall getDomainId() const =0;
-		virtual StringRef __stdcall getDomainName() const =0;
+		virtual tDomainId getDomainId() const =0;
+		virtual StringRef getDomainName() const =0;
 
-		virtual tId __stdcall getId(const StringRef& name) const =0;
-		virtual StringRef __stdcall getName(tId id) const =0;
-		virtual oRange __stdcall inRange(tId id, iRange::enType check = iRange::typeBoth) const =0;
+		virtual tId getId(const StringRef& name) const =0;
+		virtual StringRef getName(tId id) const =0;
+		virtual oRange inRange(tId id, iRange::enType check = iRange::typeBoth) const =0;
 		bool idExists(tId id) const {
 			return getName(id).empty() == false;
 		}
@@ -110,23 +126,23 @@ namespace Stamina { namespace Unique {
 			return getId(name) != idNotFound;
 		}
 
-		virtual bool __stdcall registerId(tId id, const StringRef& name) =0;
-		virtual tId __stdcall registerName(const StringRef& name, const oRange& range) =0;
+		virtual bool registerId(tId id, const StringRef& name) =0;
+		virtual tId registerName(const StringRef& name, const oRange& range) =0;
 		tId registerName(const StringRef& name, tRangeId range = rangeDefault) {
 			return registerName(name, getRange(range));
 		}
-		virtual bool __stdcall unregister(tId id) =0;
-		virtual bool __stdcall unregister(const StringRef& name) =0;
+		virtual bool unregister(tId id) =0;
+		virtual bool unregister(const StringRef& name) =0;
 
-		virtual bool __stdcall addRange(const oRange& range, bool setAsDefault = false) =0;
+		virtual bool addRange(const oRange& range, bool setAsDefault = false) =0;
 		bool rangeExists(tRangeId rangeId) {
 			return getRange(rangeId) == true;
 		}
 		bool rangeExists(const oRange& range) {
 			return rangeExists(range->getRangeId());
 		}
-		virtual oRange __stdcall getRange(tRangeId rangeId) =0;
-        virtual bool __stdcall removeRange(const oRange& range) =0;
+		virtual oRange getRange(tRangeId rangeId) =0;
+        virtual bool removeRange(const oRange& range) =0;
 
 		bool idInRange(tRangeId rangeId, tId id) {
 			oRange range = getRange(rangeId);
@@ -145,13 +161,13 @@ namespace Stamina { namespace Unique {
 	class iDomainList: public iSharedObject {
 	public:
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::Unique::iDomainList, iSharedObject, Version(1,0,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Unique::iDomainList, iSharedObject, Version(1,0,0,0));
 
 
-		virtual oDomain __stdcall getDomain(tDomainId id) const =0;
-		virtual oDomain __stdcall getDomain(const StringRef& name) const =0;
-		virtual void __stdcall registerDomain(const oDomain& domain) =0;
-		virtual void __stdcall unregisterDomain(const oDomain& domain) =0;
+		virtual oDomain getDomain(tDomainId id) const =0;
+		virtual oDomain getDomain(const StringRef& name) const =0;
+		virtual void registerDomain(const oDomain& domain) =0;
+		virtual void unregisterDomain(const oDomain& domain) =0;
 
 		bool domainExists(tDomainId id) const {
 			return getDomain(id) == true;

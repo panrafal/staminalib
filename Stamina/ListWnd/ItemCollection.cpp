@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 
 /* Model statyczny */
 #include "stdafx.h"
@@ -45,7 +62,7 @@ namespace ListWnd
 
 	void ItemCollection::setFlag(ItemFlags flag, bool setting, ListView* lv) {
 		if (this->getFlag(flag) == setting) return;
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		bool visible = this->isVisible();
 		bool repaint = false;
 
@@ -95,7 +112,7 @@ namespace ListWnd
 
 	oItem ItemCollection::getEntryItem(const oEntry& entry, bool recurse)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		oItem found;
 		ItemList::iterator it;
 		for (it = _items.begin(); it != _items.end(); ++it) {
@@ -110,7 +127,7 @@ namespace ListWnd
 
 	bool ItemCollection::getEntryItems(const oEntry& entry, ItemList &list)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		ItemList::iterator it;
 		for (it = _items.begin(); it != _items.end(); ++it) {
 			if ((*it)->getEntry() == entry) {
@@ -125,7 +142,7 @@ namespace ListWnd
 
 	bool ItemCollection::getEntryItems(const oEntry& entry, ParentItemList &list)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		ItemList::iterator it;
 		for (it = _items.begin(); it != _items.end(); ++it) {
 			if ((*it)->getEntry() == entry) {
@@ -141,7 +158,7 @@ namespace ListWnd
 
 	oItem ItemCollection::getItemAt(Point pos, bool recurse, bool hitWhole)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		oItem found;
 
 		if (!hitWhole && this->getRect().contains(pos)) {
@@ -169,7 +186,7 @@ namespace ListWnd
 
 	void ItemCollection::getItemsAt(Point pos, ItemList &items)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		ItemList::iterator it;
 		for (it = _items.begin(); it != _items.end(); ++it) {
 			if (!(*it)->isPositioned()) continue;
@@ -197,7 +214,7 @@ namespace ListWnd
 	}
 
 	void ItemCollection::repaintItems(ListView* lv) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		ItemList::iterator it;
 		for (it = _items.begin(); it != _items.end(); ++it) {
 			if ((*it)->isPositioned() && lv->itemInRepaintRegion((*it)->getWholeRect())) {
@@ -213,7 +230,7 @@ namespace ListWnd
 
 	int ItemCollection::getItemIndex(const oItem& item)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		ItemList::iterator it;
 		int found = 0;
 		for (it = _items.begin(); it != _items.end(); ++it) {
@@ -230,7 +247,7 @@ namespace ListWnd
 
 	oItemCollection ItemCollection::findItem(const oItem& item)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		oItemCollection found;
 		ItemList::iterator it;
 		for (it = _items.begin(); it != _items.end(); ++it) {
@@ -246,13 +263,12 @@ namespace ListWnd
 
 	oItem ItemCollection::insertEntry(ListView* lv,	const oEntry& entry, int pos)
 	{
-		ObjLocker lock(this);
 		oItem item = entry->createItem(lv, this);
 		this->insertItem(lv, item, pos);
 		return item;
 	}
 	oItem ItemCollection::insertItem(ListView* lv, const oItem& item, int pos) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		if (item) {
 			ItemList::iterator it;
 			fCompareItems compare = this->getCompareFunction();
@@ -291,11 +307,11 @@ namespace ListWnd
 	void ItemCollection::removeEntry(ListView* lv,
 								 const oEntry& entry, bool recurse)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		lv->lockPaint();
 		lv->lockRefresh();
 		ItemList::iterator it = _items.begin();
-		if (lv->getActiveItem() && lv->getActiveItem()->getEntry() == entry)
+		if (lv->getActiveItem().isValid() && lv->getActiveItem()->getEntry() == entry)
 			lv->setActiveItem(oItem(0));
 		while (it != _items.end()) {
 			if ((*it)->getEntry() == entry) {
@@ -321,7 +337,7 @@ namespace ListWnd
 
 	void ItemCollection::removeItem(ListView* lv, const oItem& item)
 	{
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		ItemList::iterator it = std::find(_items.begin(), _items.end(), item);
 		lv->lockPaint();
 		item->repaint(lv, true);
@@ -362,7 +378,7 @@ namespace ListWnd
 	bool ItemCollection::setWholeSize(Size size)
 	{
 		if (size == this->_wholeSize) return false;
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		this->_wholeSize = size;
 		this->setRefreshFlag(refreshDimensionsChanged);
 		return true;
@@ -370,7 +386,7 @@ namespace ListWnd
 
 	void ItemCollection::setLevel(char level) {
 		Item::setLevel(level);
-		for_each(_items.begin(), _items.end(), boost::bind(Item::setLevel, boost::bind(oItem::get, _1), level+1));
+		for_each(_items.begin(), _items.end(), boost::bind(&Item::setLevel, boost::bind(&oItem::get, _1), level+1));
 	}
 
 	void ItemCollection::setExpanded(ListView* lv, bool expanded) {
@@ -392,7 +408,7 @@ namespace ListWnd
 	}
 
 	void ItemCollection::sortItems(ListView* lv) {
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockWrite);
 		fCompareItems comp = this->getCompareFunction();
 		if (comp) {
 			this->_items.sort(comp);
@@ -402,7 +418,7 @@ namespace ListWnd
 	}
 
 	int ItemCollection::countVisible() { 
-		ObjLocker lock(this);
+		ObjLocker lock(this, lockRead);
 		int c = 0;
 		for (ItemList::iterator it = _items.begin(); it != _items.end(); ++it) {
 			if ((*it)->isVisible()) 

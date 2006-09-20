@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 
 //#include <mem.h>
 #include "stdafx.h"
@@ -149,13 +166,19 @@ namespace Stamina { namespace DT {
 		} else {
 			openmode = "rb";
 			_recreating = false;
+			if (!fileExists) {
+				throw DTException( errFileNotFound );
+			}
 		}
 
 		if (_table->_timeCreated.empty()) 
 			_table->_timeCreated.now();
 
-
+#if (_MSC_VER >= 1400)
+		fopen_s(&_file, this->getOpenedFileName().c_str(), openmode);
+#else
 		_file=fopen(this->getOpenedFileName().c_str(), openmode);
+#endif
 
 		if (_file && useTempFile && (mode & fileWrite)) {
 			_temp_enabled = true;
@@ -801,7 +824,7 @@ namespace Stamina { namespace DT {
 				throw DTFileException();
 
 			oDataRow rowObj = _table->getRow(row);
-			ObjLocker l(rowObj);
+			ObjLocker l(rowObj, lockWrite);
 			
 
 			unsigned int rowSize = 0;
@@ -1101,9 +1124,9 @@ namespace Stamina { namespace DT {
 
 	Date64 getBackupDate(const RegEx& re) {
 		Date64 d;
-		d.day = atoi(re[2].c_str());
+		d.year = atoi(re[2].c_str());
 		d.month = atoi(re[3].c_str());
-		d.year = atoi(re[4].c_str());
+		d.day = atoi(re[4].c_str());
 		d.hour = atoi(re[5].c_str());
 		d.min = atoi(re[6].c_str());
 		d.sec = atoi(re[7].c_str());
@@ -1214,7 +1237,7 @@ namespace Stamina { namespace DT {
 		std::string original = RegEx::doGet("/^(.+\\.dtb).\\d+-\\d+-\\d+ \\d+-\\d+-\\d+.bak$/i", filename.c_str(), 1);
 		// plik nie jest backupem zadnego dtb
 		if (original.empty()) throw DTException(errBadParameter);
-		std::string target = original + Date64(true).strftime(".%m-%d-%Y %H-%M-%S.restored");
+		std::string target = original + Date64(true).strftime(".%Y-%m-%d %H-%M-%S.restored");
 		MoveFileEx(original.c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
 		MoveFileEx(filename.c_str(), original.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
 
@@ -1226,7 +1249,7 @@ namespace Stamina { namespace DT {
 		// szukamy backupów
 		FindFile::Found found = DT::findLastBackup(filename.empty() ? this->_fileName : filename);
 		if (found.empty()) return false;
-		restoreBackup(found.getFileName());
+		restoreBackup(found.getFilePath());
 		return true;
 	}
 
@@ -1235,8 +1258,8 @@ namespace Stamina { namespace DT {
 		DT::findLastBackup(filename.empty() ? this->_fileName : filename, &date);
 		return date;
 	}
-	String FileBin::findLastBackupFile(const StringRef& filename) {
-		return DT::findLastBackup(filename.empty() ? this->_fileName : filename).getFileName();
+	String FileBin::findLastBackupFile(const StringRef& filename, Date64* date) {
+		return DT::findLastBackup(filename.empty() ? this->_fileName : filename, date).getFilePath();
 	}
 
 

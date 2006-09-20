@@ -1,12 +1,29 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
  */
+
 
 #pragma once
 
@@ -17,109 +34,26 @@
 #define STAMINA_DEBUG
 #endif
 
+#ifndef _WINDOWS_
+	#define WIN32_LEAN_AND_MEAN
+	#define _WIN32_WINNT 0x0500
+	#include <windows.h>
+#endif
+
+
+
 
 #include "Assert.h"
-#include "LibInstance.h"
-#include "ObjectPtr.h"
 #include "Version.h"
 #include "Memory.h"
-
-#ifdef STAMINA_DEBUG
-	#include <list>
-	#include "CriticalSection.h"
-#endif
+#include "ObjectClassInfo.h"
+#include "ObjectPtr.h"
 
 namespace Stamina {
 
 #ifdef STAMINA_DEBUG
-	extern std::list<class iObject*>* debugObjects;
-	extern CriticalSection* debugObjectsCS;
+	extern volatile long debugObjectsCount;
 #endif
-
-
-
-	class ObjectClassInfo {
-	public:
-		ObjectClassInfo(const char* name, short size, ObjectClassInfo* base, const Version& version = Version()):_name(name),_size(size),_base(base),_uid(0),_libInstance(LibInstance::get()), _version(version) {
-		}
-		inline const char * getName() const {
-			return _name;
-		}
-		inline short getSize() const {
-			return _size;
-		}
-		inline ObjectClassInfo* getBaseInfo() const {
-			return _base;
-		}
-		unsigned int getUID();
-
-		inline LibInstance& getLibInstance() const {
-			return _libInstance;
-		}
-
-		inline const Version& getVersion() const {
-			return _version;
-		}
-
-		inline ModuleVersion getModuleVersion() const {
-			return ModuleVersion(versionClass, _name, _version);
-		}
-
-		inline bool operator == (ObjectClassInfo& b) {
-			return this->getUID() == b.getUID();
-		}
-		/** Returns true if this object inherits from @a b */
-		bool operator >= (ObjectClassInfo& b) {
-			if (*this == b) {
-				return true;
-			} else if (this->getBaseInfo() == 0) {
-				return false;
-			} else {
-				return *this->getBaseInfo() >= b;
-			}
-		}
-		/** Returns true if this object is a base class for @a b */
-		inline bool operator <= (ObjectClassInfo& b) {
-			return b >= *this;
-		}
-
-		/** Looks for @a b class information */
-		ObjectClassInfo* getParentInfo (ObjectClassInfo& b) {
-			if (*this == b) {
-				return this;
-			} else if (this->getBaseInfo() == 0) {
-				return 0;
-			} else {
-				return this->getBaseInfo()->getParentInfo(b);
-			}
-		}
-
-		template <class TYPE> ObjectClassInfo* getParentInfo () {
-			return getParentInfo(TYPE::staticClassInfo());
-		}
-
-	private:
-		unsigned int _uid;
-		const char * const _name;
-		const short _size;
-		ObjectClassInfo* const _base;
-		LibInstance& _libInstance;
-		const Version _version;
-	};
-#define STAMINA_OBJECT_CLASS_DEFINE(TYPE, NAME, BASE, VERSION) \
-	typedef TYPE ObjectClass;\
-	typedef BASE BaseClass;\
-	static ::Stamina::ObjectClassInfo& staticClassInfo() {\
-	static ::Stamina::ObjectClassInfo oci = ::Stamina::ObjectClassInfo(NAME, sizeof(TYPE), &BASE::staticClassInfo(), VERSION);\
-		return oci;\
-	}\
-	::Stamina::ObjectClassInfo& getClass() const {\
-		return staticClassInfo();\
-	}
-
-#define STAMINA_OBJECT_CLASS(TYPE, BASE) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, ::Stamina::Version())
-	
-#define STAMINA_OBJECT_CLASS_VERSION(TYPE, BASE, VERSION) STAMINA_OBJECT_CLASS_DEFINE(TYPE, #TYPE, BASE, VERSION)
 
 #define STAMINA_OBJECT_CLONEABLE()\
 	const static bool isCloneable = true;\
@@ -129,6 +63,9 @@ namespace Stamina {
 		return obj;\
 	}
 
+
+
+
 	class String; // forward declaration
 	class iStringFormatter;
 
@@ -137,36 +74,30 @@ namespace Stamina {
 	public:
 
 #ifdef STAMINA_DEBUG
+
 		iObject() {
-			if (debugObjectsCS) {
-				Locker locker(*debugObjectsCS);
-				if (debugObjects) {
-					debugObjects->push_back(this);
+			InterlockedIncrement(&debugObjectsCount);
 				}
-			}
-		}
 		virtual ~iObject() {
-			if (debugObjectsCS) {
-				Locker locker (*debugObjectsCS);
-				if (debugObjects) {
-					debugObjects->remove(this);
+			InterlockedDecrement(&debugObjectsCount);
 				}
-			}
-		}
 #else 
+		iObject() {
+		}
+
 		virtual ~iObject() {};
 #endif
 
 
 		/** Returns object's class information */
-		virtual ObjectClassInfo& getClass() const {
+		virtual const ObjectClassInfo& getClass() const {
 			return staticClassInfo();
 		}
 
 		virtual String toString(iStringFormatter* format=0) const;
 
 		virtual iObject* cloneObject() const {
-			S_DEBUG_ERROR("not cloneable!");
+			S_DEBUG_ERROR(L"not cloneable!");
 			return 0;
 		}
 
@@ -178,17 +109,17 @@ namespace Stamina {
 	public:
 
 		/** Static class information */
-		static ObjectClassInfo& staticClassInfo() {
-			static ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), 0, Version(0,1,0,0));
+		static const ObjectClassInfo& staticClassInfo() {
+			static const ObjectClassInfo oci = ObjectClassInfo("iObject", sizeof(iObject), ObjectClassInfo::none, Version(1,0,0,0));
 			return oci;
 		}
 
-		bool isFromCurrentLibInstance() {
+/*		bool isFromCurrentLibInstance() {
 			return this->getClass().getLibInstance() == LibInstance::get();
 		}
 		bool isSameLibInstance(const iObject& obj) {
 			return this->getClass().getLibInstance() == obj.getClass().getLibInstance();
-		}
+		}*/
 
 		template <class TO> TO* castStaticObject() {
 			return static_cast<TO*>(this);
@@ -205,6 +136,9 @@ namespace Stamina {
 				return 0;
 			}
 		}
+
+		template <class TO> TO* tryCastObject() throw (...);
+
 		template <class TO> TO castObject(TO toClass) {
 			if (this->getClass() >= toClass->getClass()) {
 				return reinterpret_cast<TO>(this);
@@ -224,8 +158,16 @@ namespace Stamina {
 			return Memory::malloc(size);
 		}
 
+		void *operator new( size_t size, void* ptr) {
+			return ptr;
+		}
+
 		void operator delete( void * buff ) {
 			Memory::free(buff);
+		}
+
+		void operator delete( void * buff, void* ) {
+			return;
 		}
 
 
@@ -233,21 +175,57 @@ namespace Stamina {
 
 		virtual void zzPlaceHolder_iObject1() {}
 		virtual void zzPlaceHolder_iObject2() {}
+		virtual void zzPlaceHolder_iObject3() {}
+		virtual void zzPlaceHolder_iObject4() {}
+		virtual void zzPlaceHolder_iObject5() {}
 
 	};
 
+
+}; // kompletne podstawy....
+
+
+#include "String.h"
+#include "Lock.h"
+#include "LockSelector.h"
+
+#ifdef STAMINA_DEBUG
+	#include <list>
+	#include <vector>
+	#include "CriticalSection.h"
+#endif
+
+
+
+
+// dokañczamy....
+namespace Stamina {
+
+#ifdef STAMINA_DEBUG
+	typedef std::list<class iObject*> tDebugObjects;
+	extern tDebugObjects* debugObjects;
+	//extern CriticalSection* debugObjectsCS;
+	extern Lock* debugObjectsCS;
+	extern volatile long debugObjectsCount;
+#endif
 
 	/** Interface of lockable objects */
 	class iLockableObject: public iObject {
 	public:
 	    /** Blokuje dostêp do obiektu */
-		virtual void __stdcall lock() const {}
+		virtual void lock(enLockType type) const =0;
+
 		/** Odblokowuje dostêp do obiektu */
-		virtual void __stdcall unlock() const {}
+		virtual void unlock(enLockType type) const =0;
+
+		/** Zwraca obiekt blokuj¹cy o podanym typie, o ile obiekt blokuj¹cy jest zgodny ze Stamina::Lock */
+		virtual Lock& selectLock(enLockType type) const {
+			return Lock_blank::instance;
+		}
 
 		virtual ~iLockableObject() {};
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iLockableObject, iObject, Version(0,1,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(iLockableObject, iObject, Version(1,0,0,0));
 
 	private:
 
@@ -259,17 +237,82 @@ namespace Stamina {
 
 	};
 
+
+	/* Scoped locking of iLockable */
+	class ObjLocker {
+	public:
+		__inline ObjLocker(const iLockableObject* lo, enLockType type) {
+			_type = type;
+			_obj = lo;
+			_obj->lock(_type);
+		}
+		__inline ObjLocker(const iLockableObject& lo, enLockType type) {
+			_type = type;
+			_obj = &lo;
+			_obj->lock(_type);
+		}
+		__inline ~ObjLocker(){
+			_obj->unlock(_type);
+		}
+	protected:
+		const iLockableObject* _obj;
+		enLockType _type;
+	};
+
+
 	class iSharedObject: public iLockableObject {
 	public:
-		virtual bool __stdcall hold() =0;
-		virtual void __stdcall release() =0;
+		virtual bool hold() =0;
+		virtual void release() =0;
 		/** Returns true when it's safe to use the object */
-		virtual bool __stdcall isValid() =0;
-		virtual bool __stdcall isDestroyed() =0;
-		virtual unsigned int __stdcall getUseCount() =0;
-		virtual ~iSharedObject() {};
+		virtual bool isValid() =0;
+		virtual bool isDestroyed() =0;
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::iSharedObject, iLockableObject, Version(0,1,0,0));
+		/** Returns number of object instances in use. There are some special meanings.
+		0 means that object is being destroyed
+		1 means that object was created, but never used (by calling hold())
+		1+ means that object is used (by calling hold()) number-1 times
+
+		If getUseCount() returns 2 (used one time), releasing will trigger the destroy proces...
+
+		To make an assertion if object will be destroyed after calling release() use:
+		@code
+		S_ASSERT(obj->isLastInstance() == 1);
+		@endcode
+		*/
+		virtual unsigned int getUseCount() =0;
+
+		bool isLastInstance() {
+			return this->getUseCount() == 2;
+		}
+
+		STAMINA_OBJECT_CLASS_VERSION(iSharedObject, iLockableObject, Version(1,0,0,0));
+
+
+#ifdef STAMINA_DEBUG
+
+		iSharedObject() {
+			if (debugObjectsCS) {
+				Locker locker(*debugObjectsCS);
+				if (debugObjects) {
+					debugObjects->push_back(this);
+				}
+			}
+		}
+		virtual ~iSharedObject() {
+			if (debugObjectsCS) {
+				Locker locker (*debugObjectsCS);
+				if (debugObjects) {
+					debugObjects->remove(this);
+				}
+			}
+		}
+#else 
+		iSharedObject() {
+		}
+
+		virtual ~iSharedObject() {};
+#endif
 
 	private:
 
@@ -293,9 +336,9 @@ namespace boost {
 	inline void intrusive_ptr_release(Stamina::iSharedObject* p) {
 		p->release();
 	}
+
 };
 
-#include "String.h"
 
 
 

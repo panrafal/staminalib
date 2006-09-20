@@ -1,22 +1,40 @@
+/*
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
 #pragma once
 #ifndef __DT_DT__
 #define __DT_DT__
 
-/*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
 
 /**@file All basic definitions needed to work with DataTable
 
 */
 
 #include <Stamina\Exception.h>
+#include <Stamina\Helpers.h>
 
 namespace Stamina { namespace DT {
 
@@ -168,7 +186,33 @@ namespace Stamina { namespace DT {
 		enError errorCode;
 
 		virtual String getReason() const {
-			return "DTException";
+			String code;
+			switch (errorCode) {
+				case errSuccess: code = "success"; break;
+				case errNoColumn: code = "noColumn"; break;
+				case errNoRow: code = "noRow"; break;
+				case errBadType: code = "badType"; break;
+
+				case errFileNotFound: code = "fileNotFound"; break;
+				case errNotInitialized: code = "notInitialized"; break;
+				case errNotAuthenticated: code = "authenticated"; break;
+				case errNotOpened: code = "notOpened"; break;
+				case errBadFormat: code = "badFormat"; break;
+				case errBadVersion: code = "badVersion"; break;
+				case errRowNotFound: code = "rowNotFound"; break;
+				case errBadParameter: code = "badParameter"; break;
+				case errWriteError: code = "writeError"; break;
+				case errAlreadyLoaded: code = "alreadyLoaded"; break;
+				case errNotLoaded: code = "notLoaded"; break;
+				case errNotChanged: code = "notChanged"; break;
+				case errFileError: code = "fileError"; break;
+
+				case resSkipped: code = "skipped"; break;
+				case resNothingToRead: code = "nothingToRead"; break;
+				default:
+					code = inttostr(errorCode);
+			};
+			return "DTException::" + code;
 		}
 	};
 

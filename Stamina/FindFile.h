@@ -1,15 +1,32 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
 
 #pragma once
 
+#include "Helpers.h"
 
 namespace Stamina {
 
@@ -37,8 +54,9 @@ namespace Stamina {
 
 		class Found {
 		public:
-			Found() {
+			Found(const std::string& dir = "") {
 				_data.cFileName[0] = 0;
+				setDirectory(dir);
 			}
 			inline Found(const Found& b) {
 				*this = b;
@@ -46,6 +64,7 @@ namespace Stamina {
 
 			inline Found& operator = (const Found& b) {
 				memcpy(&_data, &b._data, sizeof(_data));
+				this->_dir = b._dir;
 				return *this;
 			}
 
@@ -89,8 +108,20 @@ namespace Stamina {
 				return size;
 			}
 
+			inline std::string getDirectory() const {
+				return _dir;
+			}
+
+			inline void setDirectory(const std::string& dir)  {
+				_dir = Stamina::unifyPath(dir, true);
+			}
+
 			inline std::string getFileName() const {
 				return _data.cFileName;
+			}
+
+			inline std::string getFilePath() const {
+				return _dir + this->getFileName();
 			}
 
 			inline std::string getAlternateFileName() const {
@@ -105,6 +136,7 @@ namespace Stamina {
 				return this->hasAttribute(attDirectory);
 			}
 
+/*
 			inline operator std::string() const {
 				return this->getFileName();
 			}
@@ -112,9 +144,11 @@ namespace Stamina {
 			inline const TCHAR* c_str() const {
 				return _data.cFileName;
 			}
+*/
 
 		private:
 			WIN32_FIND_DATA _data;
+			std::string _dir;
 		};
 
 #ifdef _LIST_
@@ -140,6 +174,7 @@ namespace Stamina {
 				_file = 0;
 			}
 			_mask = mask;
+			_found.setDirectory( Stamina::getFileDirectory(mask) );
 		}
 
 		void requireAttribute(enAttribute attr) {
@@ -199,6 +234,9 @@ namespace Stamina {
 
 	};
 
+	template<> inline int deleteFile<FindFile::Found>(const FindFile::Found& file) {
+		return ::DeleteFile(file.getFilePath().c_str());
+	}
 
 
 }

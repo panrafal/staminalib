@@ -1,12 +1,30 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
- * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
- *
- *  $Id$
- */
+
+The contents of this file are subject to the Mozilla Public License
+Version 1.1 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License from
+/LICENSE.HTML in this package or at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations
+under the License.
+
+The Original Code is "Stamina.lib" library code, released Feb 1, 2006.
+
+The Initial Developer of the Original Code is "STAMINA" - Rafa³ Lindemann.
+Portions created by STAMINA are 
+Copyright (C) 2003-2006 "STAMINA" - Rafa³ Lindemann. All Rights Reserved.
+
+Contributor(s): 
+
+--
+
+$Id$
+
+*/
+
+
 #include "stdafx.h"
 #include "DataTable.h"
 #include "Find.h"
@@ -91,11 +109,11 @@ namespace Stamina { namespace DT {
 	}
 
 
-    void DataTable::lock(tRowId row) {
+    void DataTable::lockRow(tRowId row) {
         if (row == allRows) {
             this->_cs.lock();
             for (size_t i=0; i < _rows.size(); i++)
-                _rows[i]->lock();
+				_rows[i]->lock(lockDefault);
             return;
         } else {
             _cs.lock();
@@ -105,16 +123,16 @@ namespace Stamina { namespace DT {
 				throw DTException(errNoRow);
                 return;
 			}
-			_rows[row]->lock();
+			_rows[row]->lock(lockDefault);
             _cs.unlock();
             return;//rows[row]->CS.getLockCount();
         }
     }
 
-    void DataTable::unlock(tRowId row){
+    void DataTable::unlockRow(tRowId row){
 		if (row == allRows) {
             for (size_t i=0; i < _rows.size(); i++)
-                _rows[i]->unlock();
+				_rows[i]->unlock(lockDefault);
             _cs.unlock();
             return;
         } else {
@@ -125,7 +143,7 @@ namespace Stamina { namespace DT {
 				throw DTException(errNoRow);
                 return;
 			}
-			_rows[row]->unlock();
+			_rows[row]->unlock(lockDefault);
             _cs.unlock();
             return;
         }
