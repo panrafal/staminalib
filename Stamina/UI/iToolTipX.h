@@ -70,7 +70,7 @@ namespace Stamina {  namespace UI { namespace ToolTipX {
 		/** This tip is being detached from the Tooltip window */
 		virtual void detach(HWND hwnd) {}
 		virtual int parentMessageProc(HWND hwnd, int message, WPARAM wParam, LPARAM lParam, bool& returned) {returned = false; return 0;}
-		static const margin = 2;
+		static const int margin = 2;
 	};
 
 	typedef boost::intrusive_ptr<iTip> oTip;

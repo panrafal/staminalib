@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <md5.h>
+#include <MD5\md5.h>
 #include <memory.h>
 
 namespace Stamina {

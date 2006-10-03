@@ -7,7 +7,8 @@
  *
  *  $Id$
  */
-
+#ifndef __STAMINA_HELPERS_H__
+#define __STAMINA_HELPERS_H__
 #pragma once
 
 #include <stdlib.h>
@@ -22,7 +23,7 @@ namespace Stamina {
 
 	inline int round(double val) {
 		return (int)floor(val + 0.5);
-	};
+	}
 
 	inline void randomSeed() {
 #ifdef _WINDOWS_
@@ -241,3 +242,4 @@ namespace Stamina {
 	bool isDirectory(const char* path);
 
 };
+#endif	// __STAMINA_HELPERS_H__

@@ -22,7 +22,7 @@ namespace Stamina { namespace DT {
 
 	StaticObj<Column_undefined> colUndefined;
 
-    ColumnsDesc::operator = (const ColumnsDesc & x) {
+    int ColumnsDesc::operator = (const ColumnsDesc & x) {
         LockerCS lock(_cs);
 		_cols.resize(x._cols.size());
 		for (unsigned int i=0; i<x._cols.size();i++)

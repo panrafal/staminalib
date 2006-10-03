@@ -547,7 +547,7 @@ end:
 		return vhti.iItem;
 	}
 
-	ListView_Deselect(HWND hwnd) {
+	int ListView_Deselect(HWND hwnd) {
 		int pos;
 		int c = ListView_GetItemCount(hwnd);
 		//   while ((pos = ListView_GetSelectionMark(hwnd))>=0)
@@ -571,7 +571,7 @@ end:
 		return i;
 	}
 
-	ListView_SetCurSel (HWND hwnd , int pos) {
+	int ListView_SetCurSel (HWND hwnd , int pos) {
 		ListView_Deselect(hwnd);
 		ListView_SetItemState(hwnd , pos , LVIS_SELECTED , LVIS_SELECTED);
 		ListView_SetSelectionMark(hwnd , pos);
@@ -592,7 +592,7 @@ end:
 		return ListView_InsertItem(hwnd , &lvi);
 	}
 
-	ListView_SetString(HWND hwnd , int item , int subitem , char * txt) {
+	int ListView_SetString(HWND hwnd , int item , int subitem , char * txt) {
 		LVITEM lvi;
 		lvi.mask = LVIF_TEXT;
 		lvi.iItem = item;

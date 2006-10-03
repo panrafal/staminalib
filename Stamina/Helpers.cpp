@@ -161,7 +161,7 @@ namespace Stamina {
 		if (!str || !chIn || !chOut || !*chIn || !*chOut || strlen(chIn)!=strlen(chOut)) return str;
 		char * c = str;
 		while (*c) {
-			char * pos = strchr(chIn , *c);
+			char * pos = strchr((char*)chIn , *c);
 			if (pos) {
 				*c = chOut[pos - chIn];
 			}
@@ -179,7 +179,7 @@ namespace Stamina {
 				if (ar[i][findLen] != 0 && ar[i][findLen] != '=')
 					continue;
 				if (getValue) {
-					char * value = strchr(ar[i] , '=');
+					char * value = strchr((char*)ar[i] , '=');
 					if (!value) 
 						return 0;
 					return value + 1;

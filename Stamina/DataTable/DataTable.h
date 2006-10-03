@@ -155,20 +155,20 @@ namespace Stamina { namespace DT {
 		}
 		inline bool setInt(tRowId rowId , tColId id , int val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
-			if (row) {
+			if (row.isValid()) {
 				return this->getColumn(id)->setInt(row , val, flags);
 			}
-			return row;
+			return false;
 		}
 		inline String getString(tRowId row , tColId id, GetSet flags = getCopy) {
 			return PassStringRef( this->getColumn(id)->getString( this->getRow(row), flags ) );
 		}
 		inline bool setString(tRowId rowId , tColId id , const StringRef& val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
-			if (row) {
+			if (row.isValid()) {
 				return this->getColumn(id)->setString(row, val, flags);
 			}
-			return row;
+			return false;
 		}
 
 		inline ByteBuffer getBin(tRowId row , tColId id, GetSet flags = getCopy) {
@@ -178,10 +178,10 @@ namespace Stamina { namespace DT {
 		}
 		inline bool setBin(tRowId rowId , tColId id , const ByteBuffer& val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
-			if (row) {
+			if (row.isValid()) {
 				return this->getColumn(id)->setBin(row, val, flags);
 			}
-			return row;
+			return false;
 		}
 
 		inline __int64 get64(tRowId row , tColId id, GetSet flags = gsNone) {
@@ -189,10 +189,10 @@ namespace Stamina { namespace DT {
 		}
 		inline bool set64(tRowId rowId , tColId id , __int64 val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
-			if (row) {
+			if (row.isValid()) {
 				return this->getColumn(id)->setInt64(row , val, flags );
 			}
-			return row;
+			return false;
 		}
 
 		inline double getDouble(tRowId row , tColId id, GetSet flags = gsNone) {
@@ -200,10 +200,10 @@ namespace Stamina { namespace DT {
 		}
 		inline bool setDouble(tRowId rowId , tColId id , double val, GetSet flags = gsNone) {
 			oRow row = this->getRow(rowId);
-			if (row) {
+			if (row.isValid()) {
 				return this->getColumn(id)->setDouble(row , val, flags );
 			}
-			return row;
+			return false;
 		}
 
 

@@ -1,97 +1,147 @@
 <?xml version="1.0" encoding="windows-1250"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="8,00"
 	Name="Stamina - UI"
-	ProjectGUID="{963F7D67-4856-4169-BAAA-0DBAD9695D20}"
-	Keyword="Win32Proj">
+	ProjectGUID="{96B35143-953A-4D71-B73F-5142936BDAB0}"
+	Keyword="Win32Proj"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\Lib"
 			IntermediateDirectory="..\..\_$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
-			CharacterSet="2">
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="TRUE"
+				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="3"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="4"/>
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)/Stamina_UI_d.lib"
-				IgnoreAllDefaultLibraries="TRUE"/>
+				IgnoreAllDefaultLibraries="true"
+			/>
 			<Tool
-				Name="VCMIDLTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCXDCMakeTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCBscMakeTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCFxCopTool"
+			/>
 			<Tool
-				Name="VCResourceCompilerTool"/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\Lib"
 			IntermediateDirectory="..\..\_$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
-			CharacterSet="2">
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="3"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"/>
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)/Stamina_UI.lib"
-				IgnoreAllDefaultLibraries="TRUE"/>
+				IgnoreAllDefaultLibraries="true"
+			/>
 			<Tool
-				Name="VCMIDLTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCXDCMakeTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCBscMakeTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCFxCopTool"
+			/>
 			<Tool
-				Name="VCResourceCompilerTool"/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -100,83 +150,109 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
 			<File
-				RelativePath=".\BrowserCtrl.cpp">
+				RelativePath=".\BrowserCtrl.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\ButtonX.cpp">
+				RelativePath=".\ButtonX.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Control.cpp">
+				RelativePath=".\Control.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\DrawableButton.cpp">
+				RelativePath=".\DrawableButton.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\DrawableGauge.cpp">
+				RelativePath=".\DrawableGauge.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Image.cpp">
+				RelativePath=".\Image.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\ImageIL.cpp">
+				RelativePath=".\ImageIL.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Menu.cpp">
+				RelativePath=".\Menu.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Region.cpp">
+				RelativePath=".\Region.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\RichHTML.cpp">
+				RelativePath=".\RichHTML.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\stdafx.cpp">
+				RelativePath=".\stdafx.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"/>
+						UsePrecompiledHeader="1"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"/>
+						UsePrecompiledHeader="1"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\ToolTipX.cpp">
+				RelativePath=".\ToolTipX.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\ToolTipXitems.cpp">
+				RelativePath=".\ToolTipXitems.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Window.cpp">
+				RelativePath=".\Window.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\WindowDialog.cpp">
+				RelativePath=".\WindowDialog.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\WindowFrame.cpp">
+				RelativePath=".\WindowFrame.cpp"
+				>
 			</File>
 			<Filter
 				Name="test"
-				Filter="">
+				>
 				<File
-					RelativePath=".\Test\TestBrowser.cpp">
+					RelativePath=".\Test\TestBrowser.cpp"
+					>
 					<FileConfiguration
 						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
+						ExcludedFromBuild="true"
+						>
 						<Tool
-							Name="VCCLCompilerTool"/>
+							Name="VCCLCompilerTool"
+						/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="Release|Win32"
-						ExcludedFromBuild="TRUE">
+						ExcludedFromBuild="true"
+						>
 						<Tool
-							Name="VCCLCompilerTool"/>
+							Name="VCCLCompilerTool"
+						/>
 					</FileConfiguration>
 				</File>
 			</Filter>
@@ -184,67 +260,86 @@
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
 			<File
-				RelativePath=".\BrowserCtrl.h">
+				RelativePath=".\BrowserCtrl.h"
+				>
 			</File>
 			<File
-				RelativePath=".\ButtonX.h">
+				RelativePath=".\ButtonX.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Control.h">
+				RelativePath=".\Control.h"
+				>
 			</File>
 			<File
-				RelativePath=".\DrawableButton.h">
+				RelativePath=".\DrawableButton.h"
+				>
 			</File>
 			<File
-				RelativePath=".\DrawableGauge.h">
+				RelativePath=".\DrawableGauge.h"
+				>
 			</File>
 			<File
-				RelativePath=".\iImage.h">
+				RelativePath=".\iImage.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Image.h">
+				RelativePath=".\Image.h"
+				>
 			</File>
 			<File
-				RelativePath=".\ImageIL.h">
+				RelativePath=".\ImageIL.h"
+				>
 			</File>
 			<File
-				RelativePath=".\iToolTipX.h">
+				RelativePath=".\iToolTipX.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Menu.h">
+				RelativePath=".\Menu.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Region.h">
+				RelativePath=".\Region.h"
+				>
 			</File>
 			<File
-				RelativePath=".\RichHTML.h">
+				RelativePath=".\RichHTML.h"
+				>
 			</File>
 			<File
-				RelativePath=".\stdafx.h">
+				RelativePath=".\stdafx.h"
+				>
 			</File>
 			<File
-				RelativePath=".\ToolTipX.h">
+				RelativePath=".\ToolTipX.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Window.h">
+				RelativePath=".\Window.h"
+				>
 			</File>
 			<File
-				RelativePath=".\WindowDialog.h">
+				RelativePath=".\WindowDialog.h"
+				>
 			</File>
 			<File
-				RelativePath=".\WindowFrame.h">
+				RelativePath=".\WindowFrame.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			>
 		</Filter>
 		<Filter
 			Name="Test Files"
-			Filter="">
+			>
 		</Filter>
 	</Files>
 	<Globals>

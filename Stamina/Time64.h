@@ -55,9 +55,9 @@ namespace Stamina {
 
 		/** Constructor
 		*/
-		inline Time64(__int64 timer) {
+		/*inline Time64(__int64 timer) {
 			from_int64(timer);
-		}
+		}*/
 #ifdef _WINDOWS_
 		/** Constructor
 		*/
@@ -238,9 +238,9 @@ namespace Stamina {
 
 		/** Constructor
 		*/
-		Date64(__int64 timer) {
+		/*Date64(__int64 timer) {
 			from_int64(timer);
-		}
+		}*/
 #ifdef _WINDOWS_
 		/** Constructor
 		*/

@@ -149,7 +149,7 @@ namespace Stamina {	 namespace UI { namespace ToolTipX {
 		if (!this->_hwnd) return;
 		/*if (screen.x != -1 && this->_lastScreen == screen)
 			return; // powtórka!*/
-		if (this->_automated && screen.x != -1 && sqrt(pow(screen.x - this->_lastScreen.x, 2)+pow(screen.y - this->_lastScreen.y, 2)) > 10 ) {
+		if (this->_automated && screen.x != -1 && sqrt(pow((double)(screen.x - this->_lastScreen.x), (double)2)+pow((double)(screen.y - this->_lastScreen.y), (double)2)) > 10 ) {
 			this->hide(true);
 			//OutputDebugString("Speeding\n");
 			this->_lastScreen = screen;
@@ -427,7 +427,7 @@ namespace Stamina {	 namespace UI { namespace ToolTipX {
 
 
 	void ToolTip::registerClass(HINSTANCE hInst) {
-		static once = true;
+		static bool once = true;
 		if (!once) return;
 		once = true;
 		WNDCLASSEX wcex;
