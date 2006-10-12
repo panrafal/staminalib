@@ -2,46 +2,91 @@
 //
 
 #include "stdafx.h"
-#include <Stamina/Sockets/TCPSocketClient.h>
+#include "../TCPClient_W32.h"
+#include "../TCPServer_W32.h"
 #include <boost/signal.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 using namespace Stamina;
 using namespace std;
 
-class Test
+class TestClient
 {
 public:
+	TestClient()
+	{
+		socket = new TCPClient_W32();
+	}
+	~TestClient()
+	{
+		socket->close();
+		delete socket;
+	}
+
 	void start()
 	{
-		socket.evtOnConnected.connect(boost::bind(&Test::onConnected, this));
-		socket.evtOnReceived.connect(boost::bind(&Test::onReceived, this, _1));
-		socket.connect("www.onet.pl", 80);
+		socket->evtOnConnected.connect(boost::bind(&TestClient::onConnected, this));
+		socket->evtOnReceived.connect(boost::bind(&TestClient::onReceived, this));
+		socket->evtOnError.connect(boost::bind(&TestClient::onError, this, _1));
+		socket->connect("localhost", 4567);
 		
 	}
 private:
+	void onError(unsigned int error )
+	{
+		DWORD dw;
+		dw = WSAGetLastError();
+		std::cout << error << std::endl;
+	}
+
 	void onConnected() 
 	{
-		std::cout << "Connected!!!!" << std::endl;
+		/*std::cout << "Connected!!!!" << std::endl;
 
-		char b[] = "GET / HTTP/1.1\r\nHost: www.konnekt.info\r\n\r\n";
-		ByteBuffer data;
-		data.assign((const unsigned char*)b, strlen(b));
-
-		socket.send(data);
+		char b[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+		socket->write(b, strlen(b));*/
 	}
 
-	void onReceived(const ByteBuffer& data) 
+	void onReceived() 
 	{
-		std::cout << (char*)data.getString() << std::endl;
+		char buff[2048];
+		int rcv = socket->read(buff, 2048);
+		buff[rcv] = '\0'; 
+		std::cout << buff << std::endl;
 	}
 private:
-	TCPSocketClient socket;
+	SocketClient* socket;
+};
+
+
+class TestServer {
+public:
+	TestServer() {
+		socket = new TCPServer_W32();
+	}
+
+	void start() {
+		socket->evtOnAccept.connect(boost::bind(&TestServer::onAccept, this, _1));
+		socket->evtOnError.connect(boost::bind(&TestServer::onError, this, _1));
+		socket->listen(4567);
+	}
+private:
+	void onAccept(SocketClient* socket) {
+		socket->write("zonk zonk zonk", 14);
+	}
+	void onError(unsigned int error) {
+		std::cout << error << std::endl;
+	}
+private:
+	SocketServer* socket;
 };
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	Test t;
+	TestClient t;
+	TestServer s;
+	s.start();
+	Sleep(3000);
 	t.start();
 	char c;
 	std::cin >> c;

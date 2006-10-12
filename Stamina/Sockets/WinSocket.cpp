@@ -22,7 +22,7 @@ namespace Stamina {
 		if (_ref == 0) {
 			wVersionRequested = MAKEWORD(major, minor);
 			if (WSAStartup(wVersionRequested, &wsaData))
-				throw SocketException(WSAGetLastError());
+				throw WSASocketException(WSAGetLastError());
 		}
 		_ref++;
 	}

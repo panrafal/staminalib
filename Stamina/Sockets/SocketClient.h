@@ -5,13 +5,14 @@
  * 
  *  Copyright (C)2005-2006 Krzysztof G³ogocki
  *
- *  $Id:  $
+ *  $Id: $
  */
 
 #ifndef __STAMINA_SOCKETCLIENT_H__
 #define __STAMINA_SOCKETCLIENT_H__
 
-#include "iSocket.h"
+#include "iSocketClient.h"
+#include "SocketException.h"
 
 #include <Stamina/Object.h>
 #include <Stamina/ObjectImpl.h>
@@ -26,7 +27,7 @@ namespace Stamina {
 	 *
 	 * @author Krzysztof G³ogocki
 	 */
-	class SocketClient : public SharedObject<iSocket> {
+	class SocketClient : public SharedObject<iSocketClient> {
 	public:
 		/** Connection state.
 		 */
@@ -37,19 +38,9 @@ namespace Stamina {
 			stConnected
 		};
 
-		STAMINA_OBJECT_CLASS_VERSION(Stamina::SocketClient, iSocket, Version(0,1,0,0));
+		STAMINA_OBJECT_CLASS_VERSION(Stamina::SocketClient, iSocketClient, Version(0,1,0,0));
 
 		SocketClient() : _state(stDisconnected), _port(0) {}
-
-		/** Establishes connection to host @a host on port @a port.
-		 * @param host Hostname.
-		 * @param port Port number.
-		 */
-		virtual bool connect(const StringRef& host, unsigned short port) = 0;
-		/** Sends data to connected host.
-		 * @return Number of bytes sent.
-		 */
-		virtual int send(const ByteBuffer& buffer) = 0;
 
 		inline String getHost() const {
 			return _host;
@@ -68,11 +59,7 @@ namespace Stamina {
 
 		/** Fires when data has been received.
 		 */
-		boost::signal<void (const ByteBuffer&)> evtOnReceived;
-
-		/** Fires when data is beeing send.
-		 */
-		boost::signal<void (const ByteBuffer&)> evtOnSend;
+		boost::signal<void ()> evtOnReceived;
 		
 		/** Fires when connection is beeing closed.
 		 */
@@ -83,8 +70,9 @@ namespace Stamina {
 		boost::signal<void (unsigned int)> evtOnError;
 	protected:
 		String _host;
-		unsigned short _port;
+		Port _port;
 		State _state;
+		CriticalSection_w32 _critical;
 	};
 }
 
