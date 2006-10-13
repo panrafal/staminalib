@@ -154,6 +154,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SOCKS5Proxy.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -209,6 +213,10 @@
 			</File>
 			<File
 				RelativePath=".\SocketServer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SOCKS5Proxy.h"
 				>
 			</File>
 			<File

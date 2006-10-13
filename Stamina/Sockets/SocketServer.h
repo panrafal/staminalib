@@ -90,6 +90,8 @@ namespace Stamina {
 		State _state;
 		Port _port;
 	};
+
+	typedef SharedPtr<SocketServer> oSocketServer;
 }
 
 #endif	// __STAMINA_SOCKETSERVER_H__

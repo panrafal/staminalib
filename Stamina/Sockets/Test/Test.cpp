@@ -28,7 +28,7 @@ public:
 		socket->evtOnConnected.connect(boost::bind(&TestClient::onConnected, this));
 		socket->evtOnReceived.connect(boost::bind(&TestClient::onReceived, this));
 		socket->evtOnError.connect(boost::bind(&TestClient::onError, this, _1));
-		socket->connect("localhost", 4567);
+		socket->connect("www.konnekt.info", 80);
 		
 	}
 private:
@@ -41,10 +41,10 @@ private:
 
 	void onConnected() 
 	{
-		/*std::cout << "Connected!!!!" << std::endl;
+		std::cout << "Connected!!!!" << std::endl;
 
-		char b[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
-		socket->write(b, strlen(b));*/
+		char b[] = "GET / HTTP/1.1\r\nHost: konnekt.info\r\n\r\n";
+		socket->write(b, strlen(b));
 	}
 
 	void onReceived() 

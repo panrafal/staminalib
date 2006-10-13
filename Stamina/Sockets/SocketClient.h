@@ -74,6 +74,8 @@ namespace Stamina {
 		State _state;
 		CriticalSection_w32 _critical;
 	};
+
+	typedef SharedPtr<SocketClient> oSocketClient;
 }
 
 #endif	// __STAMINA_SOCKETCLIENT_H__

@@ -36,7 +36,6 @@ namespace Stamina {
 	private:
 		unsigned int connecting();
 		unsigned int loop();
-		bool isConnected();
 	};
 }
 
