@@ -12,7 +12,7 @@
 #include "SOCKS5Proxy.h"
 
 namespace Stamina {
-	SOCKS5Proxy::SOCKS5Proxy(const oSocketClient& socket) 
+	SOCKS5Proxy::SOCKS5Proxy(const oSocketClient& socket, Mode mode) 
 		: _socket(socket), _mode(mode), _proxyState(psNotConnected) {
 		
 		// connect signals

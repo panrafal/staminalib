@@ -76,20 +76,18 @@ namespace Stamina {
 			// set send time-out in milliseconds
 			setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO,(char*)&option, sizeof(option));
 
-			// est socket to nonblocking mode
-			int iMode = 1;
-			ioctlsocket(_socket, FIONBIO, (u_long*)&iMode);
-
 			_threads->run(boost::bind(&TCPClient_W32::loop, this), "TCPClient_W32::loop");
 
-			if (::connect(_socket, (const sockaddr*)&server, sizeof(sockaddr_in)) != SOCKET_ERROR ||
+			if (::connect(_socket, (const sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR &&
 				WSAGetLastError() != WSAEWOULDBLOCK) {
-
 				closesocket(_socket);
 				evtOnError(WSAGetLastError());
 				this->_state = stDisconnected;
 				ExitThread(-1);
 			}
+			// est socket to nonblocking mode
+			int iMode = 1;
+			ioctlsocket(_socket, FIONBIO, (u_long*)&iMode);
 		}
 		ExitThread(NO_ERROR);
 	}
