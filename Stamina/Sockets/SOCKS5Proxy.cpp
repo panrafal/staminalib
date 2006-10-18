@@ -180,8 +180,8 @@ namespace Stamina {
 			buffer.append((unsigned char*)_proxy.destHost.substr(0, 255).c_str(), 255);
 		}
 
-		buffer.append((unsigned char*)_proxy.destPort/256, 1);
-		buffer.append((unsigned char*)_proxy.destPort%256, 1);
+		buffer.append((unsigned char*)(_proxy.destPort / 256), 1);
+		buffer.append((unsigned char*)(_proxy.destPort % 256), 1);
 
 		_proxyState = psConnectSend;
 		_socket->write(buffer);

@@ -78,6 +78,7 @@ namespace Stamina {
 
 		// hide method
 		bool connect(const StringRef& host, Port port) {
+      return false;
 		}
 	};
 }
