@@ -47,7 +47,7 @@ namespace Stamina {
 
 		SOCKS5Proxy(const oSocketClient& socket, Mode mode = mClient);
 		
-		void connect(const Proxy& proxy);
+		bool connect(const Proxy& proxy);
 		void close();
 
 		int write(const char* data, Size size);
@@ -56,13 +56,13 @@ namespace Stamina {
 		inline Mode getMode() const {
 			return _mode;
 		}
+
 	protected:
 		oSocketClient _socket;
 		Mode _mode;
 		ProxyState _proxyState;
-		String _username;
-		String _password;
 		Proxy _proxy;
+
 	private:
 		void onConnected();
 		void sendProxyHandshake();

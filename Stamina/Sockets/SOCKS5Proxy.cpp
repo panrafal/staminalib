@@ -26,7 +26,7 @@ namespace Stamina {
 		this->_host = proxy.proxyHost;
 		this->_port = proxy.proxyPort;
 		_proxy = proxy;
-		return _socket->connect(host, port);
+		return _socket->connect(_host, _port);
 	}
 
 	void SOCKS5Proxy::close() {
@@ -56,7 +56,7 @@ namespace Stamina {
 
 		ByteBuffer buffer;
 
-		if (_username.getLength() != 0) {
+		if (_proxy.username.getLength() != 0) {
 			buffer.append((unsigned char*)5, 1);	// VER
 			buffer.append((unsigned char*)2, 1);	// NMETHODS
 			buffer.append((unsigned char*)0, 1);	// NO AUTHENTICATION REQUIRED
@@ -121,7 +121,7 @@ namespace Stamina {
 		buffer.append((unsigned char*)1, 1); // Version
 
 		// username
-		if (_username.getLength() <= 255) {
+		if (_proxy.username.getLength() <= 255) {
 			buffer.append((unsigned char*)_proxy.username.getLength(), 1);
 			buffer.append((unsigned char*)_proxy.username.c_str(), _proxy.username.getLength());
 		} else {
@@ -130,7 +130,7 @@ namespace Stamina {
 		}
 
 		// password
-		if (_password.getLength() <= 255) {
+		if (_proxy.password.getLength() <= 255) {
 			buffer.append((unsigned char*)_proxy.password.getLength(), 1);
 			buffer.append((unsigned char*)_proxy.password.c_str(), _proxy.password.getLength());
 		} else {

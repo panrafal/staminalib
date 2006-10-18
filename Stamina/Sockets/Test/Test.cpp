@@ -7,6 +7,7 @@
 #include <boost/signal.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+
 using namespace Stamina;
 using namespace std;
 
@@ -32,11 +33,11 @@ public:
 		
 	}
 private:
-	void onError(unsigned int error )
+	void onError(const SocketError& error)
 	{
 		DWORD dw;
 		dw = WSAGetLastError();
-		std::cout << error << std::endl;
+		std::cout << error.getMessage().c_str() << std::endl;
 	}
 
 	void onConnected() 
@@ -74,8 +75,8 @@ private:
 	void onAccept(SocketClient* socket) {
 		socket->write("zonk zonk zonk", 14);
 	}
-	void onError(unsigned int error) {
-		std::cout << error << std::endl;
+	void onError(const SocketError& error) {
+		std::cout << error.getMessage().c_str() << std::endl;
 	}
 private:
 	SocketServer* socket;

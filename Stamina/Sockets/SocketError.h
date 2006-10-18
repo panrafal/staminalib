@@ -46,7 +46,7 @@ namespace Stamina {
 			return _message.getLength() != 0;
 		}
 
-		String getMessage () const {
+		String getMessage() const {
 			return _message;
 		}
 	protected:

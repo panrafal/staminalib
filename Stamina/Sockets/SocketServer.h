@@ -69,6 +69,7 @@ namespace Stamina {
 		inline void setProxyType(ProxyType proxyType) {
 			_proxyType = proxyType;
 		}
+
 		inline ProxyType getProxyType() const {
 			return _proxyType;
 		}
