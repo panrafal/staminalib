@@ -83,7 +83,7 @@ namespace Stamina {
 
 		/** Fires when error occures.
 		 */
-		boost::signal<void (unsigned int)> evtOnError;
+		boost::signal<void (const SocketError&)> evtOnError;
 
 	protected:
 		ProxyType _proxyType;

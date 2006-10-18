@@ -13,6 +13,7 @@
 
 #include "iSocketClient.h"
 #include "SocketException.h"
+#include "SocketError.h"
 
 #include <Stamina/Object.h>
 #include <Stamina/ObjectImpl.h>
@@ -67,7 +68,7 @@ namespace Stamina {
 
 		/** Fires when error occures.
 		 */
-		boost::signal<void (unsigned int)> evtOnError;
+		boost::signal<void (const SocketError&)> evtOnError;
 	protected:
 		String _host;
 		Port _port;

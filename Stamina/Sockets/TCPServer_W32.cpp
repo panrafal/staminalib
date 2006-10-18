@@ -59,14 +59,14 @@ namespace Stamina {
 			
 			ret = select(_socket, &readfd, NULL, NULL, &time);
 			if (ret == SOCKET_ERROR) {
-				evtOnError(WSAGetLastError());
+				evtOnError(SocketError(SocketError::etWSAError, WSAGetLastError()));
 			} else if (ret > 0) {
 				if (FD_ISSET(_socket, &readfd)) {
 					sockaddr_in service;
 					int addrsize = sizeof(service);
 					SOCKET sock = accept(_socket, (SOCKADDR*)&service, &addrsize);
 					if (sock == INVALID_SOCKET) {
-						evtOnError(WSAGetLastError());
+						evtOnError(SocketError(SocketError::etWSAError, WSAGetLastError()));
 					} else {
 						evtOnAccept(createSocketObject(sock, service));
 					}

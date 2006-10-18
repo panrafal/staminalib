@@ -208,6 +208,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SocketError.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SocketException.h"
 				>
 			</File>

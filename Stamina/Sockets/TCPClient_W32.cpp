@@ -46,7 +46,7 @@ namespace Stamina {
 		_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 		if (_socket == INVALID_SOCKET) {
-			evtOnError(WSAGetLastError());
+			evtOnError(SocketError(SocketError::etWSAError, WSAGetLastError()));
 			ExitThread(-1);
 		}
 
@@ -60,7 +60,7 @@ namespace Stamina {
 
 		if (hp == NULL) {
 			closesocket(_socket);
-			evtOnError(WSAGetLastError());
+			evtOnError(SocketError(SocketError::etWSAError, WSAGetLastError()));
 			ExitThread(-1);
 		}
 		else {
@@ -81,7 +81,7 @@ namespace Stamina {
 			if (::connect(_socket, (const sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR &&
 				WSAGetLastError() != WSAEWOULDBLOCK) {
 				closesocket(_socket);
-				evtOnError(WSAGetLastError());
+				evtOnError(SocketError(SocketError::etWSAError, WSAGetLastError()));
 				this->_state = stDisconnected;
 				ExitThread(-1);
 			}
@@ -112,7 +112,7 @@ namespace Stamina {
 
 				// if error appears, fire signal and terminate thread
 				if (ret == SOCKET_ERROR) {
-					evtOnError(WSAGetLastError());
+					evtOnError(SocketError(SocketError::etWSAError, WSAGetLastError()));
 					_state = stDisconnected;
 					return -1;
 				} else if (ret > 0) {
@@ -136,7 +136,7 @@ namespace Stamina {
 
 				// if error appears, fire signal and terminate thread
 				if (ret == SOCKET_ERROR) {
-					evtOnError(WSAGetLastError());
+					evtOnError(SocketError(SocketError::etWSAError, WSAGetLastError()));
 					_state = stDisconnected;
 					return -1;
 				} else if (ret > 0) {
