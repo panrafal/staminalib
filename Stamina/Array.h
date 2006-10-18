@@ -35,8 +35,8 @@ $Id: $
 namespace Stamina {
 
 
-	template <typename TYPE>
-	class Array: public SharedObject< iArray<TYPE> > {
+	template <typename TYPE, typename LOCK = Stamina::Lock_blank>
+	class Array: public SharedObject< iArray<TYPE>, LockableObject< iArray<TYPE>, LOCK > > {
 	public:
 
 		typedef Buffer<TYPE> tBuffer;
@@ -52,6 +52,7 @@ namespace Stamina {
 
 		/** Returns item count */
 		virtual unsigned int size() const {
+			ObjLocker l(this, lockRead);
 			return _buffer.getLength();
 		}
 
@@ -59,15 +60,18 @@ namespace Stamina {
 		Use it before adding many items.
 		*/
 		virtual void reserve(unsigned int newSize) {
+			ObjLocker l(this, lockWrite);
 			_buffer.makeRoom(newSize);
 		}
 
 		/** How many elements can fit in the array without resizing */
 		virtual unsigned int capacity() const {
+			ObjLocker l(this, lockRead);
 			return _buffer.getBufferSize();
 		}
 
 		virtual void erase(int pos, unsigned int count = wholeData) {
+			ObjLocker l(this, lockWrite);
 			if (pos == 0 && count >= _buffer.getLength()) {
 				_buffer.reset();
 			} else {
@@ -76,10 +80,12 @@ namespace Stamina {
 		}
 
 		virtual TYPE& insert(const TYPE& v, int pos = wholeData) {
+			ObjLocker l(this, lockWrite);
 			return this->at(_buffer.insertInRange(this->getPosRange(pos), &v, 1));
 		}
 
 		virtual TYPE& at(int pos) {
+			ObjLocker l(this, lockRead);
 			return _buffer.getBuffer()[ this->getPos(pos) ];
 		}
 
