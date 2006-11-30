@@ -101,7 +101,7 @@ namespace Stamina {
     fd_set exceptfd;
     timeval time;
     
-    time.tv_sec = getTimeOut() / 1000 ;//100;
+    time.tv_sec = getTimeOut() / 1000;
     time.tv_usec = getTimeOut() % 1000; 
 
     while (_state != stDisconnected && _state != stDisconnecting) {
