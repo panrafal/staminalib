@@ -535,7 +535,7 @@ namespace Stamina {
 		static bool equal(const char* abegin, const char* aend, const char* bbegin, const char* bend, bool noCase) {
 			if (aend - abegin != bend - bbegin) return false;
 			if (noCase) {
-				return strnicmp(abegin, bbegin, (aend - abegin)) == 0;
+				return _strnicmp(abegin, bbegin, (aend - abegin)) == 0;
 			} else {
 				// dzia³a dla wszystkich, wiêc mo¿e byæ tu u¿yte...
 				return memcmp(abegin, bbegin, (aend - abegin)) == 0;
@@ -567,7 +567,7 @@ namespace Stamina {
 		static bool equal(const wchar_t* abegin, const wchar_t* aend, const wchar_t* bbegin, const wchar_t* bend, bool noCase) {
 			if (aend - abegin != bend - bbegin) return false;
 			if (noCase) {
-				return wcsnicmp(abegin, bbegin, (aend - abegin)) == 0;
+				return _wcsnicmp(abegin, bbegin, (aend - abegin)) == 0;
 			} else {
 				// dzia³a dla wszystkich, wiêc mo¿e byæ tu u¿yte...
 				return memcmp(abegin, bbegin, (aend - abegin) * 2) == 0;

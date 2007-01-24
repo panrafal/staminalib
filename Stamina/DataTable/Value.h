@@ -31,8 +31,8 @@ $Id: $
 */
 
 #include "DT.h"
-#include <Stamina\ObjectImpl.h>
-#include <Stamina\Lock.h>
+#include "../ObjectImpl.h"
+#include "../Lock.h"
 
 namespace Stamina { namespace DT {
 

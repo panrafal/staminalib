@@ -28,10 +28,10 @@ $Id$
 #ifndef __STAMINA_REGEX__
 #define __STAMINA_REGEX__
 
-
+#include "Stamina.h"
 #include <string>
 #include <boost\smart_ptr.hpp>
-#include <Stamina\Helpers.h>
+#include "Helpers.h"
 
 namespace Stamina {
 

@@ -27,7 +27,7 @@ $Id$
 #pragma once
 
 
-
+#include "Stamina.h"
 #include <string.h>
 
 namespace Stamina {
@@ -117,7 +117,7 @@ namespace Stamina {
 				s += itoa(major, buff, 10);
 			if (elements > 1 || minor || release || build) {
 				s += ".";
-				s += itoa(minor, buff, 10);
+				s += _itoa(minor, buff, 10);
 			}
 			if (elements > 2 || release || build) {
 				s += ".";
@@ -154,7 +154,7 @@ namespace Stamina {
 		}
 
 		bool operator == (const ModuleVersion&b) {
-			return _category == b._category && stricmp(_name, b._name) == 0 && _version == b._version;
+			return _category == b._category && _stricmp(_name, b._name) == 0 && _version == b._version;
 		}
 
 		enVersionCategory getCategory() const {

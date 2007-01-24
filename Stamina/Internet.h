@@ -27,6 +27,7 @@ $Id$
 
 #pragma once
 
+#include "Stamina.h"
 #include <Wininet.h>
 #include <boost/intrusive_ptr.hpp>
 #include "Exception.h"

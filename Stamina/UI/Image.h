@@ -121,10 +121,10 @@ namespace Stamina { namespace UI {
 			inline bool contains(DrawMask mask) const {
 				return (this->mask & mask) == mask;
 			}
-			inline set(DrawMask mask) {
+			inline void set(DrawMask mask) {
 				this->mask = (DrawMask)(this->mask | mask);
 			}
-			inline unset(DrawMask mask) {
+			inline void unset(DrawMask mask) {
 				this->mask = (DrawMask)(mask & ~mask);
 			}
 

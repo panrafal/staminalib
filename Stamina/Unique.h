@@ -27,9 +27,9 @@ $Id$
 #pragma once
 
 #include <string>
-#include <Stamina\Object.h>
-#include <Stamina\ObjectPtr.h>
-#include <Stamina\String.h>
+#include "Object.h"
+#include "ObjectPtr.h"
+#include "String.h"
 
 
 namespace Stamina { namespace Unique {

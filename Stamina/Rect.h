@@ -34,6 +34,8 @@ Obs³uga typów prostok¹ta, punktu i rozmiaru...
 #ifndef __STAMINA_RECT__
 #define __STAMINA_RECT__
 
+#include "Stamina.h"
+
 namespace Stamina {
 
 	/**Punkt*/
@@ -321,7 +323,7 @@ namespace Stamina {
 		}
 
 		operator bool() const {
-			return isSet;
+			return isSet();
 		}
 
 		Rect operator - (const Point& pt) const {

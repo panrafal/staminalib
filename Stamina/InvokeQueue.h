@@ -26,6 +26,7 @@ $Id$
 
 #pragma once
 
+#include "Stamina.h"
 #include "CriticalSection.h"
 #include <queue>
 #include "Event.h"

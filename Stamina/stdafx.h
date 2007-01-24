@@ -13,6 +13,8 @@
 #define _WIN32_IE 0x600
 #define _WIN32_WINDOWS 0x0490
 
+#define _CRT_SECURE_NO_DEPRECATE
+
 #include <windows.h>
 #include <commctrl.h>
 #include <stdstring.h>

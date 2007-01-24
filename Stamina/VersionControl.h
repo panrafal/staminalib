@@ -30,6 +30,7 @@ $Id$
 
 #pragma once
 
+#include "Stamina.h"
 #include <list>
 #include <algorithm>
 #include "Object.h"
@@ -60,13 +61,17 @@ namespace Stamina {
 
 
 		bool registerModule(const ModuleVersion& module) {
-			//OutputDebugString("registerModule: ");
-			//OutputDebugString(module.getName());
+			OutputDebugString("registerModule: ");
+			OutputDebugString(module.getName());
+			OutputDebugString(" (");
+			OutputDebugString(module.getVersion().getString().c_str());
+			OutputDebugString(")");
 
 			if (std::find(_list.begin(), _list.end(), module) != _list.end()) {
-				//OutputDebugString(" !!!! \n");
+				OutputDebugString(" [duplicate!] \n");
 				return false;
 			}
+			OutputDebugString("\n");
 			//OutputDebugString("\n");
 			_list.push_back(module);
 			return true;
@@ -155,7 +160,7 @@ namespace Stamina {
 
 #undef STAMINA_REGISTER_VERSION
 #define STAMINA_REGISTER_VERSION(NAME, MODULE) \
-	extern __declspec(dllexport) __declspec(selectany) const ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
+	__declspec(dllexport) __declspec(selectany) ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
 
 #undef STAMINA_REGISTER_CLASS_VERSION
 #define STAMINA_REGISTER_CLASS_VERSION(CLASS) \

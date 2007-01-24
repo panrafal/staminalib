@@ -65,7 +65,7 @@ namespace Stamina {
 
 		/** Constructor
 		*/
-		inline Time64(time_t timer) {
+		inline Time64(int timer) {
 			from_time_t(timer);
 		}
 
@@ -248,7 +248,7 @@ namespace Stamina {
 
 		/** Constructor
 		*/
-		Date64(time_t timer) {
+		Date64(int timer) {
 			from_time_t(timer);
 		}
 

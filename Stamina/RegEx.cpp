@@ -30,7 +30,7 @@ $Id$
 #include <windows.h>
 
 
-#include <pcre.h>
+#include <pcre/pcre.h>
 #include "RegEx.h"
 #include "Assert.h"
 

@@ -50,6 +50,7 @@ namespace Stamina {
 		if (tmp) {
 			timer = *tmp;
 		}
+
 		return timer;
 	}
 
@@ -110,9 +111,9 @@ namespace Stamina {
 
 
 	std::string Time64::getTimeString(const char* hourStr, const char* minStr, const char* secStr, bool needHour, bool needMin, bool needSec) const {
-		int hour = this->sec / (60*60);
-		int min = (this->sec % (60*60)) / 60;
-		int sec = (this->sec % (60));
+		int hour = (int)this->sec / (60*60);
+		int min = (int)(this->sec % (60*60)) / 60;
+		int sec = (int)(this->sec % (60));
 		std::string str;
 		char buff [20];
 		if (hour || needHour) {

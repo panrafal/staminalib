@@ -3,7 +3,6 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <boost/pool/pool.hpp>
 #include <boost/pool/singleton_pool.hpp>
-#include <Stamina/VersionControl.h>
 #include <Stamina/Array.h>
 
 using namespace Stamina;

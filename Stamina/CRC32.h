@@ -31,6 +31,8 @@ $Id$
 #ifndef __STAMINA_CRC32__
 #define __STAMINA_CRC32__
 
+#include "Stamina.h"
+
 namespace Stamina {
 
 	/** Class that implements CRC32 hash algorithm.

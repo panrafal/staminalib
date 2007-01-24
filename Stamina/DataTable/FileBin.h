@@ -31,8 +31,8 @@ $Id$
 
 #include <io.h>
 #include "FileBase.h"
-#include <Stamina\Helpers.h>
-#include <Stamina\FindFileFiltered.h>
+#include "..\Helpers.h"
+#include "..\FindFileFiltered.h"
 
 namespace Stamina { namespace DT {
 

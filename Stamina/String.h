@@ -24,6 +24,7 @@ $Id$
 
 */
 
+#include "Stamina.h"
 #include "Object.h"
 
 #ifndef __STAMINA_STRING__

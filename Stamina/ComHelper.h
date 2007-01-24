@@ -26,6 +26,7 @@ $Id: BrowserCtrl.cpp 179 2006-03-14 22:56:40Z hao $
 
 #pragma once
 
+#include "Stamina.h"
 #include <comutil.h>
 
 

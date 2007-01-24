@@ -32,10 +32,10 @@ $Id$
 
 
 
-#include <Stamina\Assert.h>
-#include <Stamina\FindFileFiltered.h>
-#include <Stamina\WideChar.h>
-#include <Stamina\WinHelper.h>
+#include "..\Assert.h"
+#include "..\FindFileFiltered.h"
+#include "..\WideChar.h"
+#include "..\WinHelper.h"
 
 using namespace std;
 
@@ -1186,10 +1186,10 @@ namespace Stamina { namespace DT {
 		std::map<String, FileBackups> files;
 		std::vector<Date64> range;
 
-		range.push_back(Time64(true) - (30 * 24 * 60 * 60)); // sprzed miesiaca
-		range.push_back(Time64(true) - (7 * 24 * 60 * 60)); // sprzed tygodnia
-		range.push_back(Time64(true) - (24 * 60 * 60)); // z wczoraj
-		range.push_back(Time64(true) - (6 * 60 * 60)); // sprzed 6 godzin
+		range.push_back(Time64(true) - Time64(30 * 24 * 60 * 60)); // sprzed miesiaca
+		range.push_back(Time64(true) - Time64(7 * 24 * 60 * 60)); // sprzed tygodnia
+		range.push_back(Time64(true) - Time64(24 * 60 * 60)); // z wczoraj
+		range.push_back(Time64(true) - Time64(6 * 60 * 60)); // sprzed 6 godzin
 		range.push_back(Time64(true)); // najnowsze
 
 		bool all = isDirectory(filename.c_str());

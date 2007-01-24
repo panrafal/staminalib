@@ -26,7 +26,8 @@ $Id$
 
 #pragma once
 
-#include <md5.h>
+#include "Stamina.h"
+#include <md5/md5.h>
 #include <memory.h>
 
 namespace Stamina {

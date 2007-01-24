@@ -110,9 +110,9 @@ namespace ListWnd
 	void ListView::selectionToActive() {
 		lockPaint();
 		ItemWalk::walk(this
-			, boost::bind(Item::setSelected
-				, boost::bind(oItem::get, _1)
-				, boost::bind(ItemWalk::getListView,_2), false)
+			, boost::bind(&Item::setSelected
+				, boost::bind(&oItem::get, _1)
+				, boost::bind(&ItemWalk::getListView,_2), false)
 			, oItem(), oItem(), true, false);
 		if (this->_activeItem)
 			this->_activeItem->setSelected(this, true);

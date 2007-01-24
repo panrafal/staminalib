@@ -46,7 +46,7 @@ namespace Stamina { namespace DT {
 		ColumnsDesc () {
 			_loader=false;
 		}
-		operator = (const ColumnsDesc & x);
+		int operator = (const ColumnsDesc & x);
 
 		int setColumnCount (int count, bool expand = false); // ustawia ilosc kolumn
 		oColumn setColumn (tColId id, enColumnType type , const AStringRef& name="");  // ustawia rodzaj danych w kolumnie

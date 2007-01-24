@@ -39,9 +39,9 @@ $Id$
 
 #include "Control.h"
 
-#include <Stamina/String.h>
-#include <Stamina/ComHelper.h>
-#include <Stamina/Logger.h>
+#include "../String.h"
+#include "../ComHelper.h"
+#include "../Logger.h"
 
 S_COM_SMARTPTR_TYPEDEF(IDispatch);
 S_COM_SMARTPTR_TYPEDEF(IWebBrowser2);

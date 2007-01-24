@@ -663,7 +663,7 @@ protected:
 		backup = fb.findLastBackupFile();
 		CPPUNIT_ASSERT(backup.empty() == false);
 		// sprawdzamy wyszukiwanie najnowszych...
-		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - 120).strftime(".%Y-%m-%d %H-%M-%S.bak")).c_str(), false);
+		CopyFile(filename.c_str(), (filename + Time64(Time64(true) - Time64(120)).strftime(".%Y-%m-%d %H-%M-%S.bak")).c_str(), false);
 		CPPUNIT_ASSERT_EQUAL(String(backup), fb.findLastBackupFile());
 
 		// przywracanie
@@ -683,23 +683,23 @@ protected:
 		tList keep;
 		tList remove;
 
-		keep.push_back(Time64(true) - (30 * 24 * 60 * 60) - 10); // sprzed miesiaca
-		keep.push_back(Time64(true) - (7 * 24 * 60 * 60)); // sprzed tygodnia
-		keep.push_back(Time64(true) - (24 * 60 * 60) - 550); // z wczoraj
-		keep.push_back(Time64(true) - (6 * 60 * 60) - 250); // sprzed 6 godzin
-		keep.push_back(Time64(true) - 10); // najnowsze
+		keep.push_back(Time64(true) - Time64((30 * 24 * 60 * 60) - 10)); // sprzed miesiaca
+		keep.push_back(Time64(true) - Time64(7 * 24 * 60 * 60)); // sprzed tygodnia
+		keep.push_back(Time64(true) - Time64(24 * 60 * 60 - 550)); // z wczoraj
+		keep.push_back(Time64(true) - Time64(6 * 60 * 60 - 250)); // sprzed 6 godzin
+		keep.push_back(Time64(true) - Time64(10)); // najnowsze
 
-		remove.push_back(Time64(true) - (60 * 24 * 60 * 60));
-		remove.push_back(Time64(true) - (365 * 24 * 60 * 60));
-		remove.push_back(Time64(true) - (30 * 24 * 60 * 60) - 11);
-		remove.push_back(Time64(true) - (8 * 24 * 60 * 60)); // sprzed tygodnia
-		remove.push_back(Time64(true) - (14 * 24 * 60 * 60)); // sprzed tygodnia
-		remove.push_back(Time64(true) - (29 * 24 * 60 * 60)); // sprzed tygodnia
-		remove.push_back(Time64(true) - (25 * 60 * 60)); // z wczoraj
-		remove.push_back(Time64(true) - (48 * 60 * 60)); // z wczoraj
-		remove.push_back(Time64(true) - (7 * 60 * 60)); // sprzed 6 godzin
-		remove.push_back(Time64(true) - (12 * 60 * 60)); // sprzed 6 godzin
-		remove.push_back(Time64(true) - 1000); // najnowsze
+		remove.push_back(Time64(true) - Time64(60 * 24 * 60 * 60));
+		remove.push_back(Time64(true) - Time64(365 * 24 * 60 * 60));
+		remove.push_back(Time64(true) - Time64(30 * 24 * 60 * 60 - 11));
+		remove.push_back(Time64(true) - Time64(8 * 24 * 60 * 60)); // sprzed tygodnia
+		remove.push_back(Time64(true) - Time64(14 * 24 * 60 * 60)); // sprzed tygodnia
+		remove.push_back(Time64(true) - Time64(29 * 24 * 60 * 60)); // sprzed tygodnia
+		remove.push_back(Time64(true) - Time64(25 * 60 * 60)); // z wczoraj
+		remove.push_back(Time64(true) - Time64(48 * 60 * 60)); // z wczoraj
+		remove.push_back(Time64(true) - Time64(7 * 60 * 60)); // sprzed 6 godzin
+		remove.push_back(Time64(true) - Time64(12 * 60 * 60)); // sprzed 6 godzin
+		remove.push_back(Time64(true) - Time64(1000)); // najnowsze
 
 		std::string format = getFileName("testCleanup") + ".%Y-%m-%d %H-%M-%S.bak";
 

@@ -28,6 +28,7 @@ $Id: $
 #pragma once
 
 
+#include "Stamina.h"
 #include "Helpers.h"
 
 namespace Stamina {

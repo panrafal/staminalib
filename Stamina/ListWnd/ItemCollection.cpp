@@ -386,7 +386,7 @@ namespace ListWnd
 
 	void ItemCollection::setLevel(char level) {
 		Item::setLevel(level);
-		for_each(_items.begin(), _items.end(), boost::bind(Item::setLevel, boost::bind(oItem::get, _1), level+1));
+		for_each(_items.begin(), _items.end(), boost::bind(&Item::setLevel, boost::bind(&oItem::get, _1), level+1));
 	}
 
 	void ItemCollection::setExpanded(ListView* lv, bool expanded) {

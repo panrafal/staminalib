@@ -31,6 +31,10 @@ $Id$
 #include <stdstring.h>
 #include "Helpers.h"
 
+#if (_MSC_VER >= 1400)
+#include <errno.h>
+#endif
+
 
 using namespace std;
 
@@ -38,7 +42,7 @@ namespace Stamina {
 
 	struct __initializer {
 		__initializer() {
-			srand(time(0));
+			srand((int)time(0));
 		}
 	} _initializer;
 
@@ -177,7 +181,7 @@ namespace Stamina {
 		if (!str || !chIn || !chOut || !*chIn || !*chOut || strlen(chIn)!=strlen(chOut)) return str;
 		char * c = str;
 		while (*c) {
-			char * pos = strchr(chIn , *c);
+			char * pos = strchr((char*)chIn , *c);
 			if (pos) {
 				*c = chOut[pos - chIn];
 			}
@@ -195,7 +199,7 @@ namespace Stamina {
 				if (ar[i][findLen] != 0 && ar[i][findLen] != '=')
 					continue;
 				if (getValue) {
-					char * value = strchr(ar[i] , '=');
+					char * value = strchr((char*)ar[i] , '=');
 					if (!value) 
 						return 0;
 					return value + 1;
