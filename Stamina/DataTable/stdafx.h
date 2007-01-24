@@ -10,6 +10,7 @@
 
 // TODO: reference additional headers your program requires here
 
+#include "..\Stamina.h"
 
 #include <windows.h>
 #include <vector>

@@ -72,7 +72,7 @@ namespace Stamina { namespace UI {
 	}
 
 
-	void RichEditHtml::setHTML(HWND hwnd , const CStdString & body , RichEditFormat::fSetStyleCB styleCB) {
+	void RichEditHtml::setHTML(HWND hwnd , const StringRef & body , RichEditFormat::fSetStyleCB styleCB) {
 		SendMessage(hwnd , WM_SETREDRAW , 0,0);
 		SetWindowText(hwnd , "");
 		SendMessage(hwnd , EM_SETSEL , 0 , 0);
@@ -116,7 +116,7 @@ namespace Stamina { namespace UI {
 
 #define COLOR_SWAP(c) ((c & 0x00FF0000)>>16) | (c&0xFF00) | ((c & 0x00FF)<<16)
 
-	void RichEditHtml::insertHTML(HWND hwnd ,  const CStdString& body , RichEditFormat::fSetStyleCB styleCB) {
+	void RichEditHtml::insertHTML(HWND hwnd ,  const StringRef& body , RichEditFormat::fSetStyleCB styleCB) {
 		RichEditFormat f(hwnd);
 		f.insertHTML(body, styleCB);
 	}
@@ -124,21 +124,21 @@ namespace Stamina { namespace UI {
 		SetWindowText(hwnd, "");
 	}
 
-	void RichEditFormat::insertHTML(const CStdString& insertBody , fSetStyleCB styleCB) {
+	void RichEditFormat::insertHTML(const StringRef& insertBody , fSetStyleCB styleCB) {
 		SXML xml;
 		RegEx preg;
-		CStdString body;// (insertBody);
-		body = preg.replace("#\\r|\\n|\\&\\#1[30];#" , "" , insertBody);
+		String body;// (insertBody);
+		body = preg.replace("#\\r|\\n|\\&\\#1[30];#" , "" , insertBody.a_str());
 		//	body = preg.replace("#<br/?>#is" , "" , body);
 		/* HACK */
-		body = preg.replace("#(?<!\\>)<br/?>(?!\\<)#is" , "\n" , body);
-		body = preg.replace("#<br>#is" , "<br/>" , body);
-		xml.loadSource(body);
+		body = preg.replace("#(?<!\\>)<br/?>(?!\\<)#is" , "\n" , body.a_str());
+		body = preg.replace("#<br>#is" , "<br/>" , body.a_str());
+		xml.loadSource(body.a_str());
 		SXML::NodeWalkInfo ni;
 		size_t last = 0 , lastApply = -1 , current = 0;
 
-		CStdString prefix = "";
-		CStdString suffix = "";
+		String prefix = "";
+		String suffix = "";
 		while (xml.nodeWalk(ni)) {
 			xml.pos.start = xml.pos.end;
 			xml.pos.start_end = xml.pos.end_end;
@@ -146,14 +146,14 @@ namespace Stamina { namespace UI {
 				SETTEXTEX ste;
 				ste.codepage = CP_ACP;
 				ste.flags = ST_SELECTION | ST_KEEPUNDO;
-				SendMessage(_hwnd , EM_SETTEXTEX , (int)&ste , (LPARAM)(prefix + CStdString(decodeEntities(body.substr(last , ni.start - last))) + suffix).c_str());
+				SendMessage(_hwnd , EM_SETTEXTEX , (int)&ste , (LPARAM)(prefix + String(decodeEntities(body.substr(last , ni.start - last))) + suffix).c_str());
 			}
 			current += ni.start - last;
 			last = ni.end;
-			CStdString token = ni.path.substr(ni.path.find_last_of('/')+1);
+			String token = ni.path.substr(ni.path.find_last_of('/')+1);
 			prefix = "";
 			suffix = "";
-			token.MakeLower();
+			token.makeLower();
 			int newParagraph = 0;
 			int oper = (ni.state == SXML::NodeWalkInfo::opened)? 1 : -1;
 			if (ni.state == SXML::NodeWalkInfo::closed)
@@ -182,19 +182,19 @@ namespace Stamina { namespace UI {
 			} else if (token == "sup") {
 			} else if (token == "font") {
 				_cf.dwMask |= CFM_COLOR | CFM_FACE | CFM_SIZE;
-				CStdString color = xml.getAttrib("color");
-				CStdString face = xml.getAttrib("face");
-				CStdString size = xml.getAttrib("size");
+				String color = xml.getAttrib("color");
+				String face = xml.getAttrib("face");
+				String size = xml.getAttrib("size");
 				/* W aktualnym CF ju¿ siedzi ostatnio ustawiony kolor, czy font, nie trzeba wiêc nic kombinowaæ :) */
 				if (!color.empty())
 					_cf.crTextColor = COLOR_SWAP(chtoint(color));
 				if (!face.empty())
-					strncpy(_cf.szFaceName , face, sizeof(_cf.szFaceName)-1);
+					strncpy_s(_cf.szFaceName, sizeof(_cf.szFaceName)-1, face.c_str(), min(sizeof(_cf.szFaceName)-1, face.length()));
 				/* parametr Size to ogólnie liczby dodatnie.. * 20 daj¹ dobr¹ wysokoœæ... */
 				if (!size.empty())
 					_cf.yHeight = chtoint(size) * 20;
 			} else if (token == "div" || token == "p") {
-				CStdString align = xml.getAttrib("align");
+				String align = xml.getAttrib("align");
 				if (!align.empty()) {
 					_pf.dwMask |= PFM_ALIGNMENT;
 					int alignment = 0;
@@ -207,7 +207,7 @@ namespace Stamina { namespace UI {
 			}
 			if (oper > 0 && styleCB) {
 				// Nak³adamy styl...
-				CStdString styleClass = xml.getAttrib("class");
+				String styleClass = xml.getAttrib("class");
 				if (!styleClass.empty()) {
 					SetStyle ss (_cf , _pf);
 					styleCB(token , styleClass , ss);
@@ -300,7 +300,7 @@ namespace Stamina { namespace UI {
 		_cf.dwMask = 0;
 		_pf.dwMask = 0;
 	}
-	void RichEditFormat::insertText(const CStdString & body) {
+	void RichEditFormat::insertText(const StringRef & body) {
 		SETTEXTEX ste;
 		ste.codepage = CP_ACP;
 		ste.flags = ST_SELECTION | ST_KEEPUNDO;
@@ -392,9 +392,9 @@ namespace Stamina { namespace UI {
 		_cf.yHeight = size * 20;
 		if (apply) this->push();
 	}
-	void RichEditFormat::setFont(const CStdString& face, bool apply) {
+	void RichEditFormat::setFont(const StringRef& face, bool apply) {
 		_cf.dwMask |= CFM_FACE;
-		strncpy(_cf.szFaceName , face, sizeof(_cf.szFaceName)-1);
+		strncpy_s(_cf.szFaceName, sizeof(_cf.szFaceName)-1, face.c_str(), min(sizeof(_cf.szFaceName)-1, face.length()));
 		if (apply) this->push();
 	}
 	void RichEditFormat::setAlignment(int align, bool apply) {

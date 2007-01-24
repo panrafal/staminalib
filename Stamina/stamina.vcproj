@@ -1061,6 +1061,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Compat_vs2k5.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Console.h"
 				>
 			</File>

@@ -53,9 +53,7 @@ namespace Stamina { namespace DT {
 	}
 
 	template<> extern inline  PassStringRef convert<PassStringRef, int>(int v) {
-		String s;
-		_itoa(v, s.useBuffer<char>(10), 10);
-		s.releaseBuffer<char>();
+		String s = inttostr(v);
 		return s;
 	}
 
@@ -80,7 +78,7 @@ namespace Stamina { namespace DT {
 
 	template<> extern inline  PassStringRef convert<PassStringRef, __int64>(__int64 v) {
 		String s;
-		_i64toa(v, s.useBuffer<char>(20), 10);
+		_i64toa_s(v, s.useBuffer<char>(30), 30, 10);
 		s.releaseBuffer<char>();
 		return s;
 	}
@@ -106,7 +104,7 @@ namespace Stamina { namespace DT {
 
 	template<> extern inline  PassStringRef convert<PassStringRef, double>(double v) {
 		String s;
-		gcvt(v, 20, s.useBuffer<char>(20));
+		_gcvt_s(s.useBuffer<char>(30), 30, v, 20);
 		s.releaseBuffer<char>();
 		return s;
 	}

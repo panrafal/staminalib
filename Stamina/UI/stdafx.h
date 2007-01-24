@@ -15,6 +15,8 @@
 #define _WIN32_IE 0x600
 #define _WIN32_WINDOWS 0x0490
 
+#include "..\Stamina.h"
+
 #include <windows.h>
 #include <commctrl.h>
 #include <vector>

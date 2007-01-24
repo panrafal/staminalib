@@ -36,6 +36,7 @@ $Id$
 #include <oleauto.h>
 #include <mshtmhst.h>
 
+#include "..\Stamina.h"
 
 #include "Control.h"
 

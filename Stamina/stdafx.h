@@ -15,6 +15,8 @@
 
 #define _CRT_SECURE_NO_DEPRECATE
 
+#include "Stamina.h"
+
 #include <windows.h>
 #include <commctrl.h>
 #include <stdstring.h>

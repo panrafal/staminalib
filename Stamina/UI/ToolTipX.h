@@ -33,6 +33,7 @@ $Id$
 #include <boost/shared_ptr.hpp>
 #include <deque>
 #include <map>
+#include <stdstring.h>
 
 #include "RichHtml.h"
 #include "../Rect.h"

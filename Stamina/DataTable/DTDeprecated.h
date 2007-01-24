@@ -28,6 +28,7 @@ $Id: $
 #ifndef __DT_DTDEPRECATED__
 #define __DT_DTDEPRECATED__
 
+#include "DT.h"
 
 /**@file All basic definitions needed to work with DataTable
 

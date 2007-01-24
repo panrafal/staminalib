@@ -28,6 +28,7 @@ $Id$
 #pragma once
 
 #include "Stamina.h"
+#include "String.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -57,7 +58,6 @@ namespace Stamina {
 	char * _vsaprintf(const char *format, va_list ap);
 	char * _saprintf(const char *format, ...);
 
-#ifdef _STRING_
 	std::string inttostr(int v , int radix=10 , int max=-1 , bool upper=true);
 
 	inline std::string stringf(const char *format, ...) {
@@ -70,11 +70,9 @@ namespace Stamina {
 			va_end(ap);
 			return _msg;
 	}
-#endif
-	int chtoint(const char * str , unsigned char base=0xFF);
-	__int64 chtoint64(const char * str , unsigned char base = 0xFF);
-	int chtoint(const wchar_t * str , unsigned char base=0xFF);
-	__int64 chtoint64(const wchar_t * str , unsigned char base = 0xFF);
+
+	int chtoint(const StringRef& str , unsigned char base=0xFF);
+	__int64 chtoint64(const StringRef& str , unsigned char base = 0xFF);
 
 
 
@@ -262,9 +260,9 @@ namespace Stamina {
 #endif
 
 
-	bool fileExists(const char* file);
+	bool fileExists(const StringRef& file);
 
-	bool isDirectory(const char* path);
+	bool isDirectory(const StringRef& path);
 
 };
 #endif	// __STAMINA_HELPERS_H__

@@ -107,6 +107,7 @@ namespace Stamina {
 		}
 
 #ifdef _STRING_
+#define __STAMINA_VERSION__WITH_STRING
 		/**Returns version string (x.x.x.x).
 		@param Minimum number of version parts to return
 		*/
@@ -114,18 +115,18 @@ namespace Stamina {
 			char buff [10];
 			std::string s;
 			if (elements > 0 || major || minor || release || build)
-				s += itoa(major, buff, 10);
+				s += _itoa(major, buff, 10);
 			if (elements > 1 || minor || release || build) {
 				s += ".";
 				s += _itoa(minor, buff, 10);
 			}
 			if (elements > 2 || release || build) {
 				s += ".";
-				s += itoa(release, buff, 10);
+				s += _itoa(release, buff, 10);
 			}
 			if (elements > 3 || build) {
 				s += ".";
-				s += itoa(build, buff, 10);
+				s += _itoa(build, buff, 10);
 			}
 			return s;
 		}

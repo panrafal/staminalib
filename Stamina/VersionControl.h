@@ -63,9 +63,11 @@ namespace Stamina {
 		bool registerModule(const ModuleVersion& module) {
 			OutputDebugString("registerModule: ");
 			OutputDebugString(module.getName());
+#ifdef __STAMINA_VERSION__WITH_STRING
 			OutputDebugString(" (");
 			OutputDebugString(module.getVersion().getString().c_str());
 			OutputDebugString(")");
+#endif
 
 			if (std::find(_list.begin(), _list.end(), module) != _list.end()) {
 				OutputDebugString(" [duplicate!] \n");
@@ -95,7 +97,7 @@ namespace Stamina {
 
 		Version getVersion(enVersionCategory category, const char* name) const {
 			for (tModuleList::const_iterator it = _list.begin(); it != _list.end(); ++it) {
-				if (it->getCategory() == category && !stricmp(it->getName(), name)) {
+				if (it->getCategory() == category && !_stricmp(it->getName(), name)) {
 					return it->getVersion();
 				}
 			}

@@ -83,7 +83,7 @@ namespace Stamina {
 
 	string __stdcall encodeCallback(class RegEx * p , void * param) {
 		char v [7] = "&#\0\0\0\0";
-		itoa(*p->getByVector(0) , v+2 , 10);
+		_itoa(*p->getByVector(0) , v+2 , 10);
 		v[strlen(v)]=';';
 		return v;
 	}

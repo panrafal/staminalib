@@ -133,7 +133,7 @@ namespace Stamina {
 				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					removeDirTree(ch);
 				} else {
-					unlink(ch);
+					_unlink(ch);
 				}
 			}
 			if (!FindNextFile(hFile , &fd)) break; 

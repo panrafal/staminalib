@@ -87,7 +87,7 @@ namespace Stamina {
 			s[max]='\0';
 
 		}
-		if (radix>10 && upper) strupr(s);
+		if (radix>10 && upper) _strupr(s);
 		return s;
 	}
 
@@ -155,25 +155,28 @@ namespace Stamina {
 		return sign;
 	}
 
-	int chtoint(const char * str , unsigned char base) {
-		int sign = checkIntChar(str, base);
-		return sign * strtoul(str, 0, base);
+	int chtoint(const StringRef& str , unsigned char base) {
+		if (str.isWide()) {
+			const wchar_t* s = str.w_str();
+			int sign = checkIntChar(s, base);
+			return sign * wcstoul(s, 0, base);
+		} else {
+			const char* s = str.a_str();
+			int sign = checkIntChar(s, base);
+			return sign * strtoul(s, 0, base);
+		}
 		//return strToNumber<unsigned int>(str, base);
 	}
-	__int64 chtoint64(const char * str , unsigned char base) {
-		int sign = checkIntChar(str, base);
-		//return strToNumber<unsigned __int64>(str, base);
-		return sign * _strtoui64(str, 0, base);
-	}
-	int chtoint(const wchar_t * str , unsigned char base) {
-		int sign = checkIntChar(str, base);
-		return sign * wcstoul(str, 0, base);
-		//return strToNumber<unsigned int>(str, base);
-	}
-	__int64 chtoint64(const wchar_t * str , unsigned char base) {
-		int sign = checkIntChar(str, base);
-		//return strToNumber<unsigned __int64>(str, base);
-		return sign * _wcstoui64(str, 0, base);
+	__int64 chtoint64(const StringRef& str , unsigned char base) {
+		if (str.isWide()) {
+			const wchar_t* s = str.w_str();
+			int sign = checkIntChar(s, base);
+			return sign * _wcstoui64(s, 0, base);
+		} else {
+			const char* s = str.a_str();
+			int sign = checkIntChar(s, base);
+			return sign * _strtoui64(s, 0, base);
+		}
 	}
 
 
@@ -324,11 +327,11 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 		string res;
 		string::const_iterator str_it;
 		res.reserve(str.size()+30);
-		char buff [4];
+		char buff [32];
 		for (str_it=str.begin(); str_it != str.end(); str_it++) {
 			if ((!noChange || !strchr(noChange , *str_it))&&(*str_it<'0'||*str_it>'9')&&(*str_it<'a'||*str_it>'z')&&(*str_it<'A'||*str_it>'Z')) {
 				res.append(1 , special);
-				itoa((unsigned char)*str_it , buff , 16);
+				_itoa((unsigned char)*str_it , buff , 16);
 				if (!buff[1]) {buff[2]=0;buff[1]=buff[0];buff[0]='0';}
 				res.append(buff);
 			} else {res.append(1, *str_it);}
@@ -402,7 +405,7 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					c += removeDirTree(file);
 				} else {
-					unlink(file.c_str());
+					_unlink(file.c_str());
 					c++;
 				}
 			}
@@ -437,13 +440,22 @@ void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
 		return c;
 	}
 
-	bool fileExists(const char* file) {
-		return _access(file, 0) == 0;
+	bool fileExists(const StringRef& file) {
+		if (file.isWide()) {
+			return _access(file.a_str(), 0) == 0;
+		} else {
+			return _waccess(file.w_str(), 0) == 0;
+		}
 	}
 
-	bool isDirectory(const char* path) {
-		if (path==".") return true;
-		DWORD attr = GetFileAttributes(path);
+	bool isDirectory(const StringRef& path) {
+		if (path == ".") return true;
+		DWORD attr;
+		if (path.isWide()) {
+			attr = GetFileAttributesA(path.a_str());
+		} else {
+			attr = GetFileAttributesW(path.w_str());
+		}
 		if (attr == INVALID_FILE_ATTRIBUTES) 
 			return false;
 		else

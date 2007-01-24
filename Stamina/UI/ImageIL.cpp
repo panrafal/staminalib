@@ -48,9 +48,9 @@ namespace Stamina { namespace UI {
 		if (filename.length() < 5 || !ext)
 			return oImage();
         ext++;
-		if (!stricmp(ext, "ico")) {
+		if (!_stricmp(ext, "ico")) {
 			return Image::loadIcon32(filename, loadParams.size.w, loadParams.bits);
-		} else if (!stricmp(ext, "bmp")) {
+		} else if (!_stricmp(ext, "bmp")) {
 			return new Bitmap(filename, loadParams.transparent);
 		}
 		return new ImageIL(filename, loadParams);
@@ -74,7 +74,7 @@ namespace Stamina { namespace UI {
 		if (!url.isMatched())
 			return oImage();
 		
-		int imageType = (!stricmp(url[3].c_str(),"bmp"))?IMAGE_BITMAP:((!stricmp(url[3].c_str(),"ico"))?IMAGE_ICON:-1);
+		int imageType = (!_stricmp(url[3].c_str(),"bmp"))?IMAGE_BITMAP:((!_stricmp(url[3].c_str(),"ico"))?IMAGE_ICON:-1);
 //		if (!stricmp(url[3].c_str(),"ico")) {
 		CStdString params = "&" + url[4];
 		CStdString::size_type start;

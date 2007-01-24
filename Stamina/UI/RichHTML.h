@@ -26,9 +26,10 @@ $Id$
 
 
 #pragma once
+#include "..\Stamina.h"
+#include "..\String.h"
 #include <windows.h>
 #include <Richedit.h>
-#include <stdstring.h>
 
 namespace Stamina { namespace UI {
 
@@ -68,9 +69,9 @@ namespace Stamina { namespace UI {
 			inline void offsetSize(int size) {
 				this->setSize(this->getSize() + size);
 			}
-			inline void setFont(const CStdString& face) {
+			inline void setFont(const StringRef& face) {
 				cf.dwMask |= CFM_FACE;
-				strncpy(cf.szFaceName , face, sizeof(cf.szFaceName)-1);
+				strncpy_s(cf.szFaceName, sizeof(cf.szFaceName)-1, face.c_str(), min(sizeof(cf.szFaceName)-1, face.length()));
 			}
 
 			inline int getSize() {
@@ -79,15 +80,13 @@ namespace Stamina { namespace UI {
 
 		};
 
-		typedef void (*fSetStyleCB)(const CStdString & token , const CStdString & styleClass , SetStyle & ss);
-
-#ifdef _STACK_
+		typedef void (*fSetStyleCB)(const StringRef & token , const StringRef & styleClass , SetStyle & ss);
 
 		RichEditFormat(HWND hwnd);
 
-		void insertHTML(const CStdString& body , fSetStyleCB styleCB = 0);
+		void insertHTML(const StringRef& body , fSetStyleCB styleCB = 0);
 		void clear();
-		void insertText(const CStdString& body);
+		void insertText(const StringRef& body);
 		void insertNewLine(int paragraph); /* 1-BR 2-P */
 
 		void operate(int oper);
@@ -100,7 +99,7 @@ namespace Stamina { namespace UI {
 		void setUnderline(bool underline, bool apply=true);
 		void setColor(int color, bool apply=true);
 		void setSize(int size, bool apply=true);
-		void setFont(const CStdString& face, bool apply=true);
+		void setFont(const StringRef& face, bool apply=true);
 		void setAlignment(int align, bool apply=true);
 
 		CHARFORMAT2& cf() {
@@ -141,7 +140,6 @@ namespace Stamina { namespace UI {
 	private:
 		HWND _hwnd;
 
-#endif
 	};
 
 
@@ -149,8 +147,8 @@ namespace Stamina { namespace UI {
 	class RichEditHtml {
 	public:
 		static HWND create(int style , int x , int y , int w , int h , HWND parent , HMENU id);
-		static void insertHTML(HWND hwnd ,  const CStdString& body , RichEditFormat::fSetStyleCB styleCB = 0);
-		static void setHTML(HWND hwnd , const CStdString & body , RichEditFormat::fSetStyleCB styleCB = 0);
+		static void insertHTML(HWND hwnd ,  const StringRef& body , RichEditFormat::fSetStyleCB styleCB = 0);
+		static void setHTML(HWND hwnd , const StringRef& body , RichEditFormat::fSetStyleCB styleCB = 0);
 		static void init(HWND hwnd);
 		static void init(HWND hwnd, bool getLinks, COLORREF color);
 		static void clear(HWND hwnd);
