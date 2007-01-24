@@ -89,17 +89,25 @@ namespace Stamina {
 	char * str_tr(char * str , const char * chIn , const char * chOut);
 
 
-	/** Looks for an argument in programs arguments list
+	/** Looks for an argument in programs arguments list.
+	If find or def are UNICODE, then the UNICODE arg list is looked up.
+
 	@param find Name to find with special character (ie. "/find" "-help" "-?" etc.)
 	@param getValue Returns the value of an argument (ie. "/find=VALUE")
 	@param def Default value to return if nothing is found...
 	@return Returns found argument or it's value
 	*/
-	const char * getArgV(const char * find , bool getValue=false , const char * def = 0);
+	String getArgV(const StringRef& find , bool getValue = false, const StringRef& def = "");
 
 	const char * getArgV(const char * const * argList , int argCount , const char * find , bool getValue=false , const char * def=0);
+	const wchar_t * getArgV(const wchar_t * const * argList , int argCount , const wchar_t * find , bool getValue=false , const wchar_t * def=0);
 
-	const char * searchArray(const char * find , const char ** ar  , size_t count , bool getNext=false);
+	const char * searchArray(const char * find , const char ** ar  , size_t count , bool getValue=false);
+	const wchar_t * searchArray(const wchar_t * find , const wchar_t ** ar  , size_t count , bool getValue=false);
+
+	inline bool argVExists(const StringRef& find) {
+		return getArgV(find, false).empty() == false;
+	}
 
 
 #ifdef _STRING_

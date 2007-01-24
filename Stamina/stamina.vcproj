@@ -691,6 +691,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\RegEx2.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SimXML.cpp"
 				>
 				<FileConfiguration
@@ -1030,7 +1034,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\..\__source\md5c\md5c.c"
+					RelativePath="..\depends\md5\md5c.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1182,6 +1186,10 @@
 			</File>
 			<File
 				RelativePath=".\RegEx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RegEx2.h"
 				>
 			</File>
 			<File

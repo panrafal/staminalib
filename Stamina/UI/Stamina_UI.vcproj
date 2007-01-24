@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8,00"
 	Name="Stamina - UI"
-	ProjectGUID="{1E866112-B33D-4E52-AF9C-D1B2C5A27D34}"
+	ProjectGUID="{C3AFC2D1-9600-4120-AAD7-A466EE86C2AA}"
 	Keyword="Win32Proj"
 	>
 	<Platforms>

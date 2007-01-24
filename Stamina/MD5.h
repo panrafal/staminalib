@@ -27,6 +27,7 @@ $Id$
 #pragma once
 
 #include "Stamina.h"
+#include "String.h"
 #include <md5/md5.h>
 #include <memory.h>
 
@@ -46,11 +47,7 @@ namespace Stamina {
 			memcpy(_digest, digest, 16);
 		}
 
-		inline MD5Digest(const char* string) {
-			calculate(string);
-		}
-
-		inline MD5Digest(const std::string& string) {
+		inline MD5Digest(const StringRef& string) {
 			calculate(string);
 		}
 
@@ -87,15 +84,9 @@ namespace Stamina {
 
 		inline void calculate(const void* buffer, unsigned int size);
 
-		inline void calculate(const char* string) {
-			calculate(string, strlen(string));
+		inline void calculate(const StringRef& string) {
+			calculate(string.getData(), string.getDataSize());
 		}
-
-#ifdef _STRING_
-		inline void calculate(const std::string& string) {
-			calculate(string.c_str(), string.size());
-		}
-#endif
 
 		void calculateForFile(const char* filename);
 
@@ -107,13 +98,11 @@ namespace Stamina {
 			memcpy(digest, _digest, 16);
 		}
 
-#ifdef _STRING_
-		std::string getHex() const {
+		String getHex() const {
 			char b [33];
 			this->getHex(b);
 			return b;
 		}
-#endif
 
 		void getHex(char* buffer) const;
 
@@ -146,14 +135,10 @@ namespace Stamina {
 		inline void update(const void* buff, unsigned int size) {
 	        MD5Update (&_context, (unsigned char*)buff, size);
 		}
-		inline void update(const char* string) {
-			this->update(string, strlen(string));
+		inline void update(const StringRef& string) {
+			this->update(string.getData(), string.getDataSize());
 		}
-#ifdef _STRING_
-		inline void update(const std::string& string) {
-			this->update(string.c_str(), string.length());
-		}
-#endif
+
 		
 		inline void getDigest(unsigned char digest [16]) {
 	        MD5Final (digest, &_context);
@@ -177,38 +162,38 @@ namespace Stamina {
 	}
 
 
-	inline unsigned char * MD5(const char * string , unsigned char * digest) {
+	inline unsigned char * MD5(const StringRef& string , unsigned char * digest) {
 		MD5Context ctx;
 		ctx.update(string);
 		ctx.getDigest(digest);
         return digest;
     }
 
-	inline unsigned char * MD5Salted(const char * string , unsigned char * digest, int salt) {
+	inline unsigned char * MD5Salted(const StringRef& string , unsigned char * digest, int salt) {
 		MD5Digest md5(string);
 		md5.addSalt(salt);
 		md5.getDigest(digest);
 		return digest;
 	}
 
-	inline char * MD5Hex(const char * string , char * digest) {
+	inline char * MD5Hex(const StringRef& string , char * digest) {
 		MD5Digest md5(string);
 		md5.getHex(digest);
 		return digest;
 	}
 
-	inline __int64 MD5_64(const char * string) {
+	inline __int64 MD5_64(const StringRef& string) {
 		MD5Digest md5(string);
 		return md5.getInt64();
 	}
 
 #ifdef _STRING_
-	inline std::string MD5Hex(const char * string) {
+	inline String MD5Hex(const StringRef& string) {
 		MD5Digest md5(string);
 		return md5.getHex();
 	}
 
-	inline std::string MD5FileHex(const std::string& fileName) {
+	inline String MD5FileHex(const StringRef& fileName) {
 		MD5Digest md5;
 		md5.calculateForFile(fileName.c_str());
 		return md5.getHex();

@@ -179,6 +179,11 @@ namespace Stamina {
 		return PassStringRef( buff );
 	}
 
+	inline bool setEnvironmentVariable(const StringRef& name, const StringRef& value) {
+		return SetEnvironmentVariableW(name.w_str(), value.w_str()) != 0;
+	}
+
+
 	std::string getErrorMsg(int err = 0);
 
 	inline String getModuleFileName(HMODULE module) {

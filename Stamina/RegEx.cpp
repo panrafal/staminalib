@@ -102,9 +102,10 @@ namespace Stamina {
 		}
 	}
 
-	void RegEx::setPattern (const std::string& pattern) {
+	void RegEx::setPattern (const StringRef& pattern) {
 		setCompiledPattern(compilePerl(pattern));
 	}
+
 	void RegEx::setCompiledPattern (const oCompiled& pattern) {
 		if (this->_localeOneTime)
 			_locale.reset();
@@ -170,13 +171,13 @@ namespace Stamina {
 	// ------------------------   API
 
 
-	int RegEx::match(const char * pat , const char * sub) {
+	int RegEx::match(const StringRef& pat , const StringRef& sub) {
 		setPattern(pat);
 		setSubject(sub);
 		return match();
 	}
 
-	string RegEx::replace(const char * chg , int limit) {
+	string RegEx::replace(const StringRef& chg , int limit) {
 		string re = "";
 		int i = 0;
 		if (_start) re=_subject.substr(0 , _start);

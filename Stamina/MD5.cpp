@@ -46,8 +46,9 @@ namespace Stamina {
 	}
 
 	void MD5Digest::getHex(char* buffer) const {
-        for (int i = 0; i<16; i++)
+		for (int i = 0; i<16; i++) {
 			inttoch(_digest[i] , buffer + (i*2) , 16 , 2 , 0);
+		}
 	}
 
 	__int64 MD5Digest::getInt64() const {

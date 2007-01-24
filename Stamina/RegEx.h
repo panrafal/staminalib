@@ -29,13 +29,15 @@ $Id$
 #define __STAMINA_REGEX__
 
 #include "Stamina.h"
-#include <string>
+#include "String.h"
 #include <boost\smart_ptr.hpp>
 #include "Helpers.h"
 
 namespace Stamina {
 
 	/** Regular expressions.
+
+
 	*/
 	class RegEx {
 	public:
@@ -161,7 +163,7 @@ namespace Stamina {
 
 		/** Sets the regular expression's pattern.
 		*/
-		void setPattern (const std::string& v);
+		void setPattern (const StringRef& v);
 
 		/** Sets compiled regular expression's pattern.
 		*/
@@ -169,7 +171,7 @@ namespace Stamina {
 
 		/** Sets subject for a match or replace to the regular expression given in pattern.
 		*/
-		inline void setSubject (const std::string& v) {
+		inline void setSubject (const StringRef& v) {
 			this->_result = -1;
 			this->reset();
 			_subject = v;
@@ -247,7 +249,7 @@ namespace Stamina {
 		@param pat Pattern.
 		@return Number of matches.
 		*/
-		int match(const char * pat) {
+		int match(const StringRef& pat) {
 			this->setPattern(pat); 
 			return this->match();
 		}
@@ -257,7 +259,7 @@ namespace Stamina {
 		@param sub Subject.
 		@return Number of matches.
 		*/
-		int match(const char * pat , const char * sub);
+		int match(const StringRef& pat , const StringRef& sub);
 
 		/** Searches subject for a match to the regular expression given in pattern.
 		*/
@@ -275,7 +277,7 @@ namespace Stamina {
 		@param sub Subject.
 		@return Number of matches.
 		*/
-		int match_global(const char * pat , const char * sub) {
+		int match_global(const StringRef& pat , const StringRef& sub) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->match_global();
@@ -285,7 +287,7 @@ namespace Stamina {
 		@param limit Limit of replacements.
 		@return Replaced string.
 		*/
-		std::string replace(const char * chg , int limit=0);
+		std::string replace(const StringRef& chg , int limit=0);
 
 		/** Perform a regular expression search and replace.
 		@param pat Pattern.
@@ -294,7 +296,7 @@ namespace Stamina {
 		@param limit Limit of replacements.
 		@return Replaced string.
 		*/
-		inline std::string replace(const char * pat , const char * chg , const char * sub , int limit=0) {
+		inline std::string replace(const StringRef& pat , const StringRef& chg , const StringRef& sub , int limit=0) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->replace(chg , limit);
@@ -315,7 +317,7 @@ namespace Stamina {
 		@param param User defined param.
 		@return Replaced string.
 		*/
-		std::string replace(const char * pat , fReplace callback , const char * sub , int limit=0, void * param=0) {
+		std::string replace(const StringRef& pat , fReplace callback , const StringRef& sub , int limit=0, void * param=0) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->replace(callback, limit, param);
@@ -327,7 +329,7 @@ namespace Stamina {
 		@return Replaced string.
 		*/
 		template <typename F>
-			std::string replace(F func, int limit=0) 
+			std::string replaceCB(F func, int limit=0) 
 		{
 			std::string re = "";
 			int i = 0;
@@ -352,17 +354,17 @@ namespace Stamina {
 		@return Replaced string.
 		*/
 		template <typename F>
-			std::string replace(const char * pat, F func, const char * sub , int limit=0) {
+			std::string replaceCB(const StringRef& pat, F func, const StringRef& sub , int limit=0) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->replace(func, limit);
 		}
 
 
-		inline void replaceItself(const char * chg, int limit=0) {
+		inline void replaceItself(const StringRef& chg, int limit=0) {
 			this->setSubject( this->replace(chg, limit) );
 		}
-		inline void replaceItself(const char * pat, const char * chg, int limit=0) {
+		inline void replaceItself(const StringRef& pat, const StringRef& chg, int limit=0) {
 			this->setPattern(pat);
 			this->replaceItself(chg, limit);
 		}
@@ -370,7 +372,7 @@ namespace Stamina {
 		inline void replaceItself(fReplace callback , int limit=0 , void * param=0) {
 			this->setSubject( this->replace(callback, limit, param) );
 		}
-		inline void replaceItself(const char * pat, fReplace callback , int limit=0 , void * param=0) {
+		inline void replaceItself(const StringRef& pat, fReplace callback , int limit=0 , void * param=0) {
 			this->setPattern(pat);
 			this->replaceItself(callback, limit, param);
 		}
@@ -381,7 +383,7 @@ namespace Stamina {
 			this->setSubject( this->replace(func, limit) );
 		}
 		template <typename F>
-			inline void replaceItself(const std::string& pat, F func, int limit=0) 
+			inline void replaceItself(const StringRef& pat, F func, int limit=0) 
 		{
 			this->setPattern(pat);
 			this->replaceItself(func, limit);
@@ -401,7 +403,7 @@ namespace Stamina {
 		}
 
 		template <typename F>
-			int match_global(F func, const char * pat, const char * sub , int limit=0) {
+			int match_global(F func, const StringRef& pat, const StringRef& sub , int limit=0) {
 			this->setPattern(pat);
 			this->setSubject(sub);
 			return this->match_global(func, limit);
@@ -425,7 +427,7 @@ namespace Stamina {
 		@param sub Subject.
 		@return Number of matches.
 		*/
-		inline static int doMatch(const char * pat , const char * sub) {
+		inline static int doMatch(const StringRef& pat , const StringRef& sub) {
 			return doMatch(oCompiled(new Compiled(pat)), sub);
 		}
 		/** Perform a regular expression match.
@@ -433,7 +435,7 @@ namespace Stamina {
 		@param sub Subject.
 		@return Number of matches.
 		*/
-		inline static int doMatch(const oCompiled& pat , const char * sub) {
+		inline static int doMatch(const oCompiled& pat , const StringRef& sub) {
 			RegEx r;
 			r.setSubject(sub);
 			return r.match(pat);
@@ -446,7 +448,7 @@ namespace Stamina {
 		@param limit Limit of replacements.
 		@return Replaced string.
 		*/
-		inline static std::string doReplace(const char * pat , const char * chg , const char * sub , int limit=0) {
+		inline static String doReplace(const StringRef& pat , const StringRef& chg , const StringRef& sub , int limit=0) {
 			RegEx r;
 			return r.replace(pat, chg, sub, limit);
 		}
@@ -459,7 +461,7 @@ namespace Stamina {
 		@param param User defined param.
 		@return Replaced string.
 		*/
-		inline static std::string doReplace(const char * pat , fReplace callback , const char * sub , int limit=0, void * param=0) {
+		inline static String doReplace(const StringRef& pat , fReplace callback , const StringRef& sub , int limit=0, void * param=0) {
 			RegEx r;
             return r.replace(pat, callback, sub, limit, param);
 		}
@@ -471,7 +473,7 @@ namespace Stamina {
 		@param limit Limit of replacements.
 		@return Replaced string.
 		*/
-		template <typename F> inline static  std::string doReplace(const char * pat, F func, const char * sub , int limit=0) 
+		template <typename F> inline static  String doReplace(const StringRef& pat, F func, const StringRef& sub , int limit=0) 
 		{
 			RegEx r;
 			return r.replace(pat, func, sub, limit);
@@ -487,7 +489,7 @@ namespace Stamina {
 		@param def Default value to return if not matched.
 		@return Matched result at index @subPattern.
 		*/
-		inline static std::string doGet(const char* pat, const char* sub, int subPattern = 0, const char* def = 0) {
+		inline static String doGet(const StringRef& pat, const StringRef& sub, int subPattern = 0, const StringRef& def = "") {
 			return doGet(oCompiled(new Compiled(pat)), sub, subPattern, def);
 		}
 
@@ -499,18 +501,18 @@ namespace Stamina {
 		@param def Default value to return if not matched.
 		@return Matched result at index @subPattern.
 		*/
-		inline static std::string doGet(const oCompiled& pat, const char* sub, int subPattern = 0, const char* def = 0) {
+		inline static String doGet(const oCompiled& pat, const StringRef& sub, int subPattern = 0, const StringRef& def = "") {
 			RegEx r;
 			r.setSubject(sub);
 			r.match(pat);
 			if (r.isMatched()) {
 				return r[subPattern];
 			} else {
-				return def ? def : "";
+				return def;
 			}
 		}
 
-		inline static std::string addSlashes(const std::string& str) {
+		inline static String addSlashes(const StringRef& str) {
 			return ::Stamina::addSlashes(str, "\"'\\/^$!?()[]+.{}", '\\');
 		}
 

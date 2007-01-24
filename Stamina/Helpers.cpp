@@ -210,15 +210,41 @@ namespace Stamina {
 			}
 			return 0;
 	}
+
+	const wchar_t * searchArray(const wchar_t * find , const wchar_t ** ar  , size_t count , bool getValue) {
+		size_t findLen = wcslen(find);
+		for (size_t i=0; i<count; i++)
+
+			if (wcslen(ar[i]) >= findLen && !_wcsnicmp(find , ar[i] , findLen)) {
+				if (ar[i][findLen] != 0 && ar[i][findLen] != L'=')
+					continue;
+				if (getValue) {
+					wchar_t * value = wcschr((wchar_t*)ar[i] , L'=');
+					if (!value) 
+						return 0;
+					return value + 1;
+				} else return ar[i];
+			}
+			return 0;
+	}
+
 	const char * getArgV(const char * const * argList , int argCount , const char * find , bool getValue , const char * def) {
 		const char * r = searchArray(find , (const char**)argList , argCount , getValue);
 		return r ? r : def;
 	}
-	const char * getArgV(const char * find , bool getValue , const char * def) {
-		return getArgV((const char**)__argv+1 , __argc-1 , find , getValue , def);
+
+	const wchar_t * getArgV(const wchar_t * const * argList , int argCount , const wchar_t * find , bool getValue , const wchar_t * def) {
+		const wchar_t * r = searchArray(find , (const wchar_t**)argList , argCount , getValue);
+		return r ? r : def;
 	}
 
-
+	String getArgV(const StringRef& find , bool getValue , const StringRef& def) {
+		if (find.isWide() || def.isWide()) {
+			return getArgV((const wchar_t**)__wargv+1 , __argc-1 , find.w_str() , getValue , def.w_str());
+		} else {
+			return getArgV((const char**)__argv+1 , __argc-1 , find.a_str() , getValue , def.a_str());
+		}
+	}
 
 	#ifdef __BORLANDC__
 	#define VSNPRINTF vsnprintf
