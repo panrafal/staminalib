@@ -513,7 +513,7 @@ namespace Stamina {
 		}
 
 		inline static String addSlashes(const StringRef& str) {
-			return ::Stamina::addSlashes(str, "\"'\\/^$!?()[]+.{}*", '\\');
+			return ::Stamina::addSlashes(str, "\"'\\/^$!?()[]+.{}*|", '\\');
 		}
 
 		// ----------------------------------------------------
