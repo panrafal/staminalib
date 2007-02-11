@@ -494,7 +494,7 @@ namespace Stamina {
 		}
 
 		inline static std::string addSlashes(const std::string& str) {
-			return ::Stamina::addSlashes(str, "\"'\\/^$!?()[]+.{}", '\\');
+			return ::Stamina::addSlashes(str, "\"'\\/^$!?()[]+.{}*|", '\\');
 		}
 
 		// ----------------------------------------------------
