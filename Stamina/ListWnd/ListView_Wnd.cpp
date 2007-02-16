@@ -44,8 +44,8 @@ namespace ListWnd
 	void ListView::alwaysShowScrollbars(bool horz, bool vert) {
 		this->scrollbarHAlwaysVisible = horz;
 		this->scrollbarVAlwaysVisible = vert;
-		ShowScrollBar(this->_hwnd, horz, horz || this->_hscroll);
-		ShowScrollBar(this->_hwnd, vert, vert || this->_vscroll);
+		ShowScrollBar(this->_hwnd, SB_HORZ, horz || this->_hscroll);
+		ShowScrollBar(this->_hwnd, SB_VERT, vert || this->_vscroll);
 	}
 
 
