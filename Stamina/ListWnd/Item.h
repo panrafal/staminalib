@@ -1,11 +1,11 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
+ *	Stamina.LIB
+ *	
+ *	Please READ /License.txt FIRST! 
  * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ *	Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id$
+ *	$Id$
  */
 
 /* Model statyczny */
@@ -269,7 +269,7 @@ namespace ListWnd {
 					  const oEntry& entry,
 					  int pos=-1);
 
-
+    bool moveItem(ListView* lv, const oItem& item, const oItem& beforeitem, bool active);
 
 		void removeEntry(ListView* lv,
 				   const oEntry& entry, bool recurse = true);

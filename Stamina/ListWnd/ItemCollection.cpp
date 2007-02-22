@@ -1,11 +1,11 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
+ *	Stamina.LIB
+ *	
+ *	Please READ /License.txt FIRST! 
  * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ *	Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id$
+ *	$Id$
  */
 
 /* Model statyczny */
@@ -287,6 +287,28 @@ namespace ListWnd
 		return item;
 	}
 
+  bool ItemCollection::moveItem(ListView* lv, const oItem& item, const oItem& beforeitem, bool active) {
+    if (!item) return false;
+
+    ObjLocker lock(this);
+    ItemList::iterator it = std::find(_items.begin(), _items.end(), item);
+
+    ItemList::iterator it2;
+
+    _items.erase(it);
+
+    if (beforeitem) {
+      _items.insert(std::find(_items.begin(), _items.end(), beforeitem), item);
+    } else {
+      _items.push_back(item);
+    }
+    if (active)
+      lv->setActiveItem(item);
+
+    this->setFlag(flagSubitemsChanged, true);
+    lv->refreshItems();
+    return true;
+  }
 
 	void ItemCollection::removeEntry(ListView* lv,
 								 const oEntry& entry, bool recurse)
@@ -370,7 +392,7 @@ namespace ListWnd
 
 	void ItemCollection::setLevel(char level) {
 		Item::setLevel(level);
-		for_each(_items.begin(), _items.end(), boost::bind(Item::setLevel, boost::bind(oItem::get, _1), level+1));
+		for_each(_items.begin(), _items.end(), boost::bind(&Item::setLevel, boost::bind(&oItem::get, _1), level+1));
 	}
 
 	void ItemCollection::setExpanded(ListView* lv, bool expanded) {

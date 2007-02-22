@@ -1,11 +1,11 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
+ *	Stamina.LIB
+ *	
+ *	Please READ /License.txt FIRST! 
  * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ *	Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id$
+ *	$Id$
  */
 
 /* Model statyczny */
@@ -21,52 +21,48 @@
 #include "boost\function.hpp"
 #include "boost\bind.hpp"
 #include "..\WinHelper.h"
-namespace Stamina
-{
-namespace ListWnd
-{
-	const char * const ListView::windowClassName = "Stamina::ListWnd::ListView";
+namespace Stamina {
+	namespace ListWnd {
 
-	ListView::ListView(int x , int y , int w , int h , HWND parent , HMENU id)
-	{
-		registerWindowClass();
-		this->init();
-		CreateWindowEx(0, windowClassName, "", 
-			WS_CHILD | WS_TABSTOP | WS_VISIBLE, 
-			x, y, w, h, parent, id, Stamina::getInstance(), this);
-	}
-	ListView::ListView(HWND hwnd)
-	{
-		this->init();
-		this->_hwnd = hwnd;
-	}
-	void ListView::init() {
-		this->_hwnd = 0;
-		this->_dc = 0;
-    	this->_paintdc = 0;
-		this->_paintRgn = 0;
-		this->_dcCount = 0;
-		this->_paintLockCount = 0;
-		this->_refreshLockCount = 0;
-		this->_rootItem.set(new LVItemCollection(this));
-		this->_defaultItemPlacer.set(new ItemPerRow());
-		this->_defaultViewItemPlacer.set(new ItemPerRow());
-		this->_paintNeeded = this->_refreshNeeded = false;
-		this->_vscroll = _hscroll = false;
-		this->_vscrollMult = 10;
-		this->_hscrollMult = 2;
-		this->_scrollWholeItems = false;
+		const char * const ListView::windowClassName = "Stamina::ListWnd::ListView_1.1";
 
-		this->scrollbarVAlwaysVisible = false;
-		this->scrollbarHAlwaysVisible = false;
-	}
+		ListView::ListView(int x , int y , int w , int h , HWND parent , HMENU id) {
+			registerWindowClass();
+			this->init();
+			CreateWindowEx(0, windowClassName, "", 
+				WS_CHILD | WS_TABSTOP | WS_VISIBLE, 
+				x, y, w, h, parent, id, Stamina::getInstance(), this);
+		}
 
+		ListView::ListView(HWND hwnd) {
+			this->init();
+			this->_hwnd = hwnd;
+			this->_enabled = (bool) IsWindowEnabled(hwnd);
+		}
 
+		void ListView::init() {
+			this->_hwnd = 0;
+			this->_dc = 0;
+			this->_enabled = true;
+			this->_paintdc = 0;
+			this->_paintRgn = 0;
+			this->_dcCount = 0;
+			this->_paintLockCount = 0;
+			this->_refreshLockCount = 0;
+			this->_rootItem.set(new LVItemCollection(this));
+			this->_defaultItemPlacer.set(new ItemPerRow());
+			this->_defaultViewItemPlacer.set(new ItemPerRow());
+			this->_paintNeeded = this->_refreshNeeded = false;
+			this->_vscroll = _hscroll = false;
+			this->_vscrollMult = 10;
+			this->_hscrollMult = 2;
+			this->_scrollWholeItems = false;
 
-    
-	void ListView::setActiveItem(const oItem& item)
-	{
-		{
+			this->scrollbarVAlwaysVisible = false;
+			this->scrollbarHAlwaysVisible = false;
+		}
+
+		void ListView::setActiveItem(const oItem& item) {
 			ObjLocker lock(this);
 			if (this->_activeItem == item) return;
 			this->lockPaint();
@@ -85,27 +81,26 @@ namespace ListWnd
 			this->evtActiveItemChanged(this, oldActive);
 
 			this->refreshItems();
-			
+
 			this->unlockRefresh();
 			this->unlockPaint();
 		}
-	}
-	void ListView::selectionToActive() {
-		lockPaint();
-		ItemWalk::walk(this
-			, boost::bind(Item::setSelected
-				, boost::bind(oItem::get, _1)
-				, boost::bind(ItemWalk::getListView,_2), false)
-			, oItem(), oItem(), true, false);
-		if (this->_activeItem)
-			this->_activeItem->setSelected(this, true);
-		unlockPaint();
-	}
 
-	void ListView::scrollToActive(bool leaveSpace)
-	{
-		Point pos;
-		{
+		void ListView::selectionToActive() {
+			lockPaint();
+			ItemWalk::walk(this
+				, boost::bind(&Item::setSelected
+					, boost::bind(&oItem::get, _1)
+					, boost::bind(&ItemWalk::getListView,_2), false)
+				, oItem(), oItem(), true, false);
+			if (this->_activeItem)
+				this->_activeItem->setSelected(this, true);
+			unlockPaint();
+		}
+
+		void ListView::scrollToActive(bool leaveSpace) {
+			Point pos;
+
 			ObjLocker lock(this);
 			if (!this->_activeItem) return;
 			InView in = this->isInView(this->_activeItem);
@@ -129,9 +124,9 @@ namespace ListWnd
 					}
 				}
 			}
+
+			this->scrollTo(pos);
 		}
-		this->scrollTo(pos);		
-	}
 
 	InView ListView::isInView(oItem itemObj) {
 		ObjLocker lock(this);
@@ -227,7 +222,7 @@ namespace ListWnd
 
 	void ListView::lockRefresh()
 	{
-		this->_refreshLockCount++;		
+		this->_refreshLockCount++;
 	}
 
 	void ListView::unlockRefresh(bool refresh)
@@ -435,12 +430,12 @@ namespace ListWnd
 
 	void ListView::lockPaint()
 	{
-		this->_paintLockCount++;		
+		this->_paintLockCount++;
 	}
 
 	void ListView::unlockPaint(bool repaint)
 	{
-		S_ASSERT(this->_paintLockCount > 0);		
+		S_ASSERT(this->_paintLockCount > 0);
 		this->_paintLockCount--;
 		if (repaint && this->_paintLockCount == 0 && this->_paintNeeded)
 			this->repaintView();

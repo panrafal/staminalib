@@ -1,11 +1,11 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
+ *	Stamina.LIB
+ *	
+ *	Please READ /License.txt FIRST! 
  * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ *	Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id$
+ *	$Id$
  */
 
 /* Model statyczny */
@@ -21,11 +21,8 @@
 #include "boost\function.hpp"
 #include "boost\bind.hpp"
 #include "..\WinHelper.h"
-namespace Stamina
-{
-namespace ListWnd
-{
-
+namespace Stamina {
+namespace ListWnd {
 	void ListView::onCreateWindow() {
 		SetWindowLong(this->_hwnd, GWL_USERDATA, (LONG) this);
 
@@ -38,7 +35,6 @@ namespace ListWnd
 		si.nPos = 0;
 		SetScrollInfo(this->_hwnd, SB_VERT, &si, true);
 		SetScrollInfo(this->_hwnd, SB_HORZ, &si, true);
-
 	}
 
 	void ListView::alwaysShowScrollbars(bool horz, bool vert) {
@@ -47,7 +43,6 @@ namespace ListWnd
 		ShowScrollBar(this->_hwnd, SB_HORZ, horz || this->_hscroll);
 		ShowScrollBar(this->_hwnd, SB_VERT, vert || this->_vscroll);
 	}
-
 
 	int ListView::onPaint() {
 		ObjLocker lock(this);
@@ -76,14 +71,22 @@ namespace ListWnd
 		this->_paintdc = 0;
 		return 0;
 	}
+
 	void ListView::onSize(const Size& newSize) {
 		updateClientSize();
 		this->refreshItems(refreshSize);
 		//this->_rootItem->_wholeSize = newSize;
 		updateScrollbars();
 	}
+
+	void ListView::onEnable(bool enable) {
+		if (IsWindowVisible(this->_hwnd)) {
+			this->repaintClient();
+		}
+	}
+
 	void ListView::onMouseWheel(short distance, short vkey, short x, short y) {
-		onVScroll(0, (distance>0?SB_PAGEUP:SB_PAGEDOWN), 0);
+		onVScroll(0, (distance > 0 ? SB_PAGEUP : SB_PAGEDOWN), 0);
 	}
 
 
@@ -140,7 +143,14 @@ namespace ListWnd
 			oItem item = this->getItemAt(itemPos);
 			bool shift = (vkey & MK_SHIFT) != 0;
 			bool ctrl = (vkey & MK_CONTROL) != 0;
+
 			oItem oldActive = this->getActiveItem();
+			if (oldActive) {
+				oldActive->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+			}
+			if (item) {
+				item->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+			}
 			if ((!shift) || (shift && ctrl)) {
 				this->setActiveItem( item );
 			}
@@ -151,9 +161,9 @@ namespace ListWnd
 				itemHit = item->getRect().contains(itemPos);
 				if (shift && oldActive.isValid()) {
 					ItemWalk::walk(this
-						, boost::bind(Item::setSelected
-							, boost::bind(oItem::get, _1)
-							, boost::bind(ItemWalk::getListView,_2), true)
+						, boost::bind(&Item::setSelected
+							, boost::bind(&oItem::get, _1)
+							, boost::bind(&ItemWalk::getListView,_2), true)
 						, oldActive, item, true, true);
 				} else if (ctrl/* && item != oldActive*/) {
 					item->setSelected(this, !item->isSelected());
@@ -161,8 +171,12 @@ namespace ListWnd
 					//item->setSelected(this, true);
 				}
 			}
+			this->refreshItems();
 			if (itemHit)
 				this->scrollToActive();
+			else
+				this->scrollToActive(false);
+
 			this->unlockPaint();
 		} else if (vkey & MK_RBUTTON) {
 			// context
@@ -204,6 +218,10 @@ namespace ListWnd
 
 	void ListView::onKeyDown(int vkey, int info) {
 		if (this->getActiveItem()) {
+			getActiveItem()->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+			if (getActiveItem()->getParent(this)) {
+				getActiveItem()->getParent(this)->setFlag(ListWnd::flagSubitemsChanged, true, this);
+			}
 			Point pos = this->getActiveItem()->getRect().getPos();
 			if (!walkItemNotification(this, pos, boost::bind(&iEntry::onKeyDown, _1, _2, _3, _4, vkey, info))) {
 				return;
@@ -233,13 +251,19 @@ namespace ListWnd
 					item = this->getActiveItem()->getNeighbour(this, delta);
 				}
 				if (item) {
+					item->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+					if (item->getParent(this)) {
+						item->getParent(this)->setFlag(ListWnd::flagSubitemsChanged, true, this);
+					}
 					this->setActiveItem(item);
+					this->refreshItems();
 				//	if (!shift && !ctrl) {
 						this->selectionToActive();
 						this->scrollToActive(false);
 						
 				//	}
 				}
+				this->refreshItems();
 				this->unlockPaint();
 				
 				break;}
@@ -284,7 +308,7 @@ namespace ListWnd
 
 	ListView * ListView::fromHWND(HWND wnd) {
 		ListView * lv = (ListView*)GetWindowLong(wnd, GWL_USERDATA);
-		S_ASSERT_MSG(lv, "Stamina::ListWnd::ListView control is not initialized properly!");
+//		S_ASSERT_MSG(lv, "Stamina::ListWnd::ListView control is not initialized properly!");
 		return lv;
 	}
 
@@ -298,6 +322,9 @@ namespace ListWnd
 				lv->_hwnd = hwnd;
 				lv->onCreateWindow();
 				break;}
+			case WM_ENABLE:
+				fromHWND(hwnd)->onEnable((bool) wParam);
+			break;
 			case WM_SIZE:
 				fromHWND(hwnd)->onSize(Size(LOWORD(lParam), HIWORD(lParam)));
 			    break;
@@ -353,14 +380,9 @@ namespace ListWnd
 //					fromHWND(hwnd)->onContextMenu(MK_RBUTTON, Point::fromLParam(wParam));
 				}
 				return 0;
-
-
 			case WM_MOUSEACTIVATE:
 				SetFocus(hwnd);
 				return MA_ACTIVATE;
-
-
-
 		}
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	}

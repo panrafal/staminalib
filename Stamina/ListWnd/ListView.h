@@ -1,11 +1,11 @@
 /*
- *  Stamina.LIB
- *  
- *  Please READ /License.txt FIRST! 
+ *	Stamina.LIB
+ *	
+ *	Please READ /License.txt FIRST! 
  * 
- *  Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
+ *	Copyright (C)2003,2004,2005 Rafa³ Lindemann, Stamina
  *
- *  $Id$
+ *	$Id$
  */
 
 /* Model statyczny */
@@ -103,16 +103,21 @@ namespace ListWnd {
 			return this->_hwnd;
 		}
 
+		bool isEnabled() {
+			return this->_enabled;
+		}
+		bool setEnabled(bool value = true) {
+		  this->_enabled = value;
+			return EnableWindow(getHwnd(), value);
+		}
+
 		void scrollBy(Point offset);
 
 		void lockRefresh();
-
 		void unlockRefresh(bool refresh = true);
-
 		bool canRefresh();
 
 		HDC getDC();
-
 		void releaseDC(HDC dc);
 
 		void refreshItems(RefreshFlags refresh = refreshAuto);
@@ -142,17 +147,12 @@ namespace ListWnd {
 		}
 
 		void lockPaint();
-
 		void unlockPaint(bool repaint = true);
-
 		bool canPaint();
 
 		inline Point itemToClient(const Point& pt);
-
 		Point screenToClient(const Point& pt);
-
 		Point clientToScreen(const Point& pt);
-
 		Point clientToItem(const Point& pt);
 
 		inline Rect itemToClient(const Rect& r) {
@@ -231,7 +231,7 @@ namespace ListWnd {
 		oItem insertEntry(oEntry entry, int pos = -1) {
 			return this->_rootItem->insertEntry(this, entry, pos);
 		}
- 
+
 		void removeEntry(oEntry entry, bool recurse = true) {
 			return this->_rootItem->removeEntry(this, entry, recurse);
 		}
@@ -263,7 +263,7 @@ namespace ListWnd {
 		bool scrollbarVAlwaysVisible;
 
 	public: // signals
-        
+
 		boost::signal<void(ListView* lv, const oItem& old)> evtActiveItemChanged;
 
 	protected:
@@ -272,6 +272,7 @@ namespace ListWnd {
 		static int CALLBACK windowProc(HWND hwnd , int message , WPARAM wParam, LPARAM lParam);
 		void onCreateWindow();
 		int onPaint();
+		void onEnable(bool enable);
 		void onSize(const Size& newSize);
 		void onMouseWheel(short distance, short vkey, short x, short y);
 		void onVScroll(short pos, short request, HWND ctrl);
@@ -316,12 +317,11 @@ namespace ListWnd {
 		bool _vscroll, _hscroll;
 		unsigned char _vscrollMult, _hscrollMult;
 		bool _scrollWholeItems;
+		bool _enabled;
 
 		oImage _background;
 
 	};/* END CLASS DEFINITION ListView */
-
-
 
 } /* ListWnd */
 
