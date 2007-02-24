@@ -172,10 +172,7 @@ namespace ListWnd {
 				}
 			}
 			this->refreshItems();
-			if (itemHit)
-				this->scrollToActive();
-			else
-				this->scrollToActive(false);
+			this->scrollToActive(false);
 
 			this->unlockPaint();
 		} else if (vkey & MK_RBUTTON) {
