@@ -91,6 +91,11 @@ namespace Stamina {
 				return size;
 			}
 
+			inline std::string getDirectoryName() const {
+				std::string name = _dir.substr(0, _dir.length() - 1);
+				return name.substr(name.find_last_of("\\/") + 1);
+			}
+
 			inline std::string getDirectory() const {
 				return _dir;
 			}
