@@ -57,6 +57,7 @@ class TestFileBin : public CPPUNIT_NS::TestFixture
   
 	CPPUNIT_TEST( testSave );
 	CPPUNIT_TEST( testLoad );
+	CPPUNIT_TEST( testLoadPartial );
 	CPPUNIT_TEST( testAppend );
 	CPPUNIT_TEST( testSetErased );
 	CPPUNIT_TEST( testBadPassword );
@@ -309,6 +310,63 @@ protected:
 
 		CPPUNIT_ASSERT_EQUAL( paramValue2, dt.getParam(param1) );
 
+	}
+
+
+	void testLoadPartial() {
+		createFile("testLoadPartial");
+
+		{
+			DataTable dt;
+
+			FileBin fb;
+			fb.assign(dt);
+			CPPUNIT_ASSERT( fb.loadPartial(getFileName("testLoadPartial"), 0, 2) == success );
+
+			CPPUNIT_ASSERT( dt.getColumns().getColumn(colExtra)->hasFlag(cflagIsLoaded) );
+			CPPUNIT_ASSERT( dt.getColumns().getColumn(colString)->hasFlag(cflagIsDefined) );
+
+			CPPUNIT_ASSERT_EQUAL( (unsigned int)2, dt.getRowCount() );
+			CPPUNIT_ASSERT_EQUAL( testString1, dt.getString(row1, colString) );
+			CPPUNIT_ASSERT_EQUAL( testString2, dt.getString(row2, colString) );
+			CPPUNIT_ASSERT_EQUAL( testStringDef, dt.getString(row2, colStringDef) );
+
+			CPPUNIT_ASSERT_EQUAL( paramValue1, dt.getParam(param1) );
+			CPPUNIT_ASSERT_EQUAL( paramValue2, dt.getParam(param2) );
+		}
+
+		{
+			DataTable dt;
+
+			FileBin fb;
+			fb.assign(dt);
+
+			unsigned int pos = 0;
+			CPPUNIT_ASSERT( fb.loadPartial(getFileName("testLoadPartial"), 0, 1, &pos) == success );
+			CPPUNIT_ASSERT( dt.getColumns().getColumn(colExtra)->hasFlag(cflagIsLoaded) );
+			CPPUNIT_ASSERT_EQUAL( (unsigned int)1, dt.getRowCount() );
+			CPPUNIT_ASSERT_EQUAL( testString1, dt.getString(row1, colString) );
+
+			CPPUNIT_ASSERT( fb.loadPartial(getFileName("testLoadPartial"), 1, 1, &pos) == success );
+			CPPUNIT_ASSERT_EQUAL( (unsigned int)2, dt.getRowCount() );
+			CPPUNIT_ASSERT_EQUAL( testString3, dt.getString(row3, colString) );
+
+			pos -= 16;
+			CPPUNIT_ASSERT( fb.loadPartial(getFileName("testLoadPartial"), 0, 1, &pos) == success );
+			CPPUNIT_ASSERT_EQUAL( (unsigned int)2, dt.getRowCount() );
+		}
+
+		{
+			DataTable dt;
+
+			FileBin fb;
+			fb.assign(dt);
+			CPPUNIT_ASSERT( fb.loadPartial(getFileName("testLoadPartial"), 3, 10) == success );
+			CPPUNIT_ASSERT_EQUAL( (unsigned int)0, dt.getRowCount() );
+
+			CPPUNIT_ASSERT( fb.loadPartial(getFileName("testLoadPartial"), 30, 10) == success );
+			CPPUNIT_ASSERT_EQUAL( (unsigned int)0, dt.getRowCount() );
+		}
 	}
 
 

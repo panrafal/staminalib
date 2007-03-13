@@ -109,8 +109,6 @@ namespace Stamina { namespace DT {
 		void open (const StringRef& fn , enFileMode mode) throw (...);
 		void close ();
 
-		virtual void readRows(bool skipFailed) throw (...); // wczytuje wiersze
-
 		enFileFlags getFileFlags() {
 			return _fileFlag;
 		}
@@ -182,7 +180,14 @@ namespace Stamina { namespace DT {
 
 		enResult readPartialRow(tRowId row , tColId* columns, bool readId = true) throw (...);
 
-		bool findNextRow();
+		bool findNextRow(bool validate = false);
+
+		bool isFileFinished() {
+			return feof(_file);
+		}
+
+		enResult skipRow();
+
 
 		void seekToBeginning() {
 			this->setFilePosition(0, fromBeginning);
@@ -200,6 +205,10 @@ namespace Stamina { namespace DT {
 		void setFilePosition(int pos , enPositionOrigin origin) throw(...) {
 			if (fseek(_file , pos , origin))
 				throw DTFileException();
+		}
+
+		unsigned int getFilePosition() {
+			return ftell(_file);
 		}
 
 		/**Checks table's password digest with file's one*/

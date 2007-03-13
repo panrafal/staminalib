@@ -87,6 +87,79 @@ namespace Stamina { namespace DT {
 		return success;
     }
 
+    enResult FileBase::loadPartial (const StringRef& fn, unsigned int start, unsigned int count, unsigned int* seekPtr, enFileOperation operation) {
+		if (!_table) return errNotInitialized;
+		int i = 0;
+		try {
+			this->open(fn , fileRead);
+			this->readDescriptor();
+			if (operation & loadColumns) {
+				this->mergeLoadedColumns();
+			}
+
+			if (seekPtr && *seekPtr && this->getClass().inheritsFrom(FileBin::staticClassInfo())) {
+				dynamic_cast<FileBin*>(this)->setFilePosition(*seekPtr, FileBin::fromBeginning);
+				this->findNextRow(true);
+			}
+
+			while (start -- > 0 && this->isFileFinished() == false) {
+				// pomijamy kolejne
+				if (this->skipRow() != errSuccess) break;
+			}
+			while (count -- > 0 && this->isFileFinished() == false) {
+				tRowId row = _table->addRow();
+				if (this->readRow(row) != success) {
+					_table->deleteRow(row);
+					break;
+				}
+			}
+
+			if (seekPtr && this->getClass().inheritsFrom(FileBin::staticClassInfo())) {
+				*seekPtr = dynamic_cast<FileBin*>(this)->getFilePosition();
+			}
+
+			
+		} catch (DTException& e) {
+			close();
+			if (_table->getInterface().empty() || (_table->getInterface()->handleFailedLoad(this, e, i) & iInterface::fail)) {
+				return e.errorCode;
+			}
+            i++;
+		}
+
+		close();
+		return success;
+    }
+
+	void FileBase::readRows(bool skipFailed) {
+        _table->clearRows();
+        tRowId row;
+        while (!isFileFinished())
+        { 
+			row = _table->addRow();
+			if (skipFailed == false) {
+				if (this->readRow(row) != success)
+					_table->deleteRow(row);
+			} else {
+				while (1) {
+					try {
+						if (this->readRow(row) != success)
+							_table->deleteRow(row);
+					} catch (DTException e) {
+						if (findNextRow() == true) {
+							continue; // jeszcze raz readRow
+						} else {
+							_table->deleteRow(row);
+						}
+					}
+					// wyskakujemy z pêtli ¿eby wczytaæ nastêpny
+					break;
+				}
+			}
+		
+		}
+	}
+
 
     enResult FileBase::save (const StringRef& fn, enFileOperation operation)
     {

@@ -95,6 +95,8 @@ namespace Stamina { namespace DT {
 			return this->load(fn, loadColumns);
 		}
 
+		virtual enResult FileBase::loadPartial (const StringRef& fn, unsigned int start, unsigned int count, unsigned int* seekPtr = 0, enFileOperation operation = loadColumns);
+
 		/**Stores all information from assigned table. The file is recreated.*/
 		virtual enResult save (const StringRef& fn = "", enFileOperation operation = noOperation); // zapisuje caly plik
 
@@ -112,7 +114,7 @@ namespace Stamina { namespace DT {
 		//virtual freeRow(int row)=0; // zwalnia wiersz
 
 		/**Reads all rows from file*/
-		virtual void readRows(bool skipFailed) throw (...) =0; // wczytuje wiersze
+		virtual void readRows(bool skipFailed) throw (...); // wczytuje wiersze
 
 		//virtual int next() {return 0;} // przesuwa sie na nastepny
 		//virtual int prev() {return 0;} // przesuwa sie na poprzedni
@@ -162,6 +164,8 @@ namespace Stamina { namespace DT {
 			if (!this->isAuthenticated()) throw DTException(errNotAuthenticated);
 		}
 
+		virtual bool isFileFinished()=0;
+		virtual enResult skipRow()=0;
 
 	protected:
 
@@ -189,8 +193,8 @@ namespace Stamina { namespace DT {
 		virtual enResult readPartialRow(tRowId row , tColId* columns, bool readId = true) throw (...) =0;
 
 		/**Goes to next row in file*/
-		virtual bool findNextRow()=0; // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
-
+		virtual bool findNextRow(bool validate = false)=0; // przechodzi do nastêpnej linijki (w razie gdy freadrow wywali b³¹d)
+		
 
 		virtual void seekToBeginning()=0;
 		virtual void seekToEnd()=0;

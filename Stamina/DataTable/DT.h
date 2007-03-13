@@ -74,6 +74,7 @@ namespace Stamina { namespace DT {
 		errAlreadyLoaded = 0x1009,
 		errNotLoaded = 0x1010,
 		errNotChanged = 0x1011,
+		errReadOnly = 0x1012,
 		errFileError = 0x10000000,
 
 		resSkipped = 1,

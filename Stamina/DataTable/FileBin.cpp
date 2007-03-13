@@ -977,48 +977,73 @@ namespace Stamina { namespace DT {
 		}
     }
 
-	bool FileBin::findNextRow() {
+	bool FileBin::findNextRow(bool validate) {
 		if (_verMaj <= '1' || feof(_file))
 			return false;
 		while (!feof(_file)) {
 			// szukamy '\n'
 			if (getc(_file) == '\n') {
 				setFilePosition(-1, fromCurrent);
+				if (validate) {
+					try {
+						unsigned int pos = this->getFilePosition();
+						if (skipRow() == errSuccess) {
+							// wiersz jest ok... cofamy
+							this->setFilePosition(pos, fromBeginning);
+							return true;
+						} else {
+							return false;
+						}
+					} catch(...) {
+						// wyst¹pi³ b³¹d - znaczy ¿e lewo znaleŸliœmy - szukamy dalej
+						continue;
+					}
+				}
 				return true; // znalaz³em potencjalny nowy wpis... freadrow zajmie siê sprawdzaniem...
 			}
 		}
 		return false;
 	}
 
+	enResult FileBin::skipRow() {
 
-	void FileBin::readRows(bool skipFailed) {
-        _table->clearRows();
-        tRowId row;
-        while (!feof(_file))
-        { 
-			row = _table->addRow();
-			if (skipFailed == false) {
-				if (this->readRow(row) != success)
-					_table->deleteRow(row);
-			} else {
-				while (1) {
-					try {
-						if (this->readRow(row) != success)
-							_table->deleteRow(row);
-					} catch (DTException e) {
-						if (findNextRow() == true) {
-							continue; // jeszcze raz readRow
-						} else {
-							_table->deleteRow(row);
-						}
-					}
-					// wyskakujemy z pêtli ¿eby wczytaæ nastêpny
-					break;
-				}
-			}
-		
+		if (!isOpened()) throw DTException(errNotOpened);
+
+		// Pokojowe wyjœcie - nie ma co czytaæ wiêc koñczymy
+		if ( feof(_file) ) return resNothingToRead;
+		// Od tego momentu wszystko czego nie da siê wczytaæ oznacza z³y format!
+
+		// Znacznik rozpoczêcia nowego wiersza
+		if (fgetc(_file) != '\n') {
+			if ( feof(_file) ) return resNothingToRead;
+			throw DTException(errBadFormat);
 		}
+
+		unsigned int rowSize = 0;
+
+		// rozmiar wiersza oraz flagi od v2.0
+		if (_verMaj > '1') {
+			readData(&rowSize, 4);
+			// Sprawdzamy czy ten row jest w stanie siê tu w ogóle zmieœciæ
+			if (ftell(_file) + rowSize + 4 > _fileSize)
+				throw DTException(errBadFormat);
+
+			
+			setFilePosition(rowSize , fromCurrent);
+			unsigned int rowSize2;
+			readData(&rowSize2 , 4);
+			if (rowSize != rowSize2) 
+				throw DTException(errBadFormat);
+			// format jest ok... przeskoczyliœmy...
+			return errSuccess;
+		} else {
+			return errBadFormat;
+		}
+
 	}
+
+
+
 
 	void FileBin::readCryptedData(const Column* col, void* buffer, int size, unsigned int* decrement) {
 		if ((col && col->hasFlag(cflagXor)) || this->hasFileFlag(fflagCryptAll)) {
