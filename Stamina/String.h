@@ -199,6 +199,15 @@ namespace Stamina {
 			assignCheapReference(ch, size);
 		}
 
+		inline StringRefT(char ch) {
+			_flags = 0;
+			assignCheapReference(&ch, 1);
+		}
+		inline StringRefT(wchar_t ch) {
+			_flags = 0;
+			assignCheapReference(&ch, 1);
+		}
+
 #ifdef _STRING_
 		/*
 		template <typename CHAR, typename TRAITS, typename ALLOCATOR>
@@ -450,6 +459,10 @@ namespace Stamina {
 
 		}
 
+		template <typename CHAR>
+		int getBufferSize() {
+			return this->getDataBuffer<CHAR>().getBufferSize();
+		}
 		// ------ character access
 
 		template <typename CHAR>

@@ -235,7 +235,7 @@ namespace Stamina {
 
 	};
 
-	template<> inline int deleteFile<FindFile::Found>(const FindFile::Found& file) {
+	template<> inline bool deleteFile<FindFile::Found>(const FindFile::Found& file) {
 		return ::DeleteFile(file.getFilePath().c_str());
 	}
 

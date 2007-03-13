@@ -293,30 +293,30 @@ namespace Stamina {
 
 
 
-void split(const std::string & txt, const std::string & splitter, tStringVector & list, bool all) {
-	std::string::size_type start = 0, end;
+void split(const StringRef & txt, const StringRef & splitter, tStringVector & list, bool all) {
+	unsigned int start = 0, end;
 	list.clear();
 	while (start < txt.length()) { // dopóki jest co kopiowaæ
 		end = txt.find(splitter, start);
 		if (all || start != end)
-			list.push_back(txt.substr(start, (end == txt.npos? end : end - start)) );
-		if (end == txt.npos)
+			list.push_back(txt.substr(start, (end == -1 ? end : end - start)) );
+		if (end == -1)
 			break;
 		start = end + splitter.length();
 	}
 }
-void splitCommand(const string & txt , char splitter ,  tStringVector & list) {
+void splitCommand(const StringRef& txt , char splitter ,  tStringVector& list) {
     if (txt.empty()) return;
     char end;
 	size_t pos = 0;
 	do {
 	    // Ustalamy jakim znakiem ma sià zakonczyc parametr
-	    if (splitter && txt[pos]=='"') {pos++; end = '"';}
+		if (splitter && txt.a_str()[pos]=='"') {pos++; end = '"';}
         else end = splitter;
 	    size_t fnd = txt.find(end , pos);
-	    list.push_back(txt.substr(pos , (fnd != txt.npos)?fnd-pos:fnd));
+	    list.push_back(txt.substr(pos , (fnd != -1)?fnd-pos:fnd));
 	    pos = fnd;
-	    if (pos != txt.npos) {
+	    if (pos != -1) {
 		    pos += (end=='"')?2:1;
             if (pos>=txt.size()) break;
 	    } else break;

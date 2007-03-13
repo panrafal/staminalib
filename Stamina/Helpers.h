@@ -184,11 +184,11 @@ namespace Stamina {
 
 #ifdef _DEQUE_
 
-	typedef std::deque<std::string> tStringVector;
+	typedef std::deque<String> tStringVector;
 
-	void split(const std::string & txt, const std::string & splitter, tStringVector & list, bool all = true);
+	void split(const StringRef & txt, const StringRef & splitter, tStringVector & list, bool all = true);
 
-	void splitCommand(const std::string& txt , char splitter ,  tStringVector & list);
+	void splitCommand(const StringRef& txt , char splitter ,  tStringVector & list);
 
 #endif
 
@@ -249,7 +249,7 @@ namespace Stamina {
 	template<class FILE> bool deleteFile(const FILE& file);
 
 	__if_exists(StringRef) {
-		template<> inline int deleteFile<StringRef>(const StringRef& file) {
+		template<> inline bool deleteFile<StringRef>(const StringRef& file) {
 			return ::DeleteFile(file.a_str());
 		}
 	}
