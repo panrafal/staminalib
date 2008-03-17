@@ -342,6 +342,7 @@ namespace ListWnd {
 		void repaintItems(ListView* lv);
 
 		virtual oItem insertItem(ListView* lv, const oItem& item, int pos);
+		bool moveItem(ListView* lv, const oItem& item, const oItem& beforeitem, bool active);
 
 		bool setWholeSize(Size size);
 

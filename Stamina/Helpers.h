@@ -60,6 +60,12 @@ namespace Stamina {
 
 	std::string inttostr(int v , int radix=10 , int max=-1 , bool upper=true);
 
+  inline std::string i64tostr(__int64 v, int radix = 10) {
+    char buf[32];
+    _i64toa_s(v, (char*) buf, 32, radix);
+    return buf;
+  }
+
 	inline std::string stringf(const char *format, ...) {
 		va_list ap;
 

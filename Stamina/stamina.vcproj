@@ -691,10 +691,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\RegEx2.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SimXML.cpp"
 				>
 				<FileConfiguration
@@ -1186,10 +1182,6 @@
 			</File>
 			<File
 				RelativePath=".\RegEx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RegEx2.h"
 				>
 			</File>
 			<File

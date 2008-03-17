@@ -303,6 +303,28 @@ namespace ListWnd
 		return item;
 	}
 
+  bool ItemCollection::moveItem(ListView* lv, const oItem& item, const oItem& beforeitem, bool active) {
+    if (!item) return false;
+
+    ObjLocker lock(this);
+    ItemList::iterator it = std::find(_items.begin(), _items.end(), item);
+
+    ItemList::iterator it2;
+
+    _items.erase(it);
+
+    if (beforeitem) {
+      _items.insert(std::find(_items.begin(), _items.end(), beforeitem), item);
+    } else {
+      _items.push_back(item);
+    }
+    if (active) {
+      lv->setActiveItem(item);
+    }
+    this->setFlag(flagSubitemsChanged, true);
+    lv->refreshItems();
+    return true;
+  }
 
 	void ItemCollection::removeEntry(ListView* lv,
 								 const oEntry& entry, bool recurse)
@@ -320,9 +342,9 @@ namespace ListWnd
 				if (it != _items.end()) {
 					// Trzeba ustawiæ s¹siadowi odœwie¿enie pozycji...
 					(*it)->setRefreshFlag(refreshPos);
-					this->setFlag(flagSubitemsChanged, true);
-					lv->refreshItems();
 				}
+				this->setFlag(flagSubitemsChanged, true);
+				lv->refreshItems();
 				continue;
 			}
 			if ((*it)->getItemCollection() && recurse) {

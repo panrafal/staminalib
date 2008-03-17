@@ -42,7 +42,7 @@ namespace Stamina
 {
 namespace ListWnd
 {
-	const char * const ListView::windowClassName = "Stamina::ListWnd::ListView";
+	const char * const ListView::windowClassName = "Stamina::ListWnd::ListView_1.1";
 
 	ListView::ListView(int x , int y , int w , int h , HWND parent , HMENU id)
 	{
@@ -56,6 +56,7 @@ namespace ListWnd
 	{
 		this->init();
 		this->_hwnd = hwnd;
+		this->_enabled = (bool) IsWindowEnabled(hwnd);
 	}
 	void ListView::init() {
 		this->_hwnd = 0;
@@ -114,8 +115,10 @@ namespace ListWnd
 				, boost::bind(&oItem::get, _1)
 				, boost::bind(&ItemWalk::getListView,_2), false)
 			, oItem(), oItem(), true, false);
-		if (this->_activeItem)
+
+		if (this->_activeItem) {
 			this->_activeItem->setSelected(this, true);
+		}
 		unlockPaint();
 	}
 

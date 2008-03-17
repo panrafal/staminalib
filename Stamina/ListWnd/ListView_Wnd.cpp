@@ -58,6 +58,12 @@ namespace ListWnd
 
 	}
 
+  void ListView::onEnable(bool enable) {
+    if (IsWindowVisible(this->_hwnd)) {
+      this->repaintClient();
+    }
+  }
+
 	void ListView::alwaysShowScrollbars(bool horz, bool vert) {
 		this->scrollbarHAlwaysVisible = horz;
 		this->scrollbarVAlwaysVisible = vert;
@@ -100,7 +106,7 @@ namespace ListWnd
 		updateScrollbars();
 	}
 	void ListView::onMouseWheel(short distance, short vkey, short x, short y) {
-		onVScroll(0, (distance>0?SB_PAGEUP:SB_PAGEDOWN), 0);
+		onVScroll(0, (distance > 0 ? SB_PAGEUP : SB_PAGEDOWN), 0);
 	}
 
 
@@ -158,6 +164,12 @@ namespace ListWnd
 			bool shift = (vkey & MK_SHIFT) != 0;
 			bool ctrl = (vkey & MK_CONTROL) != 0;
 			oItem oldActive = this->getActiveItem();
+			if (oldActive) {
+			  oldActive->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+			}
+			if (item) {
+			  item->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+			}
 			if ((!shift) || (shift && ctrl)) {
 				this->setActiveItem( item );
 			}
@@ -172,14 +184,14 @@ namespace ListWnd
 							, boost::bind(&oItem::get, _1)
 							, boost::bind(&ItemWalk::getListView,_2), true)
 						, oldActive, item, true, true);
-				} else if (ctrl/* && item != oldActive*/) {
+				} else if (ctrl /* && item != oldActive */) {
 					item->setSelected(this, !item->isSelected());
 				} else {
-					//item->setSelected(this, true);
+					// item->setSelected(this, true);
 				}
 			}
-			if (itemHit)
-				this->scrollToActive();
+			this->refreshItems();
+			this->scrollToActive(itemHit);
 			this->unlockPaint();
 		} else if (vkey & MK_RBUTTON) {
 			// context
@@ -221,6 +233,10 @@ namespace ListWnd
 
 	void ListView::onKeyDown(int vkey, int info) {
 		if (this->getActiveItem()) {
+		  getActiveItem()->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+		  if (getActiveItem()->getParent(this)) {
+		    getActiveItem()->getParent(this)->setFlag(ListWnd::flagSubitemsChanged, true, this);
+		  }
 			Point pos = this->getActiveItem()->getRect().getPos();
 			if (!walkItemNotification(this, pos, boost::bind(&iEntry::onKeyDown, _1, _2, _3, _4, vkey, info))) {
 				return;
@@ -250,13 +266,19 @@ namespace ListWnd
 					item = this->getActiveItem()->getNeighbour(this, delta);
 				}
 				if (item) {
+				  item->setRefreshFlag(ListWnd::RefreshFlags::refreshAll); 
+				  if (item->getParent(this)) {
+				    item->getParent(this)->setFlag(ListWnd::flagSubitemsChanged, true, this);
+				  }
 					this->setActiveItem(item);
+					this->refreshItems();
 				//	if (!shift && !ctrl) {
 						this->selectionToActive();
 						this->scrollToActive(false);
 						
 				//	}
 				}
+				this->refreshItems();
 				this->unlockPaint();
 				
 				break;}
@@ -315,6 +337,9 @@ namespace ListWnd
 				lv->_hwnd = hwnd;
 				lv->onCreateWindow();
 				break;}
+			case WM_ENABLE:
+			  fromHWND(hwnd)->onEnable((bool) wParam);
+			  break;
 			case WM_SIZE:
 				fromHWND(hwnd)->onSize(Size(LOWORD(lParam), HIWORD(lParam)));
 			    break;

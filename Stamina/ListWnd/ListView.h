@@ -120,6 +120,15 @@ namespace ListWnd {
 			return this->_hwnd;
 		}
 
+    bool isEnabled() {
+      return this->_enabled;
+    }
+
+    bool setEnabled(bool value = true) {
+      this->_enabled = value;
+      return EnableWindow(getHwnd(), value);
+    }
+
 		void scrollBy(Point offset);
 
 		void lockRefresh();
@@ -289,6 +298,7 @@ namespace ListWnd {
 		static int CALLBACK windowProc(HWND hwnd , int message , WPARAM wParam, LPARAM lParam);
 		void onCreateWindow();
 		int onPaint();
+		void onEnable(bool enable);
 		void onSize(const Size& newSize);
 		void onMouseWheel(short distance, short vkey, short x, short y);
 		void onVScroll(short pos, short request, HWND ctrl);
@@ -333,6 +343,7 @@ namespace ListWnd {
 		bool _vscroll, _hscroll;
 		unsigned char _vscrollMult, _hscrollMult;
 		bool _scrollWholeItems;
+		bool _enabled;
 
 		oImage _background;
 
