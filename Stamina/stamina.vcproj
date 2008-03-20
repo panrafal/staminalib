@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="Stamina"
 	ProjectGUID="{6618EFD8-F083-4DC2-B02A-F7A3E2990131}"
+	RootNamespace="Stamina"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -283,6 +284,75 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="TeamBuild Debug|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\depends;..\..\boost"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_PCH;PCRE_STATIC;STAMINA_DEBUG"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="2"
+				BrowseInformation="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				AdditionalDependencies="pcre.lib"
+				OutputFile="$(OutDir)/Stamina_d.lib"
+				AdditionalLibraryDirectories="..\depends\lib"
+				IgnoreAllDefaultLibraries="true"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -327,6 +397,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Debug.cpp"
@@ -363,6 +441,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\FileResource.cpp"
@@ -393,6 +479,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -437,6 +531,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Helpers.cpp"
@@ -467,6 +569,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -509,6 +619,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\InvokeQueue.cpp"
@@ -539,6 +657,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -581,6 +707,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\MD5.cpp"
@@ -611,6 +745,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -653,6 +795,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\RegEx.cpp"
@@ -683,6 +833,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -725,6 +883,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
@@ -755,6 +921,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -797,6 +971,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Task.cpp"
@@ -827,6 +1009,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -869,6 +1059,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ThreadInvoke.cpp"
@@ -899,6 +1097,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -941,6 +1147,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Unique.cpp"
@@ -971,6 +1185,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1013,6 +1235,14 @@
 						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<Filter
 				Name="external"
@@ -1028,12 +1258,28 @@
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
+					<FileConfiguration
+						Name="TeamBuild Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\depends\md5\md5c.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="TeamBuild Debug|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -1313,6 +1559,14 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Test\TestHelpers.cpp"
@@ -1343,6 +1597,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1385,6 +1647,14 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Test\TestStringBuffer.cpp"
@@ -1415,6 +1685,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1457,6 +1735,14 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Test\TestUnique.cpp"
@@ -1487,6 +1773,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1529,6 +1823,14 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Test\TimeString.cpp"
@@ -1565,6 +1867,14 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Test\TimeStringBuffer.cpp"
@@ -1595,6 +1905,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release_scrt|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="TeamBuild Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
