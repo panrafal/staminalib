@@ -6,7 +6,7 @@
 #include <Stamina\Time64.h>
 
 using namespace Stamina;
-using FindFile::Found;
+//using FindFile::Found;
 
 using std::string;
 using namespace std;
@@ -38,7 +38,7 @@ public:
 
 protected:
 
-	void printFoundInfo(const Found& found) {
+	void printFoundInfo(const FindFile::Found& found) {
 		cout << endl;
 		cout << "Found: " << found.getFileName() << (found.isDirectory() ? "\\ " : " ");
 		cout << found.getFileSize() << "B ";

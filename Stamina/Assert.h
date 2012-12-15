@@ -34,7 +34,7 @@
 #ifdef _DEBUG
 #define S_ERROR(msg) _ASSERT_BASE(false, msg)
 #else
-#define S_ERROR(msg) MessageBox(0, msg, "S_ERROR!", MB_OK | MB_ICONEXCLAMATION)
+#define S_ERROR(msg) MessageBoxW(0, msg, L"S_ERROR!", MB_OK | MB_ICONEXCLAMATION)
 #endif
 
 #if 0

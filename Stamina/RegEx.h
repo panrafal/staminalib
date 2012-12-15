@@ -14,7 +14,7 @@
 
 #include <string>
 #include <boost\smart_ptr.hpp>
-#include <Stamina\Helpers.h>
+#include "Helpers.h"
 
 namespace Stamina {
 

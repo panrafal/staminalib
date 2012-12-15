@@ -15,10 +15,10 @@
 
 
 
-#include <Stamina\Assert.h>
-#include <Stamina\FindFileFiltered.h>
-#include <Stamina\WideChar.h>
-#include <Stamina\WinHelper.h>
+#include "..\Assert.h"
+#include "..\FindFileFiltered.h"
+#include "..\WideChar.h"
+#include "..\WinHelper.h"
 
 using namespace std;
 

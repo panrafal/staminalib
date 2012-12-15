@@ -59,27 +59,27 @@ namespace ListWnd
 	class EntryImpl : public Entry {
 	private:
 		void insertEntry(ListView* lv, const oEntry& entry, int pos, class ItemList* created) {
-			S_ERROR("placeholder");
+			S_ERROR(L"placeholder");
 		}
 		void removeEntry(ListView* lv, const oEntry& entry, bool recurse) {
-			S_ERROR("placeholder");
+			S_ERROR(L"placeholder");
 		}
 		void removeAll(ListView* lv) {
-			S_ERROR("placeholder");
+			S_ERROR(L"placeholder");
 		}
 		void updateItemsList(ListView* lv, const oItemCollection& item) {
-			S_ERROR("placeholder");
+			S_ERROR(L"placeholder");
 		}
 		void onItemInsert(ListView* lv, const oItemCollection& coll, const oItem& item) {
-			S_ERROR("placeholder");
+			S_ERROR(L"placeholder");
 		}
 
 		oItemPlacer getItemPlacer(ListView* lv, const oItemCollection& coll) {
-			S_ERROR("placeholder");
+			S_ERROR(L"placeholder");
 			return oItemPlacer();
 		}
 		Rect getItemsRect(ListView* lv, const oItemCollection& item) {
-			S_ERROR("placeholder");
+			S_ERROR(L"placeholder");
 			return Rect();
 		}
 

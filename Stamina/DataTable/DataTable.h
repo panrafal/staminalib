@@ -16,10 +16,10 @@
 
 #include <vector>
 #include <map>
-#include <Stamina\CriticalSection.h>
-#include <Stamina\MD5.h>
-#include <Stamina\Time64.h>
-#include <Stamina\Version.h>
+#include "..\CriticalSection.h"
+#include "..\MD5.h"
+#include "..\Time64.h"
+#include "..\Version.h"
 
 #include "DT.h"
 #include "DataRow.h"

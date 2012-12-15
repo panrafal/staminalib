@@ -14,7 +14,7 @@
 
 #include "DataTable.h"
 
-#include <Stamina/ObjectImpl.h>
+#include "../ObjectImpl.h"
 
 namespace Stamina { namespace DT {
 

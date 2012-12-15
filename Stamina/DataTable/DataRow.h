@@ -12,7 +12,7 @@
 #define __DT_DATAROW__
 
 #include "iRow.h"
-#include <Stamina/ObjectImpl.h>
+#include "../ObjectImpl.h"
 
 
 namespace Stamina { namespace DT {

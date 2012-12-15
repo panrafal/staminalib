@@ -50,6 +50,7 @@ namespace Stamina {
 			due *= delay;
 			int setTimerRes = SetWaitableTimer(_handle, (LARGE_INTEGER*)&due, period, routine, argument, resume);
 			S_ASSERT(setTimerRes != 0);
+			
 		}
 
 		inline void stop() {
@@ -112,23 +113,37 @@ namespace Stamina {
 		inline void start(unsigned int delay, unsigned int period = 0, bool resume = false) {
 			_period = period;
 			Timer::start(delay, period, resume);
+			_timerThread = Thread();
 		}
 
 		inline void stop() {
 			this->_period = 0;
-			Timer::stop();
-			if (_autoDestroy)
-				delete this;
+			if (_autoDestroy) {
+				if (isRunning()) {
+					Timer::stop();
+					_timerThread.queueFunction((PAPCFUNC)destroyProc, this, true);
+				} else {
+					Timer::stop();
+					delete this;
+				}
+			} else {
+				Timer::stop();
+			}
 		}
 
 	protected:
 		bool _autoDestroy : 1;
 		unsigned int _period;
+		Thread _timerThread;
+
 		void timerProc(__int64 nanotime) {
 			if (_autoDestroy && _period == 0)
 				stop();
 		}
 
+		static void __stdcall destroyProc(TimerDynamic* me) {
+			delete me;
+		}
 		
 	};
 

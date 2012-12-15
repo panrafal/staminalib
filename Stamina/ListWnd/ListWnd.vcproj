@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\..\Depends"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_PCH;STAMINA_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,6 +64,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)/ListWnd_d.lib"
+				AdditionalLibraryDirectories="..\..\Depends\Lib"
 				IgnoreAllDefaultLibraries="true"
 			/>
 			<Tool
@@ -106,6 +108,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\Depends"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_USE_PCH"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
@@ -126,6 +129,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)/ListWnd.lib"
+				AdditionalLibraryDirectories="..\..\Depends\Lib"
 				IgnoreAllDefaultLibraries="true"
 			/>
 			<Tool

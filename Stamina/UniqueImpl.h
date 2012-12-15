@@ -11,8 +11,8 @@
 #pragma once
 
 #include <map>
-#include <Stamina\ObjectImpl.h>
-#include <Stamina\String.h>
+#include "ObjectImpl.h"
+#include "String.h"
 
 #include "Unique.h"
 

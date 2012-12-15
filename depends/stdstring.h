@@ -2,8 +2,7 @@
 //  FILE:  StdString.h
 //  AUTHOR:	Joe O'Leary (with outside help noted in comments)
 //
-//
-//		If you find any bugs int his code, please let me know:
+//		If you find any bugs in this code, please let me know:
 //
 //				jmoleary@earthlink.net
 //				http://www.joeo.net/stdstring.htm (a bit outdated)
@@ -91,8 +90,14 @@
 //			- Bill Carducci
 //			- Brian Groose
 //			- MKingman
+//			- Don Beusee
 //
 //	REVISION HISTORY
+//
+//	  2005-JAN-10 - Thanks to Don Beusee for pointing out the danger in mapping
+//					length-checked formatting functions to non-length-checked
+//					CRT equivalents.  Also thanks to him for motivating me to
+//					optimize my implementation of Replace()
 //
 //	  2004-APR-22 - A big, big thank you to "MKingman" (whoever you are) for
 //					finally spotting a silly little error in StdCodeCvt that
@@ -317,16 +322,21 @@
 //      if you would leave this notice here.
 // =============================================================================
 
-// Avoid multiple inclusion the VC++ way,
-// Turn off browser references
+// Avoid multiple inclusion
+
+#ifndef STDSTRING_H
+#define STDSTRING_H
+
+// When using VC, turn off browser references
 // Turn off unavoidable compiler warnings
 
 #if defined(_MSC_VER) && (_MSC_VER > 1100)
-	#pragma once
+	#pragma warning (push)
 	#pragma component(browser, off, references, "CStdString")
 	#pragma warning (disable : 4290) // C++ Exception Specification ignored
 	#pragma warning (disable : 4127) // Conditional expression is constant
 	#pragma warning (disable : 4097) // typedef name used as synonym for class name
+	#pragma warning (disable : 4996) // deprecated (secure STL)
 #endif
 
 // Borland warnings to turn off
@@ -336,15 +346,12 @@
 //	#pragma warn -inl   // Turn off inline function warnings
 #endif
 
-#ifndef STDSTRING_H
-#define STDSTRING_H
-
 // SS_IS_INTRESOURCE
 // -----------------
 //		A copy of IS_INTRESOURCE from VC7.  Because old VC6 version of winuser.h
 //		doesn't have this.
 
-#define SS_IS_INTRESOURCE
+#define SS_IS_INTRESOURCE(_r) (false)
 
 #if !defined (SS_ANSI) && defined(_MSC_VER)
 	#undef SS_IS_INTRESOURCE
@@ -392,7 +399,7 @@
 //
 //          sTmp.Format("My name is %s", sName.c_str());            // WORKS!
 //          sTmp.Format("My name is %s", static_cast<PCSTR>(sName));// WORKS!
-//          sTmp.Format("My name is %s", (PCSTR)sName);// WORKS!
+//          sTmp.Format("My name is %s", (PCSTR)sName);				// WORKS!
 //
 //      This is because it is illegal to pass anything but a POD type as a
 //      variadic argument to a variadic function (i.e. as one of the "..."
@@ -445,6 +452,7 @@
 //      if I'm building on Win32.  So for now, if you use MS Visual C++ or
 //      Borland's compiler, I turn this on.  Otherwise you may turn it on
 //      yourself, if you prefer
+
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(_WIN32)
     #define SS_WIN32
 #endif
@@ -483,21 +491,32 @@
 	#define SS_ALLOCA
 #endif
 
+
 // MACRO: SS_MBCS
 // --------------
-//		Setting this macro means you are using MBCS characters.  In MSVC
-//		builds, this macro gets set automatically by detection of the
-//		preprocessor flag _MBCS.  For other platforms you may set it manually
-//		if you wish.  The only effect it currently has is to cause the
-//		allocation of more space for wchar_t --> char conversions.
+//		Setting this macro means you are using MBCS characters.  In MSVC builds,
+//		this macro gets set automatically by detection of the preprocessor flag
+//		_MBCS.  For other platforms you may set it manually if you wish.  The
+//		only effect it currently has is to cause the allocation of more space
+//		for wchar_t --> char conversions.
 //		Note that MBCS does not mean UNICODE.
 //
 //	#define SS_MBCS
 //
+
 #ifdef _MBCS
 	#define SS_MBCS
 #endif
 
+
+// MACRO SS_NO_LOCALE
+// ------------------
+// If your implementation of the Standard C++ Library lacks the <locale> header,
+// you can #define this macro to make your code build properly.  Note that this
+// is some of my newest code and frankly I'm not very sure of it, though it does
+// pass my unit tests.
+
+// #define SS_NO_LOCALE
 
 
 // Compiler Error regarding _UNICODE and UNICODE
@@ -506,7 +525,7 @@
 // flag named "_UNICODE".  Other times they check "UNICODE" (note the lack of
 // leading underscore in the second version".  In several places, they silently
 // "synchronize" these two flags this by defining one of the other was defined. 
-// In older version of this header , I used to try to do the same thing. 
+// In older version of this header, I used to try to do the same thing. 
 //
 // However experience has taught me that this is a bad idea.  You get weird
 // compiler errors that seem to indicate things like LPWSTR and LPTSTR not being
@@ -640,7 +659,9 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 #include <string>			// basic_string
 #include <algorithm>		// for_each, etc.
 #include <functional>		// for StdStringLessNoCase, et al
-#include <locale>		// for various facets
+#ifndef SS_NO_LOCALE
+	#include <locale>			// for various facets
+#endif
 
 // If this is a recent enough version of VC include comdef.h, so we can write
 // member functions to deal with COM types & compiler support classes e.g.
@@ -712,6 +733,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 //
 // If you are having trouble with the SS_USE_FACET macro, in your implementation
 // of the Standard C++ Library, you can define your own version of SS_USE_FACET.
+
 #ifndef schMSG
 	#define schSTR(x)	   #x
 	#define schSTR2(x)	schSTR(x)
@@ -719,26 +741,36 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 #endif
 
 #ifndef SS_USE_FACET
+
 	// STLPort #defines a macro (__STL_NO_EXPLICIT_FUNCTION_TMPL_ARGS) for
 	// all MSVC builds, erroneously in my opinion.  It causes problems for
 	// my SS_ANSI builds.  In my code, I always comment out that line.  You'll
 	// find it in   \stlport\config\stl_msvc.h
+
 	#if defined(__SGI_STL_PORT) && (__SGI_STL_PORT >= 0x400 )
+
 		#if defined(__STL_NO_EXPLICIT_FUNCTION_TMPL_ARGS) && defined(_MSC_VER)
 			#ifdef SS_ANSI
 				#pragma schMSG(__STL_NO_EXPLICIT_FUNCTION_TMPL_ARGS defined!!)
 			#endif
 		#endif
 		#define SS_USE_FACET(loc, fac) std::use_facet<fac >(loc)
+
 	#elif defined(_MSC_VER )
-	#define SS_USE_FACET(loc, fac) std::_USE(loc, fac)
+
+		#define SS_USE_FACET(loc, fac) std::_USE(loc, fac)
 
 	// ...and
 	#elif defined(_RWSTD_NO_TEMPLATE_ON_RETURN_TYPE)
+
         #define SS_USE_FACET(loc, fac) std::use_facet(loc, (fac*)0)
+
 	#else
+
 		#define SS_USE_FACET(loc, fac) std::use_facet<fac >(loc)
+
 	#endif
+
 #endif
 
 // =============================================================================
@@ -761,126 +793,138 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 	#include <varargs.h>
 #endif
 
-// StdCodeCvt - made to look like Win32 functions WideCharToMultiByte
-//				and MultiByteToWideChar but uses locales in SS_ANSI
-//				builds.  There are a number of overloads.
-//              First argument is the destination buffer.
-//              Second argument is the source buffer
-//#if defined (SS_ANSI) || !defined (SS_WIN32)
 
-// 'SSCodeCvt' - shorthand name for the codecvt facet we use
+#ifdef SS_NO_LOCALE
 
-typedef std::codecvt<wchar_t, char, mbstate_t> SSCodeCvt;
+	#if defined(_WIN32) || defined (_WIN32_WCE)
 
-inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCSTR pSrcA, int nSrc,
-    const std::locale& loc=std::locale())
-{
+		inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCSTR pSrcA, int nSrc, 
+			UINT acp=CP_ACP)
+		{
+			ASSERT(0 != pSrcA);
+			ASSERT(0 != pDstW);
+			pDstW[0] = '\0';
+			MultiByteToWideChar(acp, 0, pSrcA, nSrc, pDstW, nDst);
+			return pDstW;
+		}
+		inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCUSTR pSrcA, int nSrc, 
+			UINT acp=CP_ACP)
+		{
+			return StdCodeCvt(pDstW, nDst, (PCSTR)pSrcA, nSrc, acp);
+		}
 
-    ASSERT(0 != pSrcA);
-    ASSERT(0 != pDstW);
+		inline PSTR StdCodeCvt(PSTR pDstA, int nDst, PCWSTR pSrcW, int nSrc, 
+			UINT acp=CP_ACP)
+		{
+			ASSERT(0 != pDstA);
+			ASSERT(0 != pSrcW);
+			pDstA[0] = '\0';
+			WideCharToMultiByte(acp, 0, pSrcW, nSrc, pDstA, nDst, 0, 0);
+			return pDstA;
+		}
+		inline PUSTR StdCodeCvt(PUSTR pDstA, int nDst, PCWSTR pSrcW, int nSrc, 
+			UINT acp=CP_ACP)
+		{
+			return (PUSTR)StdCodeCvt((PSTR)pDstA, nDst, pSrcW, nSrc, acp);
+		}
+	#else
+	#endif
 
-	pDstW[0]					= '\0';	
+#else
 
-	if ( nSrc > 0 )
-	{
-		PCSTR pNextSrcA			= pSrcA;
-		PWSTR pNextDstW			= pDstW;
-		SSCodeCvt::result res	= SSCodeCvt::ok;
-		const SSCodeCvt& conv	= SS_USE_FACET(loc, SSCodeCvt);
-		SSCodeCvt::state_type st= { 0 };
-		res						= conv.in(st,
-									pSrcA, pSrcA + nSrc, pNextSrcA,
-									pDstW, pDstW + nDst, pNextDstW);
+	// StdCodeCvt - made to look like Win32 functions WideCharToMultiByte
+	//				and MultiByteToWideChar but uses locales in SS_ANSI
+	//				builds.  There are a number of overloads.
+	//              First argument is the destination buffer.
+	//              Second argument is the source buffer
+	//#if defined (SS_ANSI) || !defined (SS_WIN32)
 
-		ASSERT(SSCodeCvt::ok == res);
-		ASSERT(SSCodeCvt::error != res);
-		ASSERT(pNextDstW >= pDstW);
-		ASSERT(pNextSrcA >= pSrcA);
+	// 'SSCodeCvt' - shorthand name for the codecvt facet we use
 
-		// Null terminate the converted string
+	typedef std::codecvt<wchar_t, char, mbstate_t> SSCodeCvt;
 
-		if ( pNextDstW - pDstW > nDst )
-			*(pDstW + nDst) = '\0';
-		else
-			*pNextDstW = '\0';
-	}
-    return pDstW;
-}
-inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCUSTR pSrcA, int nSrc,
-    const std::locale& loc=std::locale())
-{
-    return StdCodeCvt(pDstW, nDst, (PCSTR)pSrcA, nSrc, loc);
-}
-
-inline PSTR StdCodeCvt(PSTR pDstA, int nDst, PCWSTR pSrcW, int nSrc,
-    const std::locale& loc=std::locale())
-{
-    ASSERT(0 != pDstA);
-    ASSERT(0 != pSrcW);
-
-	pDstA[0]					= '\0';	
-
-	if ( nSrc > 0 )
-	{
-		PSTR pNextDstA			= pDstA;
-		PCWSTR pNextSrcW		= pSrcW;
-		SSCodeCvt::result res	= SSCodeCvt::ok;
-		const SSCodeCvt& conv	= SS_USE_FACET(loc, SSCodeCvt);
-		SSCodeCvt::state_type st= { 0 };
-		res						= conv.out(st,
-									pSrcW, pSrcW + nSrc, pNextSrcW,
-									pDstA, pDstA + nDst, pNextDstA);
-
-		ASSERT(SSCodeCvt::error != res);
-		ASSERT(SSCodeCvt::ok == res);	// strict, comment out for sanity
-		ASSERT(pNextDstA >= pDstA);
-		ASSERT(pNextSrcW >= pSrcW);
-
-		// Null terminate the converted string
-
-		if ( pNextDstA - pDstA > nDst )
-			*(pDstA + nDst) = '\0';
-		else
-			*pNextDstA = '\0';
-	}
-    return pDstA;
-}
-inline PUSTR StdCodeCvt(PUSTR pDstA, int nDst, PCWSTR pSrcW, int nSrc,
-    const std::locale& loc=std::locale())
-{
-    return (PUSTR)StdCodeCvt((PSTR)pDstA, nDst, pSrcW, nSrc, loc);
-}
-/*
-#else   // ...or are we doing things assuming win32 and Visual C++?
-
-	inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCSTR pSrcA, int nSrc, UINT acp=CP_ACP)
+	inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCSTR pSrcA, int nSrc,
+		const std::locale& loc=std::locale())
 	{
 		ASSERT(0 != pSrcA);
 		ASSERT(0 != pDstW);
-		pW[0] = '\0';
-		MultiByteToWideChar(acp, 0, pSrcA, nSrc, pDstW, nDst);
-		return pW;
+
+		pDstW[0]					= '\0';	
+
+		if ( nSrc > 0 )
+		{
+			PCSTR pNextSrcA			= pSrcA;
+			PWSTR pNextDstW			= pDstW;
+			SSCodeCvt::result res	= SSCodeCvt::ok;
+			const SSCodeCvt& conv	= SS_USE_FACET(loc, SSCodeCvt);
+			SSCodeCvt::state_type st= { 0 };
+			res						= conv.in(st,
+										pSrcA, pSrcA + nSrc, pNextSrcA,
+										pDstW, pDstW + nDst, pNextDstW);
+
+			ASSERT(SSCodeCvt::ok == res);
+			ASSERT(SSCodeCvt::error != res);
+			ASSERT(pNextDstW >= pDstW);
+			ASSERT(pNextSrcA >= pSrcA);
+
+			// Null terminate the converted string
+
+			if ( pNextDstW - pDstW > nDst )
+				*(pDstW + nDst) = '\0';
+			else
+				*pNextDstW = '\0';
+		}
+		return pDstW;
 	}
-	inline PWSTR StdCodeCvt(PWSTR pDstW, nDst, PCUSTR pSrcA, int nSrc, UINT acp=CP_ACP)
+	inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCUSTR pSrcA, int nSrc,
+		const std::locale& loc=std::locale())
 	{
-		return StdCodeCvt(pDstW, nDst, (PCSTR)pSrcA, nSrc, acp);
+		return StdCodeCvt(pDstW, nDst, (PCSTR)pSrcA, nSrc, loc);
 	}
 
-	inline PSTR StdCodeCvt(PSTR pDstA, nDst PCWSTR pSrcW, int nSrc, UINT acp=CP_ACP)
+	inline PSTR StdCodeCvt(PSTR pDstA, int nDst, PCWSTR pSrcW, int nSrc,
+		const std::locale& loc=std::locale())
 	{
 		ASSERT(0 != pDstA);
 		ASSERT(0 != pSrcW);
-		pA[0] = '\0';
-		WideCharToMultiByte(acp, 0, pSrcW, nSrc, pDstA, nDst, 0, 0);
-		return pA;
+
+		pDstA[0]					= '\0';	
+
+		if ( nSrc > 0 )
+		{
+			PSTR pNextDstA			= pDstA;
+			PCWSTR pNextSrcW		= pSrcW;
+			SSCodeCvt::result res	= SSCodeCvt::ok;
+			const SSCodeCvt& conv	= SS_USE_FACET(loc, SSCodeCvt);
+			SSCodeCvt::state_type st= { 0 };
+			res						= conv.out(st,
+										pSrcW, pSrcW + nSrc, pNextSrcW,
+										pDstA, pDstA + nDst, pNextDstA);
+
+			ASSERT(SSCodeCvt::error != res);
+			ASSERT(SSCodeCvt::ok == res);	// strict, comment out for sanity
+			ASSERT(pNextDstA >= pDstA);
+			ASSERT(pNextSrcW >= pSrcW);
+
+			// Null terminate the converted string
+
+			if ( pNextDstA - pDstA > nDst )
+				*(pDstA + nDst) = '\0';
+			else
+				*pNextDstA = '\0';
+		}
+		return pDstA;
 	}
-	inline PUSTR StdCodeCvt(PUSTR pDstA, nDst, PCWSTR pSrcW, int nSrc, UINT acp=CP_ACP)
+
+	inline PUSTR StdCodeCvt(PUSTR pDstA, int nDst, PCWSTR pSrcW, int nSrc,
+		const std::locale& loc=std::locale())
 	{
-		return (PUSTR)StdCodeCvt((PSTR)pDstA, nDst, pSrcW, nSrc, acp);
+		return (PUSTR)StdCodeCvt((PSTR)pDstA, nDst, pSrcW, nSrc, loc);
 	}
 
 #endif
-*/
+
+
 
 // Unicode/MBCS conversion macros are only available on implementations of
 // the "C" library that have the non-standard _alloca function.  As far as I
@@ -1129,16 +1173,43 @@ inline PWSTR StdCodeCvt(PWSTR pDst, int nDst, PCWSTR pSrc, int nSrc)
 // out into two, almost identical classes.  Either that or it would be a huge,
 // convoluted mess, with tons of "if" statements all over the place checking the
 // size of template parameter CT.
-// 
-// In several cases, you will see two versions of each function.  One version is
-// the more portable, standard way of doing things, while the other is the
-// non-standard, but often significantly faster Visual C++ way.
 // =============================================================================
+
+#ifdef SS_NO_LOCALE
+
+	// --------------------------------------------------------------------------
+	// Win32 GetStringTypeEx wrappers
+	// --------------------------------------------------------------------------
+	inline bool wsGetStringType(LCID lc, DWORD dwT, PCSTR pS, int nSize, 
+		WORD* pWd)
+	{
+		return FALSE != GetStringTypeExA(lc, dwT, pS, nSize, pWd);
+	}
+	inline bool wsGetStringType(LCID lc, DWORD dwT, PCWSTR pS, int nSize, 
+		WORD* pWd)
+	{
+		return FALSE != GetStringTypeExW(lc, dwT, pS, nSize, pWd);
+	}
+
+
+	template<typename CT>
+		inline bool ssisspace (CT t)
+	{ 
+		WORD toYourMother;
+		return	wsGetStringType(GetThreadLocale(), CT_CTYPE1, &t, 1, &toYourMother)
+			&& 0 != (C1_BLANK & toYourMother);
+	}
+
+#endif
 
 // If they defined SS_NO_REFCOUNT, then we must convert all assignments
 
-#ifdef SS_NO_REFCOUNT
-	#define SSREF(x) (x).c_str()
+#if defined (_MSC_VER) && (_MSC_VER < 1300)
+	#ifdef SS_NO_REFCOUNT
+		#define SSREF(x) (x).c_str()
+	#else
+		#define SSREF(x) (x)
+	#endif
 #else
 	#define SSREF(x) (x)
 #endif
@@ -1163,16 +1234,24 @@ inline SS_NOTHROW int sslen(const std::wstring& s)
 // -----------------------------------------------------------------------------
 // sstolower/sstoupper -- convert characters to upper/lower case
 // -----------------------------------------------------------------------------
-template<typename CT>
-inline CT sstolower(const CT& t, const std::locale& loc = std::locale())
-{
-	return std::tolower<CT>(t, loc);
-}
-template<typename CT>
-inline CT sstoupper(const CT& t, const std::locale& loc = std::locale())
-{
-	return std::toupper<CT>(t, loc);
-}
+
+#ifdef SS_NO_LOCALE
+	inline char sstoupper(char ch)		{ return (char)::toupper(ch); }
+	inline wchar_t sstoupper(wchar_t ch){ return (wchar_t)::towupper(ch); }
+	inline char sstolower(char ch)		{ return (char)::tolower(ch); }
+	inline wchar_t sstolower(wchar_t ch){ return (wchar_t)::tolower(ch); }
+#else
+	template<typename CT>
+	inline CT sstolower(const CT& t, const std::locale& loc = std::locale())
+	{
+		return std::tolower<CT>(t, loc);
+	}
+	template<typename CT>
+	inline CT sstoupper(const CT& t, const std::locale& loc = std::locale())
+	{
+		return std::toupper<CT>(t, loc);
+	}
+#endif
 
 // -----------------------------------------------------------------------------
 // ssasn: assignment functions -- assign "sSrc" to "sDst"
@@ -1569,23 +1648,51 @@ inline void ssupr(CT* pT, size_t nLen, const std::locale& loc=std::locale())
 }
 
 // -----------------------------------------------------------------------------
-//  vsprintf/vswprintf or _vsnprintf/_vsnwprintf equivalents.  In standard
-//  builds we can't use _vsnprintf/_vsnwsprintf because they're MS extensions.
+// vsprintf/vswprintf or _vsnprintf/_vsnwprintf equivalents.  In standard
+// builds we can't use _vsnprintf/_vsnwsprintf because they're MS extensions.
+//
 // -----------------------------------------------------------------------------
-#if defined(SS_ANSI) || !defined(_MSC_VER)
+// Borland's headers put some ANSI "C" functions in the 'std' namespace. 
+// Promote them to the global namespace so we can use them here.
 
-    // Borland's headers put some ANSI "C" functions in the 'std' namespace. 
-    // Promote them to the global namespace so we can use them here.
+#if defined(__BORLANDC__)
+    using std::vsprintf;
+    using std::vswprintf;
+#endif
 
-    #if defined(__BORLANDC__)
-        using std::vsprintf;
-        using std::vswprintf;
-    #endif
+	// GNU is supposed to have vsnprintf and vsnwprintf.  But only the newer
+	// distributions do.
+
+#if defined(__GNUC__)
+
+	inline int ssvsprintf(PSTR pA, size_t nCount, PCSTR pFmtA, va_list vl)
+	{ 
+		return vsnprintf(pA, nCount, pFmtA, vl);
+	}
+	inline int ssvsprintf(PWSTR pW, size_t nCount, PCWSTR pFmtW, va_list vl)
+	{
+		return vswprintf(pW, nCount, pFmtW, vl);
+	}
+
+	// Microsofties can use
+#elif defined(_MSC_VER) && !defined(SS_ANSI)
+
+	inline int	ssnprintf(PSTR pA, size_t nCount, PCSTR pFmtA, va_list vl)
+	{ 
+		return _vsnprintf(pA, nCount, pFmtA, vl);
+	}
+	inline int	ssnprintf(PWSTR pW, size_t nCount, PCWSTR pFmtW, va_list vl)
+	{
+		return _vsnwprintf(pW, nCount, pFmtW, vl);
+	}
+
+#elif defined (SS_DANGEROUS_FORMAT)  // ignore buffer size parameter if needed?
 
 	inline int ssvsprintf(PSTR pA, size_t /*nCount*/, PCSTR pFmtA, va_list vl)
 	{
 		return vsprintf(pA, pFmtA, vl);
 	}
+
 	inline int ssvsprintf(PWSTR pW, size_t nCount, PCWSTR pFmtW, va_list vl)
 	{
 		// JMO: Some distributions of the "C" have a version of vswprintf that
@@ -1629,16 +1736,45 @@ inline void ssupr(CT* pT, size_t nLen, const std::locale& loc=std::locale())
     #endif
 
 	}
-#else
+
+#else 
+
+	// GOT COMPILER PROBLEMS HERE?
+	// ---------------------------
+	// Does your compiler choke on one or more of the following 2 functions?  It
+	// probably means that you don't have have either vsnprintf or vsnwprintf in
+	// your version of the CRT.  This is understandable since neither is an ANSI
+	// "C" function.  However it still leaves you in a dilemma.  In order to make
+	// this code build, you're going to have to to use some non-length-checked
+	// formatting functions that every CRT has:  vsprintf and vswprintf.  
+	//
+	// This is very dangerous.  With the proper erroneous (or malicious) code, it
+	// can lead to buffer overlows and crashing your PC.  Use at your own risk
+	// In order to use them, just #define SS_DANGEROUS_FORMAT at the top of
+	// this file.
+	//
+	// Even THEN you might not be all the way home due to some non-conforming
+	// distributions.  More on this in the comments below.
+
 	inline int	ssnprintf(PSTR pA, size_t nCount, PCSTR pFmtA, va_list vl)
-	{ 
-		return _vsnprintf(pA, nCount, pFmtA, vl);
+	{
+	#ifdef _MSC_VER
+			return _vsnprintf(pA, nCount, pFmtA, vl);
+	#else
+			return vsnprintf(pA, nCount, pFmtA, vl);
+	#endif
 	}
 	inline int	ssnprintf(PWSTR pW, size_t nCount, PCWSTR pFmtW, va_list vl)
 	{
-		return _vsnwprintf(pW, nCount, pFmtW, vl);
+	#ifdef _MSC_VER
+			return _vsnwprintf(pW, nCount, pFmtW, vl);
+	#else
+			return vsnwprintf(pW, nCount, pFmtW, vl);
+	#endif
 	}
+
 #endif
+
 
 
 
@@ -1664,6 +1800,7 @@ inline void ssupr(CT* pT, size_t nLen, const std::locale& loc=std::locale())
 //		Note -- with MSVC I have reversed the arguments order here because the
 //		functions appear to return the opposite of what they should
 // -----------------------------------------------------------------------------
+#ifndef SS_NO_LOCALE
 template <typename CT>
 inline int sscoll(const CT* sz1, int nLen1, const CT* sz2, int nLen2)
 {
@@ -1693,7 +1830,7 @@ inline int ssicoll(const CT* sz1, int nLen1, const CT* sz2, int nLen2)
 	return coll.compare(s2.c_str(), s2.c_str()+nLen2,
 						s1.c_str(), s1.c_str()+nLen1);
 }
-
+#endif
 
 
 // -----------------------------------------------------------------------------
@@ -1850,22 +1987,41 @@ inline int sscpy(CT1* pDst, const std::basic_string<CT2>& sSrc)
 // Functional objects for changing case.  They also let you pass locales
 // -----------------------------------------------------------------------------
 
-template<typename CT>
-struct SSToUpper : public std::binary_function<CT, std::locale, CT>
-{
-    inline CT operator()(const CT& t, const std::locale& loc) const
-    {
-	    return sstoupper<CT>(t, loc);
-    }
-};
-template<typename CT>
-struct SSToLower : public std::binary_function<CT, std::locale, CT>
-{
-    inline CT operator()(const CT& t, const std::locale& loc) const
-    {
-	    return sstolower<CT>(t, loc);
-    }
-};
+#ifdef SS_NO_LOCALE
+	template<typename CT>
+	struct SSToUpper : public std::unary_function<CT, CT>
+	{
+		inline CT operator()(const CT& t) const
+		{
+			return sstoupper(t);
+		}
+	};
+	template<typename CT>
+	struct SSToLower : public std::unary_function<CT, CT>
+	{
+		inline CT operator()(const CT& t) const
+		{
+			return sstolower(t);
+		}
+	};
+#else
+	template<typename CT>
+	struct SSToUpper : public std::binary_function<CT, std::locale, CT>
+	{
+		inline CT operator()(const CT& t, const std::locale& loc) const
+		{
+			return sstoupper<CT>(t, loc);
+		}
+	};
+	template<typename CT>
+	struct SSToLower : public std::binary_function<CT, std::locale, CT>
+	{
+		inline CT operator()(const CT& t, const std::locale& loc) const
+		{
+			return sstolower<CT>(t, loc);
+		}
+	};
+#endif
 
 // This struct is used for TrimRight() and TrimLeft() function implementations.
 //template<typename CT>
@@ -1878,7 +2034,6 @@ struct SSToLower : public std::binary_function<CT, std::locale, CT>
 template<typename CT>
 struct NotSpace : public std::unary_function<CT, bool>
 {
-
 	// DINKUMWARE BUG:
 	// Note -- using std::isspace in a COM DLL gives us access violations
 	// because it causes the dynamic addition of a function to be called
@@ -1891,9 +2046,15 @@ struct NotSpace : public std::unary_function<CT, bool>
 	// problem, you may replace the calls here with good old isspace() and
 	// iswspace() from the CRT unless they specify SS_ANSI
     
+#ifdef SS_NO_LOCALE
+	
+	bool operator() (CT t) const { return !ssisspace(t); }
+
+#else
 	const std::locale loc;
 	NotSpace(const std::locale& locArg=std::locale()) : loc(locArg) {}
 	bool operator() (CT t) const { return !std::isspace(t, loc); }
+#endif
 };
 
 
@@ -2023,6 +2184,18 @@ public:
 	#endif
 	}
 
+
+#ifdef __STAMINA_STRING__
+	CStdStr(const Stamina::StringRef& s) 
+	{
+		if (s.isWide())
+			*this = s.w_str();
+		else
+			*this = s.a_str();
+	}
+#endif
+
+
 	CStdStr(MYCITER first, MYCITER last)
 		: MYBASE(first, last)
 	{
@@ -2060,6 +2233,18 @@ public:
 		ssasn(*this, str);
 		return *this;
 	}
+
+#ifdef __STAMINA_STRING__
+	MYTYPE& operator=(const Stamina::StringRef& s) 
+	{
+		if (s.isWide()) {
+			ssasn(*this, s.w_str());
+		} else {
+			ssasn(*this, s.a_str());
+		}
+		return *this;
+	}
+#endif
 
 	MYTYPE& operator=(PCSTR pA)
 	{
@@ -2268,7 +2453,11 @@ public:
 		std::transform(this->begin(),
 					   this->end(),
 					   this->begin(),
+#ifdef SS_NO_LOCALE
+					   SSToUpper<CT>());
+#else
 					   std::bind2nd(SSToUpper<CT>(), loc));
+#endif
 
 		// ...but if it were, this would probably work better.  Also, this way
 		// seems to be a bit faster when anything other then the "C" locale is
@@ -2292,7 +2481,11 @@ public:
 		std::transform(this->begin(),
 					   this->end(),
 					   this->begin(),
+#ifdef SS_NO_LOCALE
+					   SSToLower<CT>());
+#else
 					   std::bind2nd(SSToLower<CT>(), loc));
+#endif
 
 		// ...but if it were, this would probably work better.  Also, this way
 		// seems to be a bit faster when anything other then the "C" locale is
@@ -2322,7 +2515,7 @@ public:
 
 	CT* GetBuf(int nMinLen=-1)
 	{
-		if ( static_cast<int>(size()) < nMinLen )
+		if ( static_cast<int>(this->size()) < nMinLen )
 			this->resize(static_cast<MYSIZE>(nMinLen));
 
 		return this->empty() ? const_cast<CT*>(this->data()) : &(this->at(0));
@@ -2746,7 +2939,7 @@ public:
         *this = szFmt;
     }
     template<class A1>
-    void Format(const CT* szFmt, A1 v)
+    void Format(const CT* szFmt, const A1& v)
     {
         Fmt(szFmt, FmtArg<A1>(v)());
     }
@@ -2972,11 +3165,8 @@ public:
 	void AppendFormatV(const CT* szFmt, va_list argList)
 	{
 		CT szBuf[STD_BUF_SIZE];
-	#ifdef SS_ANSI
-		int nLen = ssvsprintf(szBuf, STD_BUF_SIZE-1, szFmt, argList);
-	#else
 		int nLen = ssnprintf(szBuf, STD_BUF_SIZE-1, szFmt, argList);
-	#endif
+
 		if ( 0 < nLen )
 			this->append(szBuf, nLen);
 	}
@@ -3001,10 +3191,11 @@ public:
 	void FormatV(const CT* szFormat, va_list argList)
 	{
 	#ifdef SS_ANSI
-
+		MYTYPE str;
 		int nLen	= sslen(szFormat) + STD_BUF_SIZE;
-		ssvsprintf(GetBuffer(nLen), nLen-1, szFormat, argList);
-		ReleaseBuffer();
+		ssnprintf(str.GetBuffer(nLen), nLen-1, szFormat, argList);
+		str.ReleaseBuffer();
+		*this = str;
 
 	#else
 
@@ -3025,7 +3216,7 @@ public:
 			// Ensure proper NULL termination.
 
 			nActual			= nUsed == -1 ? nChars-1 : SSMIN(nUsed, nChars-1);
-			pBuf[nActual+1]= '\0';
+			pBuf[nActual]= '\0';
 
 
 		} while ( nUsed < 0 && nTry++ < MAX_FMT_TRIES );
@@ -3052,6 +3243,7 @@ public:
 		}
 	#endif
 
+#ifndef SS_NO_LOCALE
 	int Collate(PCMYSTR szThat) const
 	{
 		return sscoll(this->c_str(), this->length(), szThat, sslen(szThat));
@@ -3061,7 +3253,7 @@ public:
 	{
 		return ssicoll(this->c_str(), this->length(), szThat, sslen(szThat));
 	}
-
+#endif
 	int Compare(PCMYSTR szThat) const
 	{
 		return this->compare(szThat);	
@@ -3252,7 +3444,7 @@ public:
 
 	MYTYPE Mid(int nFirst) const
 	{
-		return Mid(nFirst, this->GetLength()-nFirst));
+		return Mid(nFirst, this->GetLength()-nFirst);
 	}
 
 	MYTYPE Mid(int nFirst, int nCount) const
@@ -3321,11 +3513,30 @@ public:
 
 		if ( 0 != nOldLen )
 		{
-			static const CT ch	= CT(0);
-			MYSIZE nNewLen		= sslen(szNew);
-			PCMYSTR szRealNew	= szNew == 0 ? &ch : szNew;
+			// If the replacement string is longer than the one it replaces, this
+			// string is going to have to grow in size,  Figure out how much
+			// and grow it all the way now, rather than incrementally
 
-			while ( (nIdx=this->find(szOld, nIdx)) != MYBASE::npos )
+			MYSIZE nNewLen		= sslen(szNew);
+			if ( nNewLen > nOldLen )
+			{
+				int nFound			= 0;
+				while ( nIdx < this->length() &&
+					(nIdx=this->find(szOld, nIdx)) != MYBASE::npos )
+				{
+					nFound++;
+					nIdx += nOldLen;
+				}
+				this->reserve(this->size() + nFound * (nNewLen - nOldLen));
+			}
+
+
+			static const CT ch	= CT(0);
+			PCMYSTR szRealNew	= szNew == 0 ? &ch : szNew;
+			nIdx				= 0;
+
+			while ( nIdx < this->length() && 
+				(nIdx=this->find(szOld, nIdx)) != MYBASE::npos )
 			{
 				this->replace(this->begin()+nIdx, this->begin()+nIdx+nOldLen,
 					szRealNew);
@@ -3565,7 +3776,7 @@ public:
 	// -------------------------------------------------------------------------
 	HRESULT StreamSave(IStream* pStream) const
 	{
-		ASSERT(size()*sizeof(CT) < 0xffffffffUL - sizeof(SSSHDR));
+		ASSERT(this->size()*sizeof(CT) < 0xffffffffUL - sizeof(SSSHDR));
 		HRESULT hr		= E_FAIL;
 		ASSERT(pStream != 0);
 		SSSHDR hdr;
@@ -3854,11 +4065,6 @@ inline CStdStringW operator+(const CStdStringW& s1, PCSTR pA)
 }
 
 
-
-
-
-
-
 // New-style format function is a template
 
 #ifdef SS_SAFE_FORMAT
@@ -3917,13 +4123,13 @@ private:
 // Note that we use an intermediate CString object in order to ensure that
 // we use the exact same format.
 
-#if defined(_MFC_VER) && 0
+#ifdef _MFC_VER
 	inline CArchive& AFXAPI operator<<(CArchive& ar, const CStdStringA& strA)
 	{
 		CString strTemp	= strA;
 		return ar << strTemp;
 	}
-    inline CArchive& AFXAPI operator<<(CArchive& ar, const CStdStringW& strW)
+	inline CArchive& AFXAPI operator<<(CArchive& ar, const CStdStringW& strW)
 	{
 		CString strTemp	= strW;
 		return ar << strTemp;
@@ -4152,57 +4358,14 @@ struct StdStringEqualsNoCaseA
 //	}
 //}
 
-
-
-// std::string/CStdString inline operator+ versions...
-
-inline std::string operator+(const std::string& s1, const std::string& s2)
-{
-	std::string sRet(SSREF(s1));
-	sRet.append(s2);
-	return sRet;
-}
-inline std::string operator+(const std::string& s1, PCSTR pA)
-{
-	std::string sRet(SSREF(s1));
-	sRet.append(pA);
-	return sRet;
-}
-inline std::string operator+(PCSTR pA, const std::string& sA)
-{
-	std::string sRet;
-	std::string::size_type nObjSize = sA.size();
-	std::string::size_type nLitSize = 
-		static_cast<std::string::size_type>(sslen(pA));
-
-	sRet.reserve(nLitSize + nObjSize);
-	sRet.assign(pA);
-	sRet.append(sA);
-	return sRet;
-}
-
-
-inline CStdString operator+(const CStdString& s1, const std::string& s2)
-{
-	CStdString sRet(SSREF(s1));
-	sRet.append(s2);
-	return sRet;
-}
-inline CStdString operator+(const std::string& s1, const CStdString& s2)
-{
-	CStdString sRet(SSREF(s1));
-	sRet.append(s2);
-	return sRet;
-}
-
-
-
-
 // Turn back on any Borland warnings we turned off.
 
 #ifdef __BORLANDC__
     #pragma option pop  // Turn back on inline function warnings
 //	#pragma warn +inl   // Turn back on inline function warnings
 #endif
+
+#pragma warning (pop)
+
 
 #endif	// #ifndef STDSTRING_H

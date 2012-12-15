@@ -16,8 +16,8 @@
 
 */
 
-#include <Stamina\Exception.h>
-#include <Stamina\Helpers.h>
+#include "..\Exception.h"
+#include "..\Helpers.h"
 
 namespace Stamina { namespace DT {
 

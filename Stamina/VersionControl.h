@@ -135,7 +135,7 @@ namespace Stamina {
 	};
 
 #define STAMINA_REGISTER_VERSION(NAME, MODULE) \
-	extern __declspec(dllexport) __declspec(selectany) const ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
+	extern /*__declspec(dllexport)*/ __declspec(selectany) const ::Stamina::VersionControlRegistrar __version__##NAME (MODULE);
 
 #define STAMINA_REGISTER_CLASS_VERSION(CLASS) \
 	STAMINA_REGISTER_VERSION(CLASS, CLASS::staticClassInfo())

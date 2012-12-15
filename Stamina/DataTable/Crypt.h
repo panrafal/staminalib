@@ -12,7 +12,7 @@
 #ifndef __DT_CRYPT__
 #define __DT_CRYPT__
 
-#include <Stamina\MD5.h>
+#include "..\MD5.h"
 
 namespace Stamina { namespace DT {
 
