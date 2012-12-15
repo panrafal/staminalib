@@ -256,7 +256,7 @@ namespace Stamina {
 
 	__if_exists(StringRef) {
 		template<> inline bool deleteFile<StringRef>(const StringRef& file) {
-			return ::DeleteFile(file.a_str());
+			return ::DeleteFile(file.a_str()) != 0;
 		}
 	}
 

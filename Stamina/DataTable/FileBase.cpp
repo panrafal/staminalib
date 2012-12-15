@@ -182,6 +182,7 @@ namespace Stamina { namespace DT {
 						this->writeRow(i);
 					}
 				}
+				_table->setChanged(false);
 				break;
 			} catch (DTException e) {
 				this->close();

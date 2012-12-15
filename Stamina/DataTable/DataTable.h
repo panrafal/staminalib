@@ -272,9 +272,9 @@ namespace Stamina { namespace DT {
 				return getRowId(id) != rowNotFound;
 		}
 
-		void setChanged() {
+		void setChanged(bool changed = true) {
 	        LockerCS lock(_cs);
-			_changed = true;
+			_changed = changed;
 		}
 
 		bool isChanged() {
