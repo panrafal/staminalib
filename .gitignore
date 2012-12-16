@@ -1,0 +1,46 @@
+
+# /
+/_Debug
+/lib
+/_Release
+/doc
+/*.old
+/*.suo
+/*.ncb
+/Doc
+
+# /Stamina/
+/Stamina/*.bak
+/Stamina/*.user
+
+# /Stamina/DataTable/
+/Stamina/DataTable/*.old
+
+# /Stamina/ListWnd/
+/Stamina/ListWnd/*.old
+
+# /Stamina/Memory/
+/Stamina/Memory/*.aps
+/Stamina/Memory/*.old
+
+# /Stamina/TestSuite/
+/Stamina/TestSuite/TestSuite.pdb
+/Stamina/TestSuite/TestSuite_d.exe
+/Stamina/TestSuite/TestSuite_d.ilk
+/Stamina/TestSuite/TestSuite.exe
+/Stamina/TestSuite/TestFileBin__*.dtb
+/Stamina/TestSuite/*.bak
+/Stamina/TestSuite/*.tmp
+/Stamina/TestSuite/*.restored
+/Stamina/TestSuite/*.bsc
+/Stamina/TestSuite/*.exp
+/Stamina/TestSuite/*.lib
+/Stamina/TestSuite/*.exe
+/Stamina/TestSuite/*.dll
+/Stamina/TestSuite/*.pdb
+/Stamina/TestSuite/*.user
+/Stamina/TestSuite/*.old
+
+# /Stamina/UI/
+/Stamina/UI/*.old
+/Stamina/UI/*.user
