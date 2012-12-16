@@ -1,3 +1,0 @@
-Licencja zosta³a przeniesiona do pliku /LICENSE.HTML
-
-License is moved to /LICENSE.HTML file
